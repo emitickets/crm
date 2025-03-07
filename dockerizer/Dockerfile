@@ -24,11 +24,6 @@ COPY ./dockerizer/laravel.sh /app/laravel.sh
 
 COPY . /app
 
-WORKDIR /app/application  
-RUN composer install --no-interaction --no-scripts
-RUN npm install
-
-# Ajusta permisos y propietario en /app
 RUN chmod -R 755 /app/application/bootstrap/ \
     && chmod -R 755 /app/application/storage/ \
     && chmod -R 755 /app/application/public/ \
@@ -36,6 +31,13 @@ RUN chmod -R 755 /app/application/bootstrap/ \
     && chown -R application:application /app/application/storage/ \
     && chown -R application:application /app/application/ \
     && chmod +x /app/application/laravel.sh 
+    
+WORKDIR /app/application  
+RUN composer install --no-interaction --no-scripts
+RUN npm install
+
+# Ajusta permisos y propietario en /app
+
 RUN /app/application/laravel.sh
 
 # Expone el puerto 80
