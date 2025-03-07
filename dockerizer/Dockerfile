@@ -11,7 +11,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | b
     && nvm alias default ${NODE_VERSION} \
     && nvm use default
 
-RUN mkdir -p /var/cache/nginx_cache && chown -R www-data:www-data /var/cache/nginx_cache
+# RUN mkdir -p /var/cache/nginx_cache && chown -R www-data:www-data /var/cache/nginx_cache
 
 # Copia archivos de configuración desde dockerizer
 COPY ./dockerizer/php.ini /opt/docker/etc/php/php.ini
