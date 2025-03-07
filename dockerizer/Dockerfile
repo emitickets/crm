@@ -1,6 +1,7 @@
 FROM webdevops/php-nginx:8.2
 # ENVIROMENTS
-ENV NODE_VERSION=18.19.1
+# ENV NODE_VERSION=18.19.1
+ENV NODE_VERSION=12.13.0
 ENV NVM_DIR=/root/.nvm
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 
