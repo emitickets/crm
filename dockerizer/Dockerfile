@@ -19,14 +19,13 @@ COPY ./dockerizer/nginx.conf /etc/nginx/nginx.conf
 COPY ./dockerizer/vhost.conf /opt/docker/etc/nginx/vhost.conf
 COPY ./dockerizer/laravel.sh /app/laravel.sh 
 
-# Copiar dependencias del proyecto
-COPY ./application/package*.json /app/application
-COPY ./application/composer.json ./application/composer.lock /app/application/
+
+
+COPY . /app
 
 WORKDIR /app/application  
 RUN composer install --no-interaction --no-scripts
 RUN npm install
-COPY . /app
 
 # Ajusta permisos y propietario en /app
 RUN chmod -R 755 /app/application/bootstrap/ \
