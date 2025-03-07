@@ -30,11 +30,11 @@ RUN chmod -R 755 /app \
     
 WORKDIR /app/application  
 RUN composer install --no-interaction --no-scripts
-# RUN npm install
+RUN npm install
 
 # Ajusta permisos y propietario en /app
 
-RUN /app/application/laravel.sh
+# RUN /app/application/laravel.sh
 
 # Expone el puerto 80
 EXPOSE 80
