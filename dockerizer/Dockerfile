@@ -24,11 +24,7 @@ COPY ./dockerizer/laravel.sh /app/laravel.sh
 
 COPY . /app
 
-RUN chmod -R 755 /app/application/bootstrap/ \
-    && chmod -R 755 /app/application/storage/ \
-    && chmod -R 755 /app/application/public/ \
-    && chown -R application:application /app/application/bootstrap/ \
-    && chown -R application:application /app/application/storage/ \
+RUN chmod -R 755 /app/application/ \
     && chown -R application:application /app/application/ \
     && chmod +x /app/application/laravel.sh 
     
