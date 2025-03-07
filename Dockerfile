@@ -9,6 +9,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    nodejs \
+    npm \
     && docker-php-ext-install pdo_mysql zip mbstring exif pcntl bcmath gd
 
 # Habilita módulos de Apache
@@ -20,8 +22,10 @@ COPY . /var/www/html/
 # Instala Composer (si se requiere)
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Instala dependencias de Composer (si hay un composer.json)
-# RUN composer install --no-dev --optimize-autoloader
+# Instala dependencias de Composer en la ruta application
+WORKDIR /var/www/html/application
+RUN composer install --no-dev --optimize-autoloader
+RUN npm install
 
 # Configura permisos
 RUN chown -R www-data:www-data /var/www/html/
