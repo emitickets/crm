@@ -20,23 +20,23 @@ COPY ./dockerizer/vhost.conf /opt/docker/etc/nginx/vhost.conf
 COPY ./dockerizer/laravel.sh /app/laravel.sh 
 
 # Copiar dependencias del proyecto
-COPY ./package*.json /app/
-COPY ./composer.json ./composer.lock /app/
+COPY ./application/package*.json /app/application
+COPY ./application/composer.json ./application/composer.lock /app/application/
 
-WORKDIR /app  
+WORKDIR /app/application  
 RUN composer install --no-interaction --no-scripts
 RUN npm install
 COPY . /app
 
 # Ajusta permisos y propietario en /app
-RUN chmod -R 755 /app/bootstrap/ \
-    && chmod -R 755 /app/storage/ \
-    && chmod -R 755 /app/public/ \
-    && chown -R application:application /app/bootstrap/ \
-    && chown -R application:application /app/storage/ \
-    && chown -R application:application /app/ \
-    && chmod +x /app/laravel.sh 
-RUN /app/laravel.sh
+RUN chmod -R 755 /app/application/bootstrap/ \
+    && chmod -R 755 /app/application/storage/ \
+    && chmod -R 755 /app/application/public/ \
+    && chown -R application:application /app/application/bootstrap/ \
+    && chown -R application:application /app/application/storage/ \
+    && chown -R application:application /app/application/ \
+    && chmod +x /app/application/laravel.sh 
+RUN /app/application/laravel.sh
 
 # Expone el puerto 80
 EXPOSE 80
