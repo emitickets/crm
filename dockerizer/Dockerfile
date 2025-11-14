@@ -46,9 +46,10 @@ FROM webdevops/php-nginx:8.2
 # Copiar los archivos de la aplicación desde el builder
 COPY --from=builder /app /app
 
-# Configurar Nginx para Laravel (root debe apuntar a /app/public)
+# Configurar Nginx para Laravel
+# Este proyecto tiene index.php en la raíz, no en /public
 # La imagen base webdevops/php-nginx usa variables de entorno para configurar el vhost
-ENV WEB_DOCUMENT_ROOT=/app/public
+ENV WEB_DOCUMENT_ROOT=/app
 
 # Crear todas las carpetas de almacenamiento necesarias (según documentación de Grow CRM)
 RUN mkdir -p /app/updates \
