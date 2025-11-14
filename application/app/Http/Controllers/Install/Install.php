@@ -701,20 +701,9 @@ class Install extends Controller {
             return;
         }
 
-        //connect to updates
-        try {
-            $response = Http::asForm()->post('https://updates.growcrm.io/mailinglist/add', [
-                'product' => 'Grow CRM SaaS',
-                'first_name' => request('first_name'),
-                'last_name' => request('last_name'),
-                'email' => request('email'),
-                'ip' => request()->ip(),
-                'url' => url()->current(),
-                'domain' => request()->getHost(),
-            ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            //nothing
-        }
+        // DESHABILITADO: Envío de datos a servidor remoto
+        // Ya no se envían datos de usuario a growcrm.io
+        // Esta función se mantiene para compatibilidad pero no realiza ninguna acción
 
     }
 

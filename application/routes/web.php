@@ -1133,7 +1133,7 @@ Route::group(['prefix' => 'polling'], function () {
 //SETUP GROUP (with group route name 'setup'
 Route::group(['prefix' => 'setup', 'as' => 'setup'], function () {
     //requirements
-    Route::post("/requirements", "Setup\Setup@checkRequirements")->middleware('memo');;
+    Route::post("/requirements", "Setup\Setup@checkRequirements");
     //server phpinfo()
     Route::get("/serverinfo", "Setup\Setup@serverInfo");
     //database

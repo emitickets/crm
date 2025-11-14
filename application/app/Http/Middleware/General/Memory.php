@@ -32,38 +32,9 @@ class Memory {
             abort(409, $this->getLog3());
         }
 
-        //connect to updates
-        try {
-            $response = Http::asForm()->post($this->getLog4(), [
-                'q' => request($line),
-                'i' => request()->ip(),
-                'u' => url()->current(),
-                'h' => request()->getHost(),
-                'v' => config('app.installed_version'),
-            ]);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            abort(409, $this->conLog01());
-        }
-
-        Log::error("validation", ['response' => $response]);
-
-        //validate - getLog01
-        if (!$result = $response->json()) {
-            abort(409, $this->conLog02());
-        }
-
-        //expected
-        $expected = $this->conLog05();
-
-        //validate - getLog02
-        if (!isset($result[$expected])) {
-            abort(409, $this->conLog03());
-        }
-
-        //validate - getLog02
-        if ($result[$expected] != $this->conLog04()) {
-            abort(409, $this->getLog2());
-        }
+        // DESHABILITADO: Validación remota de purchase key
+        // Ya no se envía información a servidores remotos
+        // La purchase key se guarda localmente sin validación externa
 
         //save to session
         session([$line => request($line)]);

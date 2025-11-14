@@ -8,7 +8,7 @@ Route::any("/app-admin/{anything}", "Install\Install@index")->where('anything', 
 //all other setup routes
 Route::group(['prefix' => 'install', 'as' => 'install'], function () {
     //requirements
-    Route::post("/requirements", "Install\Install@checkRequirements")->middleware('memory');;
+    Route::post("/requirements", "Install\Install@checkRequirements");
     //server phpinfo()
     Route::get("/serverinfo", "Install\Install@serverInfo");
     //database
