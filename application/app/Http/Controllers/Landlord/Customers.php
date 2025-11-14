@@ -616,8 +616,8 @@ class Customers extends Controller {
             abort(409, 'Demo Mode: You cannot delete the main demo accounts. You can create new ones for testing');
         }
 
-        //get the customer
-        if (!$customer = Tenant::Where('tenant_id', $id)->first()) {
+        //get the customer from landlord db
+        if (!$customer = Tenant::on('landlord')->Where('tenant_id', $id)->first()) {
             abort(404);
         }
 
@@ -629,6 +629,19 @@ class Customers extends Controller {
             //swicth to this tenants DB
             $customer->makeCurrent();
 
+            // Asegurar que la conexión tenga la base de datos correcta seleccionada
+            $database_name = $customer->database;
+            if ($database_name) {
+                // Configurar la base de datos en la conexión
+                config(['database.connections.tenant.database' => $database_name]);
+                
+                // Purgar la conexión para forzar la reconexión con la nueva base de datos
+                DB::purge('tenant');
+                
+                // Volver a hacer makeCurrent para aplicar la configuración
+                $customer->makeCurrent();
+            }
+
             //update teh default users password
             if ($user = \App\Models\User::on('tenant')->Where('id', 1)->first()) {
                 $user->password = Hash::make(request('password'));
@@ -637,6 +650,9 @@ class Customers extends Controller {
 
         } catch (Exception $e) {
             abort(409, $e->getMessage());
+        } finally {
+            //reset tenant connection after operation
+            Tenant::forgetCurrent();
         }
 
         /** ----------------------------------------------
@@ -708,13 +724,13 @@ class Customers extends Controller {
             abort(409, 'Demo Mode: You cannot update the main demo accounts. You can create new ones for testing');
         }
 
-        //get the customer
-        if (!$customer = Tenant::Where('tenant_id', $id)->first()) {
+        //get the customer from landlord db
+        if (!$customer = Tenant::on('landlord')->Where('tenant_id', $id)->first()) {
             abort(404);
         }
 
         //get the subscription
-        if (!$subscription = \App\Models\Subscription::Where('subscription_customerid', $id)->first()) {
+        if (!$subscription = \App\Models\Landlord\Subscription::on('landlord')->Where('subscription_customerid', $id)->first()) {
             abort(409, __('lang.no_subscription_exists_for_customer'));
         }
 
@@ -736,6 +752,19 @@ class Customers extends Controller {
             //swicth to this tenants DB
             $customer->makeCurrent();
 
+            // Asegurar que la conexión tenga la base de datos correcta seleccionada
+            $database_name = $customer->database;
+            if ($database_name) {
+                // Configurar la base de datos en la conexión
+                config(['database.connections.tenant.database' => $database_name]);
+                
+                // Purgar la conexión para forzar la reconexión con la nueva base de datos
+                DB::purge('tenant');
+                
+                // Volver a hacer makeCurrent para aplicar la configuración
+                $customer->makeCurrent();
+            }
+
             //update teh default users password
             if ($settings = \App\Models\Settings::on('tenant')->Where('settings_id', 1)->first()) {
                 $settings->settings_saas_status = 'active';
@@ -744,6 +773,9 @@ class Customers extends Controller {
 
         } catch (Exception $e) {
             abort(409, $e->getMessage());
+        } finally {
+            //reset tenant connection after operation
+            Tenant::forgetCurrent();
         }
 
         /** ----------------------------------------------
@@ -801,8 +833,8 @@ class Customers extends Controller {
      */
     public function updateSyncAccount($id) {
 
-        //get the customer
-        if (!$customer = Tenant::Where('tenant_id', $id)->first()) {
+        //get the customer from landlord db
+        if (!$customer = Tenant::on('landlord')->Where('tenant_id', $id)->first()) {
             abort(404);
         }
 
@@ -817,6 +849,19 @@ class Customers extends Controller {
         try {
             //swicth to this tenants DB
             $customer->makeCurrent();
+
+            // Asegurar que la conexión tenga la base de datos correcta seleccionada
+            $database_name = $customer->database;
+            if ($database_name) {
+                // Configurar la base de datos en la conexión
+                config(['database.connections.tenant.database' => $database_name]);
+                
+                // Purgar la conexión para forzar la reconexión con la nueva base de datos
+                DB::purge('tenant');
+                
+                // Volver a hacer makeCurrent para aplicar la configuración
+                $customer->makeCurrent();
+            }
 
             //update teh default users password
             if ($settings = \App\Models\Settings::on('tenant')->Where('settings_id', 1)->first()) {
@@ -846,6 +891,9 @@ class Customers extends Controller {
 
         } catch (Exception $e) {
             abort(409, $e->getMessage());
+        } finally {
+            //reset tenant connection after operation
+            Tenant::forgetCurrent();
         }
 
         /** ----------------------------------------------
