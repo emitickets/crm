@@ -34,9 +34,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . /app
 
-# Instalar dependencias de Composer (sin dev para producción)
+# Instalar dependencias de Composer (incluyendo dev)
 WORKDIR /app/application
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+RUN composer install --optimize-autoloader --no-interaction
 
 # --- Etapa 2: Production ---
 # Esta etapa usa la imagen de webdevops y copia los archivos
@@ -84,7 +84,7 @@ RUN if [ -f /app/application/.env ]; then chmod 775 /app/application/.env; fi
 # Establecer el directorio de trabajo
 WORKDIR /app/application
 
-# Ejecutar scripts de Composer post-install (sin scripts para evitar errores con Debugbar en producción)
+# Regenerar autoload optimizado automáticamente
 RUN composer dump-autoload --optimize --no-scripts
 
 # Expone el puerto 80
