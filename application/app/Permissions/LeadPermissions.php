@@ -84,6 +84,11 @@ class LeadPermissions {
             foreach ($users as $user) {
                 if ($user->type == 'team' && isset($user->role->role_leads)) {
                     if ($user->id > 0) {
+                        //creator of the content
+                        if ($lead->lead_creatorid == $user->id) {
+                            $list[] = $user->id;
+                            continue;
+                        }
                         //global user
                         if ($user->role->role_leads >= 1 && $user->role->role_leads_scope == 'global') {
                             $list[] = $user->id;
@@ -110,6 +115,15 @@ class LeadPermissions {
         }
 
         /**
+         * [CREATOR]
+         * Grant full permission for whatever request
+         *
+         */
+        if ($lead->lead_creatorid == auth()->id()) {
+            return true;
+        }
+
+        /**
          * [CLIENT]
          * Deny all clients
          *
@@ -122,6 +136,10 @@ class LeadPermissions {
          * [VIEW A LEAD]
          */
         if ($action == 'view') {
+            //creator
+            if ($lead->lead_creatorid == auth()->id()) {
+                return true;
+            }
             //global user
             if (auth()->user()->role->role_leads >= 1 && auth()->user()->role->role_leads_scope == 'global') {
                 return true;
@@ -136,6 +154,10 @@ class LeadPermissions {
          * [EDITING A LEAD]
          */
         if ($action == 'edit') {
+            //creator
+            if ($lead->lead_creatorid == auth()->id()) {
+                return true;
+            }
             //global user
             if (auth()->user()->role->role_leads >= 2 && auth()->user()->role->role_leads_scope == 'global') {
                 return true;
@@ -155,6 +177,10 @@ class LeadPermissions {
          * - comments, attach files, create checklists, etc
          */
         if ($action == 'participate') {
+            //creator
+            if ($lead->lead_creatorid == auth()->id()) {
+                return true;
+            }
             //assigned
             if ($assigned_users->contains(auth()->id())) {
                 return true;
@@ -170,6 +196,10 @@ class LeadPermissions {
          * [DELETING A LEAD]
          */
         if ($action == 'delete') {
+            //creator
+            if ($lead->lead_creatorid == auth()->id()) {
+                return true;
+            }
             //global user
             if (auth()->user()->role->role_leads >= 3 && auth()->user()->role->role_leads_scope == 'global') {
                 return true;

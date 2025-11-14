@@ -36,7 +36,9 @@ class SubscriptionPushCancellation {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+        
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /**
          *   - Find webhhoks waiting to be completed

@@ -158,6 +158,7 @@ class ProposalAutomationRepository {
         $project->clientperm_tasks_create = $this->settings->settings_projects_clientperm_tasks_create;
         $project->clientperm_timesheets_view = $this->settings->settings_projects_clientperm_timesheets_view;
         $project->clientperm_expenses_view = $this->settings->settings_projects_clientperm_expenses_view;
+        $project->clientperm_checklists = $this->settings->settings_projects_clientperm_checklists;
         $project->assignedperm_milestone_manage = $this->settings->settings_projects_assignedperm_milestone_manage;
         $project->assignedperm_tasks_collaborate = $this->settings->settings_projects_assignedperm_tasks_collaborate;
         $project->project_calendar_timezone = config('system.settings_system_timezone');

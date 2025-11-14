@@ -69,14 +69,14 @@ class CloneContractRepository {
         $new_contract->doc_provider_signed_signature_directory = null;
         $new_contract->doc_provider_signed_signature_filename = null;
         $new_contract->doc_provider_signed_ip_address = null;
-        $new_contract->doc_provider_signed_status = null;
+        $new_contract->doc_provider_signed_status = 'unsigned';
         $new_contract->doc_signed_userid = null;
         $new_contract->doc_signed_date = null;
         $new_contract->doc_signed_first_name = null;
         $new_contract->doc_signed_last_name = null;
         $new_contract->doc_signed_signature_directory = null;
         $new_contract->doc_signed_signature_filename = null;
-        $new_contract->doc_signed_status = null;
+        $new_contract->doc_signed_status = 'unsigned';
         $new_contract->doc_signed_ip_address = null;
         $new_contract->doc_fallback_client_first_name = $payload['doc_fallback_client_first_name'];
         $new_contract->doc_fallback_client_last_name = $payload['doc_fallback_client_last_name'];

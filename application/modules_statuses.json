@@ -2,5 +2,6 @@
     "Purchasing": false,
     "Sandbox": false,
     "Services": false,
-    "Test1": false
+    "ActivityReport": false,
+    "Inventory": false
 }

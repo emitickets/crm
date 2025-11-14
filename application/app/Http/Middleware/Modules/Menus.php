@@ -34,15 +34,20 @@ class Menus {
             return $next($request);
         }
 
+        //skip for ajax calls
+        if (request()->ajax()) {
+            return $next($request);
+        }
+
+        //skip for guest
+        if (!auth()->check()) {
+            return $next($request);
+        }
+
         try {
             //get all modules (status will be checked later)
             $this->modules = Module::all();
             if (count($this->modules) == 0) {
-                return $next($request);
-            }
-
-            //skip for ajax calls
-            if (request()->ajax()) {
                 return $next($request);
             }
 
@@ -63,7 +68,7 @@ class Menus {
             return $next($request);
 
         } catch (\Exception$e) {
-            Log::error("Menu middleware error: " . $e->getMessage());
+            Log::error("MODULES - Menu middleware error: " . $e->getMessage());
             return $next($request);
         }
     }
@@ -85,13 +90,13 @@ class Menus {
 
             //check if the module is enabled in the database
             if (!in_array($module_name, config('modules.enabled'))) {
-                Log::info("Module [$module_name] is not enabled in the crm. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - Module [$module_name] is not enabled in the crm. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return;
             }
 
             //check if the module has a config.json file and if that file has valid menu objects
             if (!$menus = $this->getMenus($module)) {
-                Log::info("Module [$module_name] does not have a valid menus config.json file. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - Module [$module_name] does not have a valid menus config.json file. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return;
             }
 
@@ -99,7 +104,7 @@ class Menus {
             foreach ($menus as $menu) {
                 //validate the minimum expected structure of each menu object
                 if (!$menu = $this->validateMenu($menu, $module_name)) {
-                    Log::info("Module [$module_name] has an incorrectly formatted menu object. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::info("MODULES - Module [$module_name] has an incorrectly formatted menu object. Will skip it", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     continue;
                 }
 
@@ -123,7 +128,7 @@ class Menus {
                 }
             }
         } catch (\Exception$e) {
-            Log::error("generating module menus failed - error: " . $e->getMessage(), ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - generating module menus failed - error: " . $e->getMessage(), ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
     }
 
@@ -149,27 +154,27 @@ class Menus {
 
             //check if file exists
             if (!file_exists($module_config_file)) {
-                Log::error("generating menus for module [$module_name] failed - config.json file not found", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::error("MODULES - generating menus for module [$module_name] failed - config.json file not found", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
 
             //get file contents
             $json_contents = file_get_contents($module_config_file);
             if ($json_contents === false) {
-                Log::error("generating menus for module [$module_name] failed - unable to read config.json file", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::error("MODULES - generating menus for module [$module_name] failed - unable to read config.json file", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
 
             //decode json
             $config = json_decode($json_contents, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::error("generating menus for module [$module_name] failed - invalid JSON format in config.json", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::error("MODULES - generating menus for module [$module_name] failed - invalid JSON format in config.json", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
 
             //validate menus object exists
             if (!isset($config['menus']) || !is_array($config['menus'])) {
-                Log::info("generating menus for module [$module_name
+                Log::info("MODULES - generating menus for module [$module_name
                 ] - skipped - no menus found in the config file", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
@@ -178,7 +183,7 @@ class Menus {
             return $config['menus'];
 
         } catch (\Exception$e) {
-            Log::info("generating menus for module [$module_name] failed - error: . $e->getMessage()", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - generating menus for module [$module_name] failed - error: . $e->getMessage()", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return false;
         }
     }
@@ -195,12 +200,12 @@ class Menus {
      *-----------------------------------------------------------------------------------*/
     private function validateMenu($menu = [], $module_name = '') {
 
-        Log::info("validating menu for module [$module_name] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - validating menu for module [$module_name] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //basic validation - check if type exists
             if (!isset($menu['type']) || empty($menu['type'])) {
-                Log::error("validating menu for module [$module_name] failed - menu type is missing]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::error("MODULES - validating menu for module [$module_name] failed - menu type is missing]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
 
@@ -212,7 +217,7 @@ class Menus {
             ];
 
             if (!in_array($menu['type'], $valid_types)) {
-                Log::error("validating menu for module [$module_name] failed - menu type is invalid]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::error("MODULES - validating menu for module [$module_name] failed - menu type is invalid]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 return false;
             }
 
@@ -220,7 +225,7 @@ class Menus {
             $required_fields = ['placement', 'parent', 'title'];
             foreach ($required_fields as $field) {
                 if (!isset($menu[$field]) || empty($menu[$field])) {
-                    Log::error("validating menu for module [$module_name] failed - missing required field ($field) ]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::error("MODULES - validating menu for module [$module_name] failed - missing required field ($field) ]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     return false;
                 }
             }
@@ -239,7 +244,7 @@ class Menus {
 
                 //validate submenu items
                 if (!isset($menu['data']) || !is_array($menu['data'])) {
-                    Log::error("validating menu for module [$module_name] failed - missing or invalid dropdown submenu (data) array]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::error("MODULES - validating menu for module [$module_name] failed - missing or invalid dropdown submenu (data) array]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     return false;
                 }
 
@@ -249,7 +254,7 @@ class Menus {
                     $required_fields = ['title', 'href'];
                     foreach ($required_fields as $field) {
                         if (!isset($submenu[$field]) || empty($submenu[$field])) {
-                            Log::error("validating menu for module [$module_name] failed - missing a required field ($field)]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                            Log::error("MODULES - validating menu for module [$module_name] failed - missing a required field ($field)]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                             unset($menu['data'][$key]);
                             continue;
                         }
@@ -272,13 +277,13 @@ class Menus {
                     //set menu visibility
                     $menu['data'][$key]['visible'] = $this->setMenuVisibility($menu['data'][$key], $module_name);
 
-                    Log::info("validating menu for module [$module_name] completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::info("MODULES - validating menu for module [$module_name] completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     Log::debug("menu for module [$module_name] - payload", ['menu' => $menu]);
                 }
 
                 //check if we have any valid submenu items left
                 if (empty($menu['data'])) {
-                    Log::error("validating menu for module [$module_name] failed - dropdown menu has no submenu (data) items]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::error("MODULES - validating menu for module [$module_name] failed - dropdown menu has no submenu (data) items]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     return false;
                 }
             }
@@ -286,7 +291,7 @@ class Menus {
             return $menu;
 
         } catch (\Exception$e) {
-            Log::error("validating menu for module [$module_name] failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - validating menu for module [$module_name] failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return false;
         }
     }
@@ -308,13 +313,13 @@ class Menus {
         $menu_type = $menu['type'];
         $parent = $menu['parent'];
 
-        Log::info("rendering [main menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - rendering [main menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //render single menu
             if ($menu['type'] == 'single') {
 
-                Log::info("rendering [main menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [main menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.main.single', compact('menu'))->render();
@@ -323,7 +328,7 @@ class Menus {
             //render dropdown menu
             if ($menu['type'] == 'dropdown') {
 
-                Log::info("rendering [main menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [main menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.main.dropdown', compact('menu'))->render();
@@ -332,7 +337,7 @@ class Menus {
             //render dropdown child menu
             if ($menu['type'] == 'dropdown-child') {
 
-                Log::info("rendering [main menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [main menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.main.dropdown-child', compact('menu'))->render();
@@ -343,10 +348,10 @@ class Menus {
                 $parent => config($parent) . $menu_html,
             ]);
 
-            Log::info("rendering [main menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - rendering [main menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         } catch (\Exception$e) {
-            Log::error("rendering a menu for [main menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - rendering a menu for [main menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
     }
 
@@ -367,13 +372,13 @@ class Menus {
         $menu_type = $menu['type'];
         $parent = $menu['parent'];
 
-        Log::info("rendering [settings menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - rendering [settings menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //render single menu
             if ($menu['type'] == 'single') {
 
-                Log::info("rendering [settings menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [settings menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.settings.single', compact('menu'))->render();
@@ -382,7 +387,7 @@ class Menus {
             //render dropdown menu
             if ($menu['type'] == 'dropdown') {
 
-                Log::info("rendering [settings menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [settings menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.settings.dropdown', compact('menu'))->render();
@@ -391,7 +396,7 @@ class Menus {
             //render dropdown child menu
             if ($menu['type'] == 'dropdown-child') {
 
-                Log::info("rendering [main menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [main menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.main.dropdown-child', compact('menu'))->render();
@@ -402,10 +407,10 @@ class Menus {
                 $parent => config($parent) . $menu_html,
             ]);
 
-            Log::info("rendering [main menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - rendering [main menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         } catch (\Exception$e) {
-            Log::error("rendering a menu for [settings menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - rendering a menu for [settings menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
 
     }
@@ -427,13 +432,13 @@ class Menus {
         $menu_type = $menu['type'];
         $parent = $menu['parent'];
 
-        Log::info("rendering [tabs menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - rendering [tabs menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //render single menu
             if ($menu['type'] == 'single') {
 
-                Log::info("rendering [tabs menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [tabs menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.tabs.single', compact('menu'))->render();
@@ -442,7 +447,7 @@ class Menus {
             //render dropdown menu
             if ($menu['type'] == 'dropdown') {
 
-                Log::info("rendering [tabs menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [tabs menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.tabs.dropdown', compact('menu'))->render();
@@ -451,7 +456,7 @@ class Menus {
             //render dropdown child menu
             if ($menu['type'] == 'dropdown-child') {
 
-                Log::info("rendering [tabs menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [tabs menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.tabs.dropdown-child', compact('menu'))->render();
@@ -462,10 +467,10 @@ class Menus {
                 $parent => config($parent) . $menu_html,
             ]);
 
-            Log::info("rendering [tabs menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - rendering [tabs menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         } catch (\Exception$e) {
-            Log::error("rendering a menu for [tabs menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - rendering a menu for [tabs menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
     }
 
@@ -486,13 +491,13 @@ class Menus {
         $menu_type = $menu['type'];
         $parent = $menu['parent'];
 
-        Log::info("rendering [topnav menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - rendering [topnav menu] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //render single menu
             if ($menu['type'] == 'single') {
 
-                Log::info("rendering [topnav menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [topnav menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.topnav.single', compact('menu'))->render();
@@ -501,7 +506,7 @@ class Menus {
             //render dropdown menu
             if ($menu['type'] == 'dropdown') {
 
-                Log::info("rendering [topnav menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [topnav menu][dropdown] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.topnav.dropdown', compact('menu'))->render();
@@ -510,7 +515,7 @@ class Menus {
             //render dropdown child menu
             if ($menu['type'] == 'dropdown-child') {
 
-                Log::info("rendering [topnav menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [topnav menu][dropdown-child] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.topnav.dropdown-child', compact('menu'))->render();
@@ -521,10 +526,10 @@ class Menus {
                 $parent => config($parent) . $menu_html,
             ]);
 
-            Log::info("rendering [topnav menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - rendering [topnav menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         } catch (\Exception$e) {
-            Log::error("rendering a menu for [main menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - rendering a menu for [main menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
     }
 
@@ -545,13 +550,13 @@ class Menus {
         $menu_type = $menu['type'];
         $parent = $menu['parent'];
 
-        Log::info("rendering [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - rendering [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - started]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         try {
             //render single menu
             if ($menu['type'] == 'single') {
 
-                Log::info("rendering [profile menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                Log::info("MODULES - rendering [profile menu][single] ($menu_type) for module [$module_name] with parent [$parent]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                 //render the html for this menu
                 $menu_html = ($menu['html']) ? ($menu['html']) : view('modules.menus.profile.single', compact('menu'))->render();
@@ -562,10 +567,10 @@ class Menus {
                 $parent => config($parent) . $menu_html,
             ]);
 
-            Log::info("rendering [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - rendering [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - completed]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         } catch (\Exception$e) {
-            Log::error("rendering a menu for [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::error("MODULES - rendering a menu for [profile menu] ($menu_type) for module [$module_name] with parent [$parent] - failed. error: " . $e->getMessage(), ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
     }
 
@@ -579,14 +584,13 @@ class Menus {
      *-----------------------------------------------------------------------------------*/
     private function setMenuVisibility($menu = [], $module_name) {
 
-        Log::info("setting menu visibility (permission check) for menu titled [" . $menu['title'] . "] - (for logged in users) - started ]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - setting menu visibility (permission check) for menu titled [$module_name][" . $menu['title'] . "] - (for logged in users) - started ]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         if (!auth()->check()) {
-            Log::info("the system did not detect a logged in user for this session - will now exit this step ]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            return false;
         }
 
-        //default
-        $has_permission = true;
+        $failed_count = 0;
 
         $user_id = auth()->id();
         $user_name = auth()->user()->full_name;
@@ -610,31 +614,31 @@ class Menus {
 
         //check based on user role permission setting (as set by admin in the 'roles' feature)
         if ((isset($menu['user_module_role']) && in_array($menu['user_module_role'], ['none', 'view', 'manage'])) && $sanitized_module_name != '') {
-            Log::info("menu titled [" . $menu['title'] . "] requires a permission level of [" . $menu['user_module_role'] . "] - will now check if current user has permission]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("MODULES - menu titled [$module_name][" . $menu['title'] . "] requires a permission level of [" . $menu['user_module_role'] . "] - will now check if current user has permission]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             if (auth()->check()) {
                 try {
                     //user does not have permission
                     if (auth()->user()->role->module->$sanitized_module_name == 'none' || auth()->user()->role->module->$sanitized_module_name == '') {
-                        $has_permission = false;
+                        $failed_count++;
                     }
                 } catch (Exception $e) {
-                    Log::error("unable to get users role permissions for this module", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
-                    $has_permission = false;
+                    Log::error("MODULES - unable to get users role permissions for this module", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    $failed_count++;
                 }
             } else {
-                $has_permission = false;
+                $failed_count++;
             }
 
         }
 
         //no failed check
-        if ($has_permission) {
-            Log::info("current user id: ($user_id) name: ($user_name) has permission to the menu titled [" . $menu['title'] . "] - it will now be set to visible]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        if ($failed_count == 0) {
+            Log::info("MODULES - current user id: ($user_id) name: ($user_name) has permission to the menu titled [$module_name][" . $menu['title'] . "] - it will now be set to visible]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return true;
         }
 
         //failed
-        Log::info("current user id: ($user_id) name: ($user_name) does not have permission to the menu titled [" . $menu['title'] . "] - it will now be set to invisible]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("MODULES - current user id: ($user_id) name: ($user_name) does not have permission to the menu titled [$module_name][" . $menu['title'] . "] - it will now be set to invisible]", ['process' => 'middleware.modules.menus', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         return false;
     }
 

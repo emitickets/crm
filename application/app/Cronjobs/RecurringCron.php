@@ -26,7 +26,10 @@ class RecurringCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
+
         middlewareBootTheme();
 
         //log that its run

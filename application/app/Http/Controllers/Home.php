@@ -9,6 +9,7 @@
 
 namespace App\Http\Controllers;
 use App\Http\Responses\Home\HomeResponse;
+use App\Http\Responses\Home\UpdateStatsResponse;
 use App\Repositories\EventRepository;
 use App\Repositories\EventTrackingRepository;
 use App\Repositories\LeadRepository;
@@ -16,6 +17,7 @@ use App\Repositories\ProjectRepository;
 use App\Repositories\StatsRepository;
 use App\Repositories\TaskRepository;
 use Illuminate\Support\Facades\Log;
+
 class Home extends Controller {
 
     private $page = array();
@@ -70,6 +72,7 @@ class Home extends Controller {
             if (auth()->user()->is_admin) {
                 //get payload
                 $payload = $this->adminDashboard();
+                $payload['available_years'] = $this->statsrepo->getAvailableYears();                
             }
             //team uder
             if (!auth()->user()->is_admin) {
@@ -96,7 +99,7 @@ class Home extends Controller {
 
         //page
         $payload['page'] = $page;
-        
+
         //process reponse
         return new HomeResponse($payload);
 
@@ -355,6 +358,13 @@ class Home extends Controller {
         $payload['leads_key_colors'] = json_encode($data['leads_key_colors']);
         $payload['leads_chart_center_title'] = $data['leads_chart_center_title'];
 
+        //[tickets] - this year
+        $ticket_data = $this->widgetTickets('thisyear');
+        $payload['tickets_stats'] = json_encode($ticket_data['stats']);
+        $payload['tickets_key_colors'] = json_encode($ticket_data['tickets_key_colors']);
+        $payload['tickets_chart_center_title'] = $ticket_data['tickets_chart_center_title'] . ' - ' . $ticket_data['count_all_tickets'];
+        $payload['ticket_statuses'] = $ticket_data['ticket_statuses'];
+
         //filter payments-today
         $payload['filter_payment_today'] = \Carbon\Carbon::now()->format('Y-m-d');
 
@@ -415,6 +425,107 @@ class Home extends Controller {
 
         return $payload;
     }
+
+/**
+ * generate a chart to show the following ticket stats
+ * @param string $filter [alltime|thisyear]  //add as we go
+ * @return array
+ */
+    public function widgetTickets($filter = 'thisyear') {
+
+        $payload['stats'] = [];
+        $payload['tickets_key_colors'] = [];
+        $payload['tickets_chart_center_title'] = __('lang.tickets');
+        $payload['ticket_statuses'] = [];
+
+        $counter = 0;
+
+        // Get all ticket statuses from database
+        $statuses = \App\Models\TicketStatus::orderBy('ticketstatus_position', 'asc')->get();
+
+        // Count tickets for each status
+        $year_start = \Carbon\Carbon::now()->startOfYear()->format('Y-m-d');
+        $year_end = \Carbon\Carbon::now()->endOfYear()->format('Y-m-d');
+
+        $ticket_statuses = [];
+
+        // Loop through each status
+        foreach ($statuses as $status) {
+
+            $count = \App\Models\Ticket::where('ticket_status', $status->ticketstatus_id)
+                ->where('ticket_created', '>=', $year_start)
+                ->where('ticket_created', '<=', $year_end)
+                ->count();
+
+            // Store the original title and the title with count
+            $payload['ticket_statuses'][] = [
+                'color' => $status->ticketstatus_color,
+                'title' => $status->ticketstatus_title . ': ' . $count,
+            ];
+
+            // Add to stats array - use JS-safe title with count included (escape any special characters)
+            $safe_title = str_replace("'", "\\'", $status->ticketstatus_title . ': ' . $count);
+
+            $payload['stats'][] = [
+                $safe_title, $count,
+            ];
+
+            // Add to counter
+            $counter += $count;
+
+            $payload['tickets_key_colors'][] = runtimeColorCode($status->ticketstatus_color);
+        }
+
+        //sum all tickets
+        $payload['count_all_tickets'] = \App\Models\Ticket::where('ticket_created', '>=', $year_start)->where('ticket_created', '<=', $year_end)->count();
+
+        // No tickets in system - display something (No Tickets - 100%) in chart
+        if ($counter == 0) {
+            $payload['stats'][] = [
+                'No Tickets: 0', 1,
+            ];
+            $payload['tickets_key_colors'][] = "#eff4f5";
+            $payload['tickets_chart_center_title'] = __('lang.no_tickets');
+        }
+
+        return $payload;
+    }
+
+/**
+ * Update income vs expenses chart for selected year
+ * @return \Illuminate\Http\Response
+ */
+    public function updateIncomeExpensesChart() {
+
+        //validation - ensure year parameter is provided and valid
+        $selected_year = request('income_expenses_year');
+        if (!$selected_year || !is_numeric($selected_year)) {
+            abort(400, 'Invalid year parameter');
+        }
+
+        //payload
+        $payload = [];
+
+        //[income][yearly] for selected year
+        $payload['income'] = $this->statsrepo->sumYearlyIncome([
+            'period' => $selected_year,
+        ]);
+
+        //[expenses][yearly] for selected year
+        $payload['expenses'] = $this->statsrepo->sumYearlyExpenses([
+            'period' => $selected_year,
+        ]);
+
+        //available years for dropdown
+        $payload['available_years'] = $this->statsrepo->getAvailableYears();
+
+        //response type
+        $payload['response'] = 'admin-income-expenses-chart';
+
+        //process response
+        return new UpdateStatsResponse($payload);
+    }
+
     /**
      * basic page setting for this section of the app
      * @param string $section page section (optional)

@@ -1,6 +1,7 @@
 @foreach($tasks as $task)
 <!--each row-->
-<tr id="task_{{ $task->task_id }}" class="{{ runtimeTaskCompletedStatus($task->task_status) }} {{ $task->pinned_status ?? '' }}">
+<tr id="task_{{ $task->task_id }}"
+    class="{{ runtimeTaskCompletedStatus($task->task_status) }} {{ $task->pinned_status ?? '' }}">
     <td class="tasks_col_title td-edge">
         <!--for polling timers-->
         <input type="hidden" name="tasks[{{ $task->task_id }}]" value="{{ $task->assigned_to_me }}">
@@ -116,8 +117,7 @@
     @endif
     @if(config('visibility.tasks_col_priority'))
     <td class="tasks_col_priority">
-        <span
-            class="label label-outline-{{ $task->taskpriority_color }}">{{ $task->taskpriority_title }}</span>
+        <span class="label label-outline-{{ $task->taskpriority_color }}">{{ $task->taskpriority_title }}</span>
     </td>
     @endif
     @if(config('visibility.tasks_col_tags'))
@@ -268,6 +268,31 @@
                 <i class="ti-pin2"></i>
             </a>
         </span>
+
+        <!--star button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.star_task')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm opacity-4 ajax-request {{ $task->is_starred ? 'hidden' : '' }}"
+                id="starred-star-button-{{ $task->task_id }}"
+                data-url="{{ url('/starred/togglestatus?action=star&resource_type=task&resource_id='.$task->task_id) }}"
+                data-loading-target="starred-star-button-{{ $task->task_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
+        </span>
+
+        <!--unstar button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.unstar_task')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm ajax-request text-warning {{ !$task->is_starred ? 'hidden' : '' }}"
+                id="starred-unstar-button-{{ $task->task_id }}"
+                data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=task&resource_id='.$task->task_id) }}"
+                data-loading-target="starred-unstar-button-{{ $task->task_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
+        </span>
+        
     </td>
 </tr>
 @endforeach

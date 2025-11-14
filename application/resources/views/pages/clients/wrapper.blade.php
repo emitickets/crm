@@ -17,6 +17,13 @@
     </div>
     <!--page heading-->
 
+    <!--stats panel-->
+    <div class="stats-wrapper" id="clients-stats-wrapper">
+        @include('misc.list-pages-stats')
+    </div>
+    <!--stats panel-->
+
+
     <!-- page content -->
     <div class="row">
         <div class="col-12">

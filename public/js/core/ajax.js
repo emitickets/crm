@@ -1,5 +1,14 @@
 "use strict";
 
+
+/** --------------------------------------------------------------------------------------------------
+ *  Frontend DOM manipulation ajax framework
+ * 
+ * @author NextLoop
+ * @modified 30 July 2025
+ * --------------------------------------------------------------------------------------------------*/
+
+
 /**------------------------------------------------------------------------
  * writes console.log output
  *------------------------------------------------------------------------*/
@@ -1819,6 +1828,7 @@ function nxAjaxUxRequest(obj, virtualPostArray = {}) {
 			if (obj.attr('data-on-start-submit-button') == 'disable') {
 				obj.prop('disabled', true);
 			}
+
 		},
 
 		/**------------------------------------------------------------------------
@@ -2040,6 +2050,27 @@ function nxAjaxUxRequest(obj, virtualPostArray = {}) {
 
 		}
 	});
+
+	/**-----------------------------------------------------------------------
+	 *  [RETURN AJAX OBJECT] Jan 2025
+	 *  Now all ajax requests will return the actual ajax oject, that can be
+	 *  further used in the events that made the request
+	 * 
+        var result = nxAjaxUxRequest(self);
+
+		result.always(function () {
+			//do something - on all statuses
+		});
+
+		result.done(function () {
+			//do something - on all success status
+		});
+
+		result.failr(function () {
+			//do something - on all failed statuses
+		});
+	 *------------------------------------------------------------------------*/
+	return ajax_request;
 };
 
 $(document).ready(function () {
@@ -2051,9 +2082,17 @@ $(document).ready(function () {
 	 *           - send request to ajax
 	 *------------------------------------------------------------------------*/
 	$(document).on('click', '.js-ajax-ux-request, .ajax-request, .js-ajax-request', function (e) {
+
+		//prevenmt default behaviour
 		e.preventDefault();
-		//call the function to process request
+
+		//call the function to process request thos ajax request
 		nxAjaxUxRequest($(this));
+
+		//stop propagation
+		if ($(this).attr('data-stop-propagation') == 'yes') {
+			e.stopPropagation();
+		}
 	});
 
 	/**-----------------------------------------------------------------------

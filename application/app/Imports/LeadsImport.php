@@ -14,8 +14,9 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 class LeadsImport implements ToModel, WithStartRow, WithHeadingRow, WithValidation, SkipsOnFailure {
 
     use Importable, SkipsFailures;
-    
+
     private $rows = 0;
+    private $skipped = 0;
 
     /**
      * @param array $row
@@ -24,8 +25,14 @@ class LeadsImport implements ToModel, WithStartRow, WithHeadingRow, WithValidati
      */
     public function model(array $row) {
 
+        // Check for duplicates before creating the lead
+        if ($this->isDuplicate($row)) {
+            $this->skipped++;
+            return null;
+        }
+
         ++$this->rows;
-        
+
         return new Lead([
             'lead_importid' => request('import_ref'),
             'lead_firstname' => $row['firstname'] ?? '',
@@ -193,11 +200,80 @@ class LeadsImport implements ToModel, WithStartRow, WithHeadingRow, WithValidati
             'lead_custom_field_147' => $row['customfield147'] ?? '',
             'lead_custom_field_148' => $row['customfield148'] ?? '',
             'lead_custom_field_149' => $row['customfield149'] ?? '',
-            'lead_custom_field_150' => $row['customfield150'] ?? '',            
+            'lead_custom_field_150' => $row['customfield150'] ?? '',
             'lead_creatorid' => auth()->id(),
             'lead_created' => now(),
             'lead_status' => request('lead_status'),
         ]);
+    }
+
+    /**
+     * Check if the lead is a duplicate based on system settings
+     * Each setting is checked individually, and if any match is found, it's a duplicate
+     * @param array $row
+     * @return bool
+     */
+    protected function isDuplicate($row) {
+
+        // Check each enabled setting separately
+        $duplicate_found = false;
+
+        // Get duplicate checking settings
+        $check_name = config('system.settings2_importing_leads_duplicates_name') == 'yes';
+        $check_email = config('system.settings2_importing_leads_duplicates_email') == 'yes';
+        $check_telephone = config('system.settings2_importing_leads_duplicates_telephone') == 'yes';
+        $check_company = config('system.settings2_importing_leads_duplicates_company') == 'yes';
+
+        // If no duplicate checking is enabled, return false
+        if (!$check_name && !$check_email && !$check_telephone && !$check_company) {
+            return false;
+        }
+
+        // Check name
+        if ($check_name) {
+            if (!empty($row['firstname']) && !empty($row['lastname'])) {
+                if (\App\Models\Lead::where('lead_firstname', $row['firstname'])->Where('lead_lastname', $row['lastname'])->exists()) {
+                    $duplicate_found = true;
+                }
+            }
+
+            /* also check only first name or only last name ???
+            if (!empty($row['firstname']) && empty($row['lastname'])) {
+                if (\App\Models\Lead::where('lead_firstname', $row['firstname'])->exists()) {
+                    $duplicate_found = true;
+                }
+            }
+
+            if (empty($row['firstname']) && !empty($row['lastname'])) {
+                if (\App\Models\Lead::where('lead_lastname', $row['lastname']->exists())) {
+                    $duplicate_found = true;
+                }
+            }
+            */
+        }
+
+        // Check email
+        if (!$duplicate_found && $check_email && !empty($row['email'])) {
+            if (\App\Models\Lead::where('lead_email', $row['email'])->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        // Check telephone
+        if (!$duplicate_found && $check_telephone && !empty($row['telephone'])) {
+            if (\App\Models\Lead::where('lead_phone', (string) $row['telephone'])->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        // Check company name
+        if (!$duplicate_found && $check_company && !empty($row['companyname'])) {
+            if (\App\Models\Lead::where('lead_company_name', $row['companyname'])->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        return $duplicate_found;
     }
 
     public function rules(): array
@@ -211,7 +287,7 @@ class LeadsImport implements ToModel, WithStartRow, WithHeadingRow, WithValidati
             ],
             'title' => [
                 'required',
-            ],   
+            ],
         ];
     }
 
@@ -223,13 +299,19 @@ class LeadsImport implements ToModel, WithStartRow, WithHeadingRow, WithValidati
         return 2;
     }
 
-
     /**
      * lets count the total imported rows
      * @return int
      */
-    public function getRowCount(): int
-    {
+    public function getRowCount(): int {
         return $this->rows;
+    }
+
+    /**
+     * get count of skipped duplicate rows
+     * @return int
+     */
+    public function getSkippedCount(): int {
+        return $this->skipped;
     }
 }

@@ -170,7 +170,7 @@ INSERT INTO `categories` (`category_id`, `category_uniqueid`, `category_created`
 (6,	'54933186.00904754',	'2020-09-02 15:41:04',	'2020-01-01 00:00:00',	0,	'Default',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'contract',	'6-default',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
 (7,	'39724217.95906825',	'2020-09-02 15:41:04',	'2020-01-01 00:00:00',	0,	'Default',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'expense',	'7-default',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
 (8,	'60361477.14086916',	'2020-09-02 15:41:04',	'2020-01-01 00:00:00',	0,	'Default',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'item',	'8-default',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
-(9,	'89350153.04490019',	'2020-09-02 15:41:04',	'2025-01-09 09:16:49',	0,	'Support',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'ticket',	'9-support',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
+(9,	'89350153.04490019',	'2020-09-02 15:41:04',	'2025-04-10 18:04:07',	0,	'Support',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'ticket',	'9-support',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
 (10,	'54399642.58528154',	'2020-09-02 15:41:04',	'2020-01-01 00:00:00',	0,	'Frequently Asked Questions',	'Answers to some of the most frequently asked questions',	'yes',	'everyone',	'sl-icon-call-out',	'knowledgebase',	'10-frequently-asked-questions',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
 (11,	'29441850.71624788',	'2020-09-02 15:41:04',	'2020-01-01 00:00:00',	0,	'Default',	NULL,	'yes',	'everyone',	'sl-icon-folder',	'proposal',	'11-proposal',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
 (60,	'69798397.34117621',	NULL,	NULL,	0,	'Default',	NULL,	'yes',	'everyone',	'sl-icon-docs',	'subscription',	'subscription',	0,	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00',	0,	0,	0,	0),
@@ -200,6 +200,8 @@ CREATE TABLE `checklists` (
   `checklist_status` varchar(250) NOT NULL DEFAULT 'pending' COMMENT 'pending | completed',
   `checklistresource_type` varchar(50) NOT NULL,
   `checklistresource_id` int(11) NOT NULL,
+  `checklist_mapping_type` text DEFAULT NULL,
+  `checklist_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`checklist_id`),
   KEY `checklistresource_type` (`checklistresource_type`),
   KEY `checklistresource_id` (`checklistresource_id`),
@@ -321,6 +323,8 @@ CREATE TABLE `clients` (
   `client_custom_field_70` decimal(10,2) DEFAULT NULL,
   `client_billing_invoice_terms` text DEFAULT NULL,
   `client_billing_invoice_due_days` smallint(6) DEFAULT NULL,
+  `client_mapping_type` text DEFAULT NULL,
+  `client_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`client_id`),
   KEY `client_creatorid` (`client_creatorid`),
   KEY `client_categoryid` (`client_categoryid`),
@@ -343,6 +347,8 @@ CREATE TABLE `comments` (
   `comment_team_status` varchar(20) DEFAULT 'unread' COMMENT 'read|unread',
   `commentresource_type` varchar(50) NOT NULL COMMENT '[polymorph] project | ticket | task | lead',
   `commentresource_id` int(11) NOT NULL COMMENT '[polymorph] e.g project_id',
+  `comment_mapping_type` text DEFAULT NULL,
+  `comment_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`comment_id`),
   KEY `comment_creatorid` (`comment_creatorid`),
   KEY `comment_clientid` (`comment_clientid`),
@@ -407,6 +413,8 @@ CREATE TABLE `contracts` (
   `doc_publishing_scheduled_date` datetime DEFAULT NULL,
   `doc_publishing_scheduled_status` text DEFAULT NULL COMMENT 'pending|published|failed',
   `doc_publishing_scheduled_log` text DEFAULT NULL,
+  `contract_mapping_type` text DEFAULT NULL,
+  `contract_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`doc_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -472,6 +480,178 @@ CREATE TABLE `cs_events` (
   PRIMARY KEY (`cs_event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+
+DROP TABLE IF EXISTS `currencies`;
+CREATE TABLE `currencies` (
+  `currency_id` int(11) NOT NULL AUTO_INCREMENT,
+  `currency_created` datetime NOT NULL,
+  `currency_update` datetime NOT NULL,
+  `currency_code` varchar(50) NOT NULL,
+  `currency_decimal_separator` varchar(50) NOT NULL,
+  `currency_thousands_separator` varchar(50) NOT NULL,
+  `currency_symbol` varchar(50) NOT NULL,
+  `currency_symbol_position` varchar(50) NOT NULL COMMENT 'left|right',
+  PRIMARY KEY (`currency_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `currencies` (`currency_id`, `currency_created`, `currency_update`, `currency_code`, `currency_decimal_separator`, `currency_thousands_separator`, `currency_symbol`, `currency_symbol_position`) VALUES
+(1,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AED',	'.',	',',	'د.إ',	'right'),
+(2,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AFN',	'.',	',',	'؋',	'right'),
+(3,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'ALL',	',',	'&nbsp;',	'L',	'right'),
+(4,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AMD',	'.',	',',	'֏',	'right'),
+(5,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'ANG',	',',	'.',	'ƒ',	'left'),
+(6,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AOA',	',',	'&nbsp;',	'Kz',	'right'),
+(7,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'ARS',	',',	'.',	'$',	'left'),
+(8,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AUD',	'.',	',',	'A$',	'left'),
+(9,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AWG',	'.',	',',	'ƒ',	'left'),
+(10,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'AZN',	'.',	',',	'₼',	'right'),
+(11,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BAM',	',',	'.',	'KM',	'right'),
+(12,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BBD',	'.',	',',	'Bds$',	'left'),
+(13,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BDT',	'.',	',',	'৳',	'right'),
+(14,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BGN',	',',	'&nbsp;',	'лв',	'right'),
+(15,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BHD',	'.',	',',	'BD',	'right'),
+(16,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BIF',	'.',	',',	'FBu',	'right'),
+(17,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BMD',	'.',	',',	'$',	'left'),
+(18,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BND',	'.',	',',	'B$',	'left'),
+(19,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BOB',	',',	'.',	'Bs.',	'left'),
+(20,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BRL',	',',	'.',	'R$',	'left'),
+(21,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BSD',	'.',	',',	'$',	'left'),
+(22,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BTN',	'.',	',',	'Nu.',	'left'),
+(23,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BWP',	'.',	',',	'P',	'left'),
+(24,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BYN',	',',	'&nbsp;',	'Br',	'right'),
+(25,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'BZD',	'.',	',',	'BZ$',	'left'),
+(26,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CAD',	'.',	',',	'C$',	'left'),
+(27,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CDF',	'.',	',',	'FC',	'right'),
+(28,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CHF',	'.',	'\'',	'CHF',	'left'),
+(29,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CLP',	',',	'.',	'$',	'left'),
+(30,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CNY',	'.',	',',	'¥',	'left'),
+(31,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'COP',	',',	'.',	'$',	'left'),
+(32,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CRC',	',',	'.',	'₡',	'left'),
+(33,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CUC',	'.',	',',	'CUC$',	'left'),
+(34,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CUP',	'.',	',',	'₱',	'left'),
+(35,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CVE',	'$',	'&nbsp;',	'$',	'right'),
+(36,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'CZK',	',',	'&nbsp;',	'Kč',	'right'),
+(37,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'DJF',	'.',	',',	'Fdj',	'right'),
+(38,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'DKK',	',',	'.',	'kr',	'right'),
+(39,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'DOP',	'.',	',',	'RD$',	'left'),
+(40,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'DZD',	'.',	',',	'دج',	'right'),
+(41,	'2025-01-12 09:40:55',	'2025-01-12 09:40:55',	'EGP',	'.',	',',	'E£',	'left'),
+(42,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'ERN',	'.',	',',	'Nfk',	'right'),
+(43,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'ETB',	'.',	',',	'Br',	'right'),
+(44,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'EUR',	',',	'&nbsp;',	'€',	'left'),
+(45,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'FJD',	'.',	',',	'FJ$',	'left'),
+(46,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'FKP',	'.',	',',	'£',	'left'),
+(47,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GBP',	'.',	',',	'£',	'left'),
+(48,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GEL',	'.',	'&nbsp;',	'₾',	'right'),
+(49,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GHS',	'.',	',',	'₵',	'left'),
+(50,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GIP',	'.',	',',	'£',	'left'),
+(51,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GMD',	'.',	',',	'D',	'right'),
+(52,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GNF',	'.',	',',	'FG',	'right'),
+(53,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GTQ',	'.',	',',	'Q',	'left'),
+(54,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'GYD',	'.',	',',	'G$',	'left'),
+(55,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'HKD',	'.',	',',	'HK$',	'left'),
+(56,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'HNL',	'.',	',',	'L',	'left'),
+(57,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'HRK',	',',	'.',	'kn',	'right'),
+(58,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'HTG',	'.',	',',	'G',	'right'),
+(59,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'HUF',	',',	'&nbsp;',	'Ft',	'right'),
+(60,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'IDR',	',',	'.',	'Rp',	'left'),
+(61,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'ILS',	'.',	',',	'₪',	'left'),
+(62,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'INR',	'.',	',',	'₹',	'left'),
+(63,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'IQD',	'.',	',',	'ع.د',	'right'),
+(64,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'IRR',	'.',	',',	'﷼',	'right'),
+(65,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'ISK',	',',	'.',	'kr',	'right'),
+(66,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'JMD',	'.',	',',	'J$',	'left'),
+(67,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'JOD',	'.',	',',	'JD',	'right'),
+(68,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'JPY',	'.',	',',	'¥',	'left'),
+(69,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KES',	'.',	',',	'KSh',	'left'),
+(70,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KGS',	'.',	'&nbsp;',	'сом',	'right'),
+(71,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KHR',	'.',	',',	'៛',	'right'),
+(72,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KMF',	'.',	',',	'CF',	'right'),
+(73,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KPW',	'.',	',',	'₩',	'left'),
+(74,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KRW',	'.',	',',	'₩',	'left'),
+(75,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KWD',	'.',	',',	'KD',	'right'),
+(76,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KYD',	'.',	',',	'CI$',	'left'),
+(77,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'KZT',	'.',	'&nbsp;',	'₸',	'right'),
+(78,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'LAK',	'.',	',',	'₭',	'right'),
+(79,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'LBP',	'.',	',',	'L£',	'right'),
+(80,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'LKR',	'.',	',',	'₨',	'left'),
+(81,	'2025-01-12 09:41:29',	'2025-01-12 09:41:29',	'LRD',	'.',	',',	'L$',	'left'),
+(82,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'LSL',	'.',	',',	'L',	'left'),
+(83,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'LYD',	'.',	',',	'LD',	'right'),
+(84,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MAD',	'.',	',',	'MAD',	'right'),
+(85,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MDL',	'.',	',',	'L',	'right'),
+(86,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MGA',	'.',	',',	'Ar',	'right'),
+(87,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MKD',	',',	'.',	'ден',	'right'),
+(88,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MMK',	'.',	',',	'K',	'right'),
+(89,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MNT',	'.',	',',	'₮',	'right'),
+(90,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MOP',	'.',	',',	'MOP$',	'left'),
+(91,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MRU',	'.',	',',	'UM',	'right'),
+(92,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MUR',	'.',	',',	'₨',	'left'),
+(93,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MVR',	'.',	',',	'Rf',	'right'),
+(94,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MWK',	'.',	',',	'MK',	'left'),
+(95,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MXN',	'.',	',',	'$',	'left'),
+(96,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MYR',	'.',	',',	'RM',	'left'),
+(97,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'MZN',	'.',	',',	'MT',	'left'),
+(98,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NAD',	'.',	',',	'N$',	'left'),
+(99,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NGN',	'.',	',',	'₦',	'left'),
+(100,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NIO',	'.',	',',	'C$',	'left'),
+(101,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NOK',	',',	'&nbsp;',	'kr',	'right'),
+(102,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NPR',	'.',	',',	'₨',	'left'),
+(103,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'NZD',	'.',	',',	'NZ$',	'left'),
+(104,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'OMR',	'.',	',',	'OMR',	'right'),
+(105,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PAB',	'.',	',',	'B/.',	'left'),
+(106,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PEN',	'.',	',',	'S/',	'left'),
+(107,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PGK',	'.',	',',	'K',	'left'),
+(108,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PHP',	'.',	',',	'₱',	'left'),
+(109,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PKR',	'.',	',',	'₨',	'left'),
+(110,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PLN',	',',	'&nbsp;',	'zł',	'right'),
+(111,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'PYG',	'.',	',',	'₲',	'left'),
+(112,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'QAR',	'.',	',',	'QR',	'right'),
+(113,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'RON',	',',	'.',	'lei',	'right'),
+(114,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'RSD',	',',	'.',	'din.',	'right'),
+(115,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'RUB',	',',	'&nbsp;',	'₽',	'right'),
+(116,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'RWF',	'.',	',',	'FRw',	'right'),
+(117,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SAR',	'.',	',',	'SR',	'right'),
+(118,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SBD',	'.',	',',	'SI$',	'left'),
+(119,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SCR',	'.',	',',	'₨',	'left'),
+(120,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SDG',	'.',	',',	'SD',	'right'),
+(121,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SEK',	',',	'&nbsp;',	'kr',	'right'),
+(122,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SGD',	'.',	',',	'S$',	'left'),
+(123,	'2025-01-12 09:42:57',	'2025-01-12 09:42:57',	'SHP',	'.',	',',	'£',	'left'),
+(124,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SLL',	'.',	',',	'Le',	'left'),
+(125,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SOS',	'.',	',',	'Sh.So.',	'left'),
+(126,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SRD',	'.',	',',	'$',	'left'),
+(127,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SSP',	'.',	',',	'£',	'left'),
+(128,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'STN',	'.',	',',	'Db',	'left'),
+(129,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SVC',	'.',	',',	'₡',	'left'),
+(130,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SYP',	'.',	',',	'LS',	'right'),
+(131,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'SZL',	'.',	',',	'E',	'left'),
+(132,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'THB',	'.',	',',	'฿',	'left'),
+(133,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TJS',	'.',	'&nbsp;',	'SM',	'right'),
+(134,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TMT',	'.',	',',	'm',	'right'),
+(135,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TND',	'.',	',',	'DT',	'right'),
+(136,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TOP',	'.',	',',	'T$',	'left'),
+(137,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TRY',	',',	'.',	'₺',	'left'),
+(138,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TTD',	'.',	',',	'TT$',	'left'),
+(139,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TWD',	'.',	',',	'NT$',	'left'),
+(140,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'TZS',	'.',	',',	'TSh',	'left'),
+(141,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'UAH',	',',	'&nbsp;',	'₴',	'right'),
+(142,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'UGX',	'.',	',',	'USh',	'left'),
+(143,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'USD',	'.',	',',	'$',	'left'),
+(144,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'UYU',	',',	'.',	'$U',	'left'),
+(145,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'UZS',	'.',	'&nbsp;',	'сўм',	'right'),
+(146,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'VES',	',',	'.',	'Bs.S',	'left'),
+(147,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'VND',	',',	'.',	'₫',	'right'),
+(148,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'VUV',	'.',	',',	'VT',	'right'),
+(149,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'WST',	'.',	',',	'WS$',	'left'),
+(150,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'XAF',	'.',	',',	'FCFA',	'right'),
+(151,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'XCD',	'.',	',',	'EC$',	'left'),
+(152,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'XOF',	'.',	',',	'CFA',	'right'),
+(153,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'XPF',	'.',	',',	'₣',	'right'),
+(154,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'YER',	'.',	',',	'﷼',	'right'),
+(155,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'ZAR',	'.',	',',	'R',	'left'),
+(156,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'ZMW',	'.',	',',	'ZK',	'left'),
+(157,	'2025-01-12 09:48:05',	'2025-01-12 09:48:05',	'ZWL',	'.',	',',	'Z$',	'left');
 
 DROP TABLE IF EXISTS `customfields`;
 CREATE TABLE `customfields` (
@@ -1098,6 +1278,10 @@ CREATE TABLE `estimates` (
   `bill_publishing_scheduled_date` date DEFAULT NULL,
   `bill_publishing_scheduled_status` varchar(20) DEFAULT '' COMMENT 'pending|published|failed',
   `bill_publishing_scheduled_log` text DEFAULT NULL,
+  `billresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `billresource_id` int(11) DEFAULT NULL,
+  `estimate_mapping_type` text DEFAULT NULL,
+  `estimate_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`bill_estimateid`),
   KEY `bill_clientid` (`bill_clientid`),
   KEY `bill_creatorid` (`bill_creatorid`),
@@ -1108,8 +1292,8 @@ CREATE TABLE `estimates` (
   KEY `bill_viewed_by_client` (`bill_viewed_by_client`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate]';
 
-INSERT INTO `estimates` (`bill_estimateid`, `bill_uniqueid`, `bill_created`, `bill_updated`, `bill_date_sent_to_customer`, `bill_date_status_change`, `bill_clientid`, `bill_projectid`, `bill_proposalid`, `bill_contractid`, `bill_creatorid`, `bill_categoryid`, `bill_date`, `bill_expiry_date`, `bill_subtotal`, `bill_discount_type`, `bill_discount_percentage`, `bill_discount_amount`, `bill_amount_before_tax`, `bill_tax_type`, `bill_tax_total_percentage`, `bill_tax_total_amount`, `bill_adjustment_description`, `bill_adjustment_amount`, `bill_final_amount`, `bill_notes`, `bill_terms`, `bill_status`, `bill_type`, `bill_estimate_type`, `bill_visibility`, `bill_viewed_by_client`, `bill_system`, `bill_converted_to_invoice`, `bill_converted_to_invoice_invoiceid`, `estimate_automation_status`, `estimate_automation_create_project`, `estimate_automation_project_title`, `estimate_automation_project_status`, `estimate_automation_create_tasks`, `estimate_automation_project_email_client`, `estimate_automation_create_invoice`, `estimate_automation_invoice_due_date`, `estimate_automation_invoice_email_client`, `estimate_automation_copy_attachments`, `estimate_automation_log_created_project_id`, `estimate_automation_log_created_invoice_id`, `bill_publishing_type`, `bill_publishing_scheduled_date`, `bill_publishing_scheduled_status`, `bill_publishing_scheduled_log`) VALUES
-(-100,	'84612794.02318210',	'2022-05-22 11:46:15',	'2022-05-22 11:46:15',	NULL,	'2022-05-22 11:46:15',	0,	0,	NULL,	NULL,	0,	5,	'2022-05-22',	NULL,	0.00,	'none',	0.00,	0.00,	0.00,	'summary',	0.00,	0.00,	NULL,	0.00,	0.00,	NULL,	'<p>Thank you for your business. We look forward to working with you on this project.</p>',	'draft',	'estimate',	'document',	'visible',	'no',	'yes',	'no',	NULL,	'disabled',	'no',	NULL,	'in_progress',	'no',	'no',	'no',	7,	'no',	'no',	NULL,	NULL,	'instant',	NULL,	'',	NULL);
+INSERT INTO `estimates` (`bill_estimateid`, `bill_uniqueid`, `bill_created`, `bill_updated`, `bill_date_sent_to_customer`, `bill_date_status_change`, `bill_clientid`, `bill_projectid`, `bill_proposalid`, `bill_contractid`, `bill_creatorid`, `bill_categoryid`, `bill_date`, `bill_expiry_date`, `bill_subtotal`, `bill_discount_type`, `bill_discount_percentage`, `bill_discount_amount`, `bill_amount_before_tax`, `bill_tax_type`, `bill_tax_total_percentage`, `bill_tax_total_amount`, `bill_adjustment_description`, `bill_adjustment_amount`, `bill_final_amount`, `bill_notes`, `bill_terms`, `bill_status`, `bill_type`, `bill_estimate_type`, `bill_visibility`, `bill_viewed_by_client`, `bill_system`, `bill_converted_to_invoice`, `bill_converted_to_invoice_invoiceid`, `estimate_automation_status`, `estimate_automation_create_project`, `estimate_automation_project_title`, `estimate_automation_project_status`, `estimate_automation_create_tasks`, `estimate_automation_project_email_client`, `estimate_automation_create_invoice`, `estimate_automation_invoice_due_date`, `estimate_automation_invoice_email_client`, `estimate_automation_copy_attachments`, `estimate_automation_log_created_project_id`, `estimate_automation_log_created_invoice_id`, `bill_publishing_type`, `bill_publishing_scheduled_date`, `bill_publishing_scheduled_status`, `bill_publishing_scheduled_log`, `billresource_type`, `billresource_id`, `estimate_mapping_type`, `estimate_mapping_id`) VALUES
+(-100,	'84612794.02318210',	'2022-05-22 11:46:15',	'2022-05-22 11:46:15',	NULL,	'2022-05-22 11:46:15',	0,	0,	NULL,	NULL,	0,	5,	'2022-05-22',	NULL,	0.00,	'none',	0.00,	0.00,	0.00,	'summary',	0.00,	0.00,	NULL,	0.00,	0.00,	NULL,	'<p>Thank you for your business. We look forward to working with you on this project.</p>',	'draft',	'estimate',	'document',	'visible',	'no',	'yes',	'no',	NULL,	'disabled',	'no',	NULL,	'in_progress',	'no',	'no',	'no',	7,	'no',	'no',	NULL,	NULL,	'instant',	NULL,	'',	NULL,	NULL,	NULL,	NULL,	NULL);
 
 DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
@@ -1201,6 +1385,10 @@ CREATE TABLE `expenses` (
   `expense_recurring_child` varchar(5) DEFAULT 'no' COMMENT 'yes|no',
   `expense_recurring_parent_id` int(11) DEFAULT NULL COMMENT 'if it was generated from a recurring invoice, the id of parent expense',
   `expense_cron_status` varchar(20) DEFAULT 'none' COMMENT 'none|processing|completed|error  (used to prevent collisions when recurring invoiced)',
+  `expenseresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `expenseresource_id` int(11) DEFAULT NULL,
+  `expense_mapping_type` text DEFAULT NULL,
+  `expense_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`expense_id`),
   KEY `expense_clientid` (`expense_clientid`),
   KEY `expense_projectid` (`expense_projectid`),
@@ -1242,6 +1430,8 @@ CREATE TABLE `files` (
   `file_type` varchar(20) DEFAULT NULL COMMENT 'image|file',
   `file_thumbname` varchar(250) DEFAULT NULL COMMENT 'optional',
   `file_visibility_client` varchar(5) DEFAULT 'yes' COMMENT 'yes | no',
+  `file_mapping_type` text DEFAULT NULL,
+  `file_mapping_id` int(11) DEFAULT NULL,
   `fileresource_type` varchar(50) DEFAULT NULL COMMENT '[polymorph] project',
   `fileresource_id` int(11) DEFAULT NULL COMMENT '[polymorph] e.g project_id',
   PRIMARY KEY (`file_id`),
@@ -1266,7 +1456,7 @@ CREATE TABLE `file_folders` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `file_folders` (`filefolder_id`, `filefolder_created`, `filefolder_updated`, `filefolder_creatorid`, `filefolder_projectid`, `filefolder_name`, `filefolder_default`, `filefolder_system`) VALUES
-(1,	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	0,	NULL,	'Default',	'yes',	'yes');
+(1,	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	0,	NULL,	'Default',	'yes',	'yes');
 
 DROP TABLE IF EXISTS `imaplog`;
 CREATE TABLE `imaplog` (
@@ -1327,6 +1517,8 @@ CREATE TABLE `invoices` (
   `bill_recurring_child` varchar(5) DEFAULT 'no' COMMENT 'yes|no',
   `bill_recurring_parent_id` int(11) DEFAULT NULL COMMENT 'if it was generated from a recurring invoice, the id of parent invoice',
   `bill_overdue_reminder_sent` varchar(5) DEFAULT 'no' COMMENT 'yes | no',
+  `bill_overdue_reminder_last_sent` datetime DEFAULT NULL,
+  `bill_overdue_reminder_counter` int(11) DEFAULT 0,
   `bill_invoice_type` varchar(30) DEFAULT 'onetime' COMMENT 'onetime | subscription',
   `bill_type` varchar(20) DEFAULT 'invoice' COMMENT 'invoice|estimate',
   `bill_visibility` varchar(20) DEFAULT 'visible' COMMENT 'visible|hidden (used to prevent invoices that are still being cloned from showing in invoices list)',
@@ -1338,6 +1530,10 @@ CREATE TABLE `invoices` (
   `bill_publishing_scheduled_date` date DEFAULT NULL,
   `bill_publishing_scheduled_status` varchar(20) DEFAULT '' COMMENT 'pending|published|failed',
   `bill_publishing_scheduled_log` text DEFAULT NULL,
+  `billresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `billresource_id` int(11) DEFAULT NULL,
+  `invoice_mapping_type` text DEFAULT NULL,
+  `invoice_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`bill_invoiceid`),
   KEY `invoice_clientid` (`bill_clientid`),
   KEY `invoice_projectid` (`bill_projectid`),
@@ -1371,6 +1567,10 @@ CREATE TABLE `items` (
   `item_dimensions_width` decimal(15,2) DEFAULT NULL,
   `item_notes_estimatation` text DEFAULT NULL,
   `item_notes_production` text DEFAULT NULL,
+  `itemresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `itemresource_id` int(11) DEFAULT NULL,
+  `item_mapping_type` text DEFAULT NULL,
+  `item_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`item_id`),
   KEY `item_categoryid` (`item_categoryid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate]';
@@ -1408,7 +1608,7 @@ CREATE TABLE `kb_categories` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate]';
 
 INSERT INTO `kb_categories` (`kbcategory_id`, `kbcategory_created`, `kbcategory_updated`, `kbcategory_creatorid`, `kbcategory_title`, `kbcategory_description`, `kbcategory_position`, `kbcategory_visibility`, `kbcategory_slug`, `kbcategory_icon`, `kbcategory_type`, `kbcategory_system_default`) VALUES
-(1,	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	0,	'Frequently Asked Questions',	'Answers to some of the most frequently asked questions',	1,	'everyone',	'1-frequently-asked-questions',	'sl-icon-call-out',	'text',	'yes');
+(1,	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	0,	'Frequently Asked Questions',	'Answers to some of the most frequently asked questions',	1,	'everyone',	'1-frequently-asked-questions',	'sl-icon-call-out',	'text',	'yes');
 
 DROP TABLE IF EXISTS `knowledgebase`;
 CREATE TABLE `knowledgebase` (
@@ -1619,6 +1819,10 @@ CREATE TABLE `leads` (
   `lead_custom_field_148` decimal(10,2) DEFAULT NULL,
   `lead_custom_field_149` decimal(10,2) DEFAULT NULL,
   `lead_custom_field_150` decimal(10,2) DEFAULT NULL,
+  `leadresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `leadresource_id` int(11) DEFAULT NULL,
+  `lead_mapping_type` text DEFAULT NULL,
+  `lead_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`lead_id`),
   KEY `lead_creatorid` (`lead_creatorid`),
   KEY `lead_categoryid` (`lead_categoryid`),
@@ -1668,12 +1872,26 @@ CREATE TABLE `leads_status` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[do not truncate]  expected to have 2 system default statuses (ID: 1 & 2) ''new'' & ''converted'' statuses ';
 
 INSERT INTO `leads_status` (`leadstatus_id`, `leadstatus_created`, `leadstatus_creatorid`, `leadstatus_updated`, `leadstatus_title`, `leadstatus_position`, `leadstatus_color`, `leadstatus_system_default`) VALUES
-(1,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'New',	1,	'default',	'yes'),
-(2,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'Converted',	6,	'success',	'yes'),
-(3,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'Qualified',	3,	'info',	'no'),
-(4,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'Proposal Sent',	5,	'lime',	'no'),
-(5,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'Contacted',	2,	'warning',	'no'),
-(7,	'2025-01-09 15:48:25',	0,	'2025-01-09 15:48:25',	'Disqualified',	4,	'danger',	'no');
+(1,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'New',	1,	'default',	'yes'),
+(2,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'Converted',	6,	'success',	'yes'),
+(3,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'Qualified',	3,	'info',	'no'),
+(4,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'Proposal Sent',	5,	'lime',	'no'),
+(5,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'Contacted',	2,	'warning',	'no'),
+(7,	'2025-08-02 14:34:44',	0,	'2025-08-02 14:34:44',	'Disqualified',	4,	'danger',	'no');
+
+DROP TABLE IF EXISTS `lead_logs`;
+CREATE TABLE `lead_logs` (
+  `lead_log_id` int(11) NOT NULL AUTO_INCREMENT,
+  `lead_log_created` datetime NOT NULL,
+  `lead_log_updated` datetime NOT NULL,
+  `lead_log_uniqueid` text NOT NULL,
+  `lead_log_creatorid` int(11) NOT NULL,
+  `lead_log_leadid` int(11) NOT NULL,
+  `lead_log_text` text NOT NULL,
+  `lead_log_type` varchar(20) NOT NULL DEFAULT 'general' COMMENT 'call|meetings|email|general',
+  PRIMARY KEY (`lead_log_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 DROP TABLE IF EXISTS `lineitems`;
 CREATE TABLE `lineitems` (
@@ -1745,6 +1963,8 @@ CREATE TABLE `messages` (
   `message_file_type` varchar(50) DEFAULT NULL COMMENT 'file | image',
   `message_type` varchar(150) DEFAULT 'file' COMMENT 'text | file',
   `message_status` varchar(150) DEFAULT 'unread' COMMENT 'read | unread',
+  `message_mapping_type` text DEFAULT NULL,
+  `message_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`message_id`),
   KEY `message_status` (`message_status`),
   KEY `message_creatorid` (`message_creatorid`),
@@ -1836,6 +2056,8 @@ CREATE TABLE `notes` (
   `note_visibility` varchar(30) DEFAULT 'public' COMMENT 'private|public',
   `noteresource_type` varchar(50) DEFAULT NULL COMMENT '[polymorph] client | project | user | lead',
   `noteresource_id` int(11) DEFAULT NULL COMMENT '[polymorph] e.g project_id',
+  `note_mapping_type` text DEFAULT NULL,
+  `note_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`note_id`),
   KEY `note_creatorid` (`note_creatorid`),
   KEY `noteresource_type` (`noteresource_type`),
@@ -1859,6 +2081,10 @@ CREATE TABLE `payments` (
   `payment_gateway` varchar(100) DEFAULT NULL COMMENT 'paypal | stripe | cash | bank',
   `payment_notes` text DEFAULT NULL,
   `payment_type` varchar(50) DEFAULT 'invoice' COMMENT 'invoice|subscription',
+  `paymentresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `paymentresource_id` int(11) DEFAULT NULL,
+  `payment_mapping_type` text DEFAULT NULL,
+  `payment_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`payment_id`),
   KEY `payment_creatorid` (`payment_creatorid`),
   KEY `payment_invoiceid` (`payment_invoiceid`),
@@ -1955,6 +2181,7 @@ CREATE TABLE `projects` (
   `project_date_start` date DEFAULT NULL,
   `project_date_due` date DEFAULT NULL,
   `project_description` text DEFAULT NULL,
+  `project_date_status_changed` date DEFAULT NULL,
   `project_status` varchar(50) DEFAULT 'not_started' COMMENT 'not_started | in_progress | on_hold | cancelled | completed',
   `project_active_state` varchar(10) DEFAULT 'active' COMMENT 'active|archive',
   `project_progress` tinyint(3) DEFAULT 0,
@@ -1968,6 +2195,7 @@ CREATE TABLE `projects` (
   `clientperm_tasks_create` varchar(40) DEFAULT 'yes' COMMENT 'yes | no',
   `clientperm_timesheets_view` varchar(40) DEFAULT 'yes' COMMENT 'yes | no',
   `clientperm_expenses_view` varchar(40) DEFAULT 'no' COMMENT 'yes | no',
+  `clientperm_checklists` varchar(40) DEFAULT 'yes' COMMENT 'yes|no',
   `assignedperm_milestone_manage` varchar(40) DEFAULT 'yes' COMMENT 'yes | no',
   `assignedperm_tasks_collaborate` varchar(40) DEFAULT NULL COMMENT 'yes | no',
   `project_visibility` varchar(40) DEFAULT 'visible' COMMENT 'visible|hidden (used to prevent projects that are still being cloned from showing in projects list)',
@@ -1978,6 +2206,8 @@ CREATE TABLE `projects` (
   `project_calendar_reminder_period` text DEFAULT NULL COMMENT 'optional - hours | days | weeks | months | years',
   `project_calendar_reminder_sent` text DEFAULT NULL COMMENT 'yes|no',
   `project_calendar_reminder_date_sent` datetime DEFAULT NULL,
+  `projectresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `projectresource_id` int(11) DEFAULT NULL COMMENT 'optional references',
   `project_custom_field_1` tinytext DEFAULT NULL,
   `project_custom_field_2` tinytext DEFAULT NULL,
   `project_custom_field_3` tinytext DEFAULT NULL,
@@ -2159,6 +2389,8 @@ CREATE TABLE `proposals` (
   `doc_publishing_scheduled_date` datetime DEFAULT NULL,
   `doc_publishing_scheduled_status` text DEFAULT NULL COMMENT 'pending|published|failed',
   `doc_publishing_scheduled_log` text DEFAULT NULL,
+  `proposal_mapping_type` text DEFAULT NULL,
+  `proposal_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`doc_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -2197,6 +2429,8 @@ CREATE TABLE `reminders` (
   `reminder_sent` varchar(10) DEFAULT 'no' COMMENT 'yes|no',
   `reminderresource_type` varchar(50) DEFAULT NULL COMMENT 'project|client|estimate|lead|task|invoice|ticket',
   `reminderresource_id` int(11) DEFAULT NULL COMMENT 'linked resoucre id',
+  `reminder_mapping_type` text DEFAULT NULL,
+  `reminder_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`reminder_id`),
   KEY `reminderresource_type` (`reminderresource_type`),
   KEY `reminderresource_id` (`reminderresource_id`),
@@ -2259,9 +2493,9 @@ CREATE TABLE `roles` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[do not truncate] [roles 1,2,3 required] [role 1 = admin] [role 2 = client] [role 3 = staff]';
 
 INSERT INTO `roles` (`role_id`, `role_created`, `role_updated`, `role_system`, `role_type`, `role_name`, `role_clients`, `role_contacts`, `role_contracts`, `role_invoices`, `role_estimates`, `role_proposals`, `role_payments`, `role_items`, `role_tasks`, `role_tasks_scope`, `role_projects`, `role_projects_scope`, `role_projects_billing`, `role_leads`, `role_leads_scope`, `role_expenses`, `role_expenses_scope`, `role_timesheets`, `role_timesheets_scope`, `role_team`, `role_team_scope`, `role_tickets`, `role_knowledgebase`, `role_manage_knowledgebase_categories`, `role_assign_projects`, `role_assign_leads`, `role_assign_tasks`, `role_set_project_permissions`, `role_subscriptions`, `role_templates_projects`, `role_templates_contracts`, `role_templates_proposals`, `role_content_import`, `role_content_export`, `role_module_cs_affiliate`, `role_homepage`, `role_messages`, `role_reports`, `role_canned`, `role_canned_scope`, `modules`) VALUES
-(1,	'2018-09-07 14:49:41',	'2025-01-09 09:16:49',	'yes',	'team',	'Administrator',	3,	4,	3,	3,	3,	4,	3,	3,	3,	'global',	3,	'global',	'2',	3,	'global',	3,	'global',	3,	'global',	3,	'global',	3,	3,	'yes',	'yes',	'yes',	'yes',	'yes',	'3',	'3',	'3',	'3',	'yes',	'yes',	'3',	'dashboard',	'yes',	'yes',	'yes',	'global',	NULL),
-(3,	'2018-09-07 14:49:41',	'2025-01-09 09:16:49',	'no',	'team',	'Staff',	1,	1,	0,	0,	0,	3,	0,	0,	3,	'own',	1,	'own',	'0',	3,	'own',	3,	'own',	2,	'own',	1,	'global',	3,	1,	'no',	'no',	'no',	'no',	'no',	'0',	'1',	'0',	'1',	'yes',	'yes',	'3',	'dashboard',	'yes',	'no',	'no',	'global',	NULL),
-(2,	'2018-09-07 14:49:41',	'2025-01-09 09:16:49',	'yes',	'client',	'Client',	0,	3,	1,	1,	1,	0,	1,	0,	1,	'own',	1,	'own',	'0',	0,	'own',	0,	'own',	1,	'own',	1,	'global',	2,	1,	'no',	'no',	'no',	'no',	'no',	'1',	'0',	'0',	'0',	'no',	'no',	'3',	'dashboard',	'yes',	'no',	'yes',	'own',	NULL);
+(1,	'2018-09-07 14:49:41',	'2025-06-25 18:25:38',	'yes',	'team',	'Administrator',	3,	4,	3,	3,	3,	4,	3,	3,	3,	'global',	3,	'global',	'2',	3,	'global',	3,	'global',	3,	'global',	3,	'global',	3,	3,	'yes',	'yes',	'yes',	'yes',	'yes',	'3',	'3',	'3',	'3',	'yes',	'yes',	'3',	'dashboard',	'yes',	'yes',	'yes',	'global',	'[{\"module_name\":\"Inventory\",\"module_alias\":\"Inventory and Warehouse Management\",\"module_permission\":\"manage\"}]'),
+(3,	'2018-09-07 14:49:41',	'2025-06-25 18:26:24',	'no',	'team',	'Staff',	1,	1,	0,	0,	0,	3,	0,	0,	3,	'own',	1,	'own',	'0',	3,	'own',	3,	'own',	2,	'own',	1,	'global',	3,	1,	'no',	'no',	'no',	'no',	'no',	'0',	'1',	'0',	'1',	'yes',	'yes',	'3',	'dashboard',	'yes',	'no',	'no',	'global',	'[{\"module_name\":\"Inventory\",\"module_alias\":\"Inventory and Warehouse Management\",\"module_permission\":\"manage\"}]'),
+(2,	'2018-09-07 14:49:41',	'2025-06-25 18:25:38',	'yes',	'client',	'Client',	0,	3,	1,	1,	1,	0,	1,	0,	1,	'own',	1,	'own',	'0',	0,	'own',	0,	'own',	1,	'own',	1,	'global',	2,	1,	'no',	'no',	'no',	'no',	'no',	'1',	'0',	'0',	'0',	'no',	'no',	'3',	'dashboard',	'yes',	'no',	'yes',	'own',	'[{\"module_name\":\"Inventory\",\"module_alias\":\"Inventory and Warehouse Management\",\"module_permission\":\"none\"}]');
 
 DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE `sessions` (
@@ -2272,7 +2506,8 @@ CREATE TABLE `sessions` (
   `payload` text NOT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL,
-  `last_activity` int(11) NOT NULL
+  `last_activity` int(11) NOT NULL,
+  `json_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'data that can be used by other modules' CHECK (json_valid(`json_data`))
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate]';
 
 
@@ -2426,8 +2661,10 @@ CREATE TABLE `settings` (
   `settings_projects_clientperm_expenses_view` text DEFAULT NULL COMMENT 'yes|no',
   `settings_projects_clientperm_milestones_view` text DEFAULT NULL COMMENT 'yes|no',
   `settings_projects_clientperm_assigned_view` text DEFAULT NULL COMMENT 'yes|no',
+  `settings_projects_clientperm_checklists` text DEFAULT NULL COMMENT 'none|view|participate|manage',
   `settings_projects_assignedperm_milestone_manage` text DEFAULT NULL COMMENT 'yes|no',
   `settings_projects_assignedperm_tasks_collaborate` text DEFAULT NULL COMMENT 'yes|no',
+  `settings_projects_assignedperm_manage_checklists` text DEFAULT NULL,
   `settings_projects_events_show_task_status_change` text DEFAULT NULL COMMENT 'yes|no',
   `settings_stripe_secret_key` text DEFAULT NULL,
   `settings_stripe_public_key` text DEFAULT NULL,
@@ -2473,8 +2710,8 @@ CREATE TABLE `settings` (
   PRIMARY KEY (`settings_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`settings_id`, `settings_created`, `settings_updated`, `settings_type`, `settings_saas_tenant_id`, `settings_saas_status`, `settings_saas_package_id`, `settings_saas_onetimelogin_key`, `settings_saas_onetimelogin_destination`, `settings_saas_package_limits_clients`, `settings_saas_package_limits_team`, `settings_saas_package_limits_projects`, `settings_saas_notification_uniqueid`, `settings_saas_notification_body`, `settings_saas_notification_read`, `settings_saas_notification_action`, `settings_saas_notification_action_url`, `settings_saas_email_server_type`, `settings_saas_email_forwarding_address`, `settings_saas_email_local_address`, `settings_installation_date`, `settings_version`, `settings_purchase_code`, `settings_company_name`, `settings_company_address_line_1`, `settings_company_state`, `settings_company_city`, `settings_company_zipcode`, `settings_company_country`, `settings_company_telephone`, `settings_company_customfield_1`, `settings_company_customfield_2`, `settings_company_customfield_3`, `settings_company_customfield_4`, `settings_clients_registration`, `settings_clients_shipping_address`, `settings_clients_disable_email_delivery`, `settings_clients_app_login`, `settings_customfields_display_leads`, `settings_customfields_display_clients`, `settings_customfields_display_projects`, `settings_customfields_display_tasks`, `settings_customfields_display_tickets`, `settings_email_general_variables`, `settings_email_from_address`, `settings_email_from_name`, `settings_email_server_type`, `settings_email_smtp_host`, `settings_email_smtp_port`, `settings_email_smtp_username`, `settings_email_smtp_password`, `settings_email_smtp_encryption`, `settings_estimates_default_terms_conditions`, `settings_estimates_prefix`, `settings_estimates_show_view_status`, `settings_modules_projects`, `settings_modules_tasks`, `settings_modules_invoices`, `settings_modules_payments`, `settings_modules_leads`, `settings_modules_knowledgebase`, `settings_modules_estimates`, `settings_modules_expenses`, `settings_modules_notes`, `settings_modules_subscriptions`, `settings_modules_contracts`, `settings_modules_proposals`, `settings_modules_tickets`, `settings_modules_timetracking`, `settings_modules_reminders`, `settings_modules_spaces`, `settings_modules_messages`, `settings_modules_reports`, `settings_modules_calendar`, `settings_files_max_size_mb`, `settings_knowledgebase_article_ordering`, `settings_knowledgebase_allow_guest_viewing`, `settings_knowledgebase_external_pre_body`, `settings_knowledgebase_external_post_body`, `settings_knowledgebase_external_header`, `settings_system_timezone`, `settings_system_date_format`, `settings_system_datepicker_format`, `settings_system_default_leftmenu`, `settings_system_default_statspanel`, `settings_system_pagination_limits`, `settings_system_kanban_pagination_limits`, `settings_system_currency_code`, `settings_system_currency_symbol`, `settings_system_currency_position`, `settings_system_currency_hide_decimal`, `settings_system_decimal_separator`, `settings_system_thousand_separator`, `settings_system_close_modals_body_click`, `settings_system_language_default`, `settings_system_language_allow_users_to_change`, `settings_system_logo_large_name`, `settings_system_logo_small_name`, `settings_system_logo_versioning`, `settings_system_session_login_popup`, `settings_system_javascript_versioning`, `settings_system_exporting_strip_html`, `settings_tags_allow_users_create`, `settings_leads_allow_private`, `settings_leads_allow_new_sources`, `settings_leads_kanban_value`, `settings_leads_kanban_date_created`, `settings_leads_kanban_category`, `settings_leads_kanban_date_contacted`, `settings_leads_kanban_telephone`, `settings_leads_kanban_source`, `settings_leads_kanban_email`, `settings_leads_kanban_tags`, `settings_leads_kanban_reminder`, `settings_tasks_client_visibility`, `settings_tasks_billable`, `settings_tasks_kanban_date_created`, `settings_tasks_kanban_date_due`, `settings_tasks_kanban_date_start`, `settings_tasks_kanban_priority`, `settings_tasks_kanban_milestone`, `settings_tasks_kanban_client_visibility`, `settings_tasks_kanban_project_title`, `settings_tasks_kanban_client_name`, `settings_tasks_kanban_tags`, `settings_tasks_kanban_reminder`, `settings_tasks_send_overdue_reminder`, `settings_invoices_prefix`, `settings_invoices_recurring_grace_period`, `settings_invoices_default_terms_conditions`, `settings_invoices_show_view_status`, `settings_invoices_show_project_on_invoice`, `settings_projects_cover_images`, `settings_projects_permissions_basis`, `settings_projects_categories_main_menu`, `settings_projects_default_hourly_rate`, `settings_projects_allow_setting_permission_on_project_creation`, `settings_projects_clientperm_files_view`, `settings_projects_clientperm_files_upload`, `settings_projects_clientperm_comments_view`, `settings_projects_clientperm_comments_post`, `settings_projects_clientperm_tasks_view`, `settings_projects_clientperm_tasks_collaborate`, `settings_projects_clientperm_tasks_create`, `settings_projects_clientperm_timesheets_view`, `settings_projects_clientperm_expenses_view`, `settings_projects_clientperm_milestones_view`, `settings_projects_clientperm_assigned_view`, `settings_projects_assignedperm_milestone_manage`, `settings_projects_assignedperm_tasks_collaborate`, `settings_projects_events_show_task_status_change`, `settings_stripe_secret_key`, `settings_stripe_public_key`, `settings_stripe_webhooks_key`, `settings_stripe_default_subscription_plan_id`, `settings_stripe_currency`, `settings_stripe_display_name`, `settings_stripe_status`, `settings_subscriptions_prefix`, `settings_paypal_email`, `settings_paypal_currency`, `settings_paypal_display_name`, `settings_paypal_mode`, `settings_paypal_status`, `settings_mollie_live_api_key`, `settings_mollie_test_api_key`, `settings_mollie_display_name`, `settings_mollie_mode`, `settings_mollie_currency`, `settings_mollie_status`, `settings_bank_details`, `settings_bank_display_name`, `settings_bank_status`, `settings_razorpay_keyid`, `settings_razorpay_secretkey`, `settings_razorpay_currency`, `settings_razorpay_display_name`, `settings_razorpay_status`, `settings_completed_check_email`, `settings_expenses_billable_by_default`, `settings_tickets_edit_subject`, `settings_tickets_edit_body`, `settings_theme_name`, `settings_theme_head`, `settings_theme_body`, `settings_track_thankyou_session_id`, `settings_proposals_prefix`, `settings_proposals_show_view_status`, `settings_contracts_prefix`, `settings_contracts_show_view_status`, `settings_cronjob_has_run`, `settings_cronjob_last_run`) VALUES
-(1,	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	'saas',	0,	'',	0,	'',	NULL,	0,	0,	0,	'',	'',	'',	'',	'',	'local',	'',	'',	'2025-01-09 15:48:25',	'2.8',	'',	'ABC Inc',	'10 Redcamp Road',	'Milehill',	'Kent',	'ZE12 8QT',	'United Kingdom',	'012 345 6789',	'',	'',	'',	'',	'enabled',	'enabled',	'disabled',	'enabled',	'toggled',	'toggled',	'toggled',	'toggled',	'toggled',	'{our_company_name}, {todays_date}, {email_signature}, {email_footer}, {dashboard_url}',	'info@example.com',	'ABC Inc',	'sendmail',	'',	'',	'',	'',	'tls',	'<p>Thank you for your business. We look forward to working with you on this project.</p>',	'EST-',	'yes',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'disabled',	'enabled',	'enabled',	'enabled',	5000,	'name-asc',	'no',	NULL,	NULL,	NULL,	'Europe/Amsterdam',	'm-d-Y',	'mm-dd-yyyy',	'collapsed',	'collapsed',	35,	35,	'USD',	'$',	'left',	'no',	'fullstop',	'comma',	'no',	'english',	'yes',	'logo-tenant.png',	'logo-tenant-small.png',	'2025-01-09 15:48:25',	'enabled',	'2025-01-09',	'yes',	'yes',	'yes',	'yes',	'show',	'show',	'hide',	'show',	'show',	'hide',	'show',	'',	'',	'visible',	'billable',	'show',	'show',	'hide',	'show',	'hide',	'hide',	'show',	'show',	'',	'',	'yes',	'INV-',	3,	'<p>Thank you for your business.</p>',	'no',	'no',	'enabled',	'user_roles',	'no',	NULL,	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'no',	'yes',	'yes',	'yes',	'',	'',	'',	NULL,	'USD',	'Credit Card',	'disabled',	'SUB-',	'info@example.com',	'USD',	'Paypal',	'sandbox',	'disabled',	'',	'',	'Mollie',	'sandbox',	'USD',	'disabled',	'<p><strong>This is just an example:</strong></p>\r\n<p><strong>Bank Name:</strong>&nbsp;ABCD</p>\r\n<p><strong>Account Name:</strong>&nbsp;ABCD</p>\r\n<p><strong>Account Number:</strong>&nbsp;ABCD</p>',	'Bank Transfer',	'enabled',	'',	'',	'USD',	'RazorPay',	'disabled',	'yes',	'yes',	'yes',	'yes',	'default',	NULL,	NULL,	'',	'PROP-',	'yes',	'CO-',	'yes',	'no',	'0000-00-00 00:00:00');
+INSERT INTO `settings` (`settings_id`, `settings_created`, `settings_updated`, `settings_type`, `settings_saas_tenant_id`, `settings_saas_status`, `settings_saas_package_id`, `settings_saas_onetimelogin_key`, `settings_saas_onetimelogin_destination`, `settings_saas_package_limits_clients`, `settings_saas_package_limits_team`, `settings_saas_package_limits_projects`, `settings_saas_notification_uniqueid`, `settings_saas_notification_body`, `settings_saas_notification_read`, `settings_saas_notification_action`, `settings_saas_notification_action_url`, `settings_saas_email_server_type`, `settings_saas_email_forwarding_address`, `settings_saas_email_local_address`, `settings_installation_date`, `settings_version`, `settings_purchase_code`, `settings_company_name`, `settings_company_address_line_1`, `settings_company_state`, `settings_company_city`, `settings_company_zipcode`, `settings_company_country`, `settings_company_telephone`, `settings_company_customfield_1`, `settings_company_customfield_2`, `settings_company_customfield_3`, `settings_company_customfield_4`, `settings_clients_registration`, `settings_clients_shipping_address`, `settings_clients_disable_email_delivery`, `settings_clients_app_login`, `settings_customfields_display_leads`, `settings_customfields_display_clients`, `settings_customfields_display_projects`, `settings_customfields_display_tasks`, `settings_customfields_display_tickets`, `settings_email_general_variables`, `settings_email_from_address`, `settings_email_from_name`, `settings_email_server_type`, `settings_email_smtp_host`, `settings_email_smtp_port`, `settings_email_smtp_username`, `settings_email_smtp_password`, `settings_email_smtp_encryption`, `settings_estimates_default_terms_conditions`, `settings_estimates_prefix`, `settings_estimates_show_view_status`, `settings_modules_projects`, `settings_modules_tasks`, `settings_modules_invoices`, `settings_modules_payments`, `settings_modules_leads`, `settings_modules_knowledgebase`, `settings_modules_estimates`, `settings_modules_expenses`, `settings_modules_notes`, `settings_modules_subscriptions`, `settings_modules_contracts`, `settings_modules_proposals`, `settings_modules_tickets`, `settings_modules_timetracking`, `settings_modules_reminders`, `settings_modules_spaces`, `settings_modules_messages`, `settings_modules_reports`, `settings_modules_calendar`, `settings_files_max_size_mb`, `settings_knowledgebase_article_ordering`, `settings_knowledgebase_allow_guest_viewing`, `settings_knowledgebase_external_pre_body`, `settings_knowledgebase_external_post_body`, `settings_knowledgebase_external_header`, `settings_system_timezone`, `settings_system_date_format`, `settings_system_datepicker_format`, `settings_system_default_leftmenu`, `settings_system_default_statspanel`, `settings_system_pagination_limits`, `settings_system_kanban_pagination_limits`, `settings_system_currency_code`, `settings_system_currency_symbol`, `settings_system_currency_position`, `settings_system_currency_hide_decimal`, `settings_system_decimal_separator`, `settings_system_thousand_separator`, `settings_system_close_modals_body_click`, `settings_system_language_default`, `settings_system_language_allow_users_to_change`, `settings_system_logo_large_name`, `settings_system_logo_small_name`, `settings_system_logo_versioning`, `settings_system_session_login_popup`, `settings_system_javascript_versioning`, `settings_system_exporting_strip_html`, `settings_tags_allow_users_create`, `settings_leads_allow_private`, `settings_leads_allow_new_sources`, `settings_leads_kanban_value`, `settings_leads_kanban_date_created`, `settings_leads_kanban_category`, `settings_leads_kanban_date_contacted`, `settings_leads_kanban_telephone`, `settings_leads_kanban_source`, `settings_leads_kanban_email`, `settings_leads_kanban_tags`, `settings_leads_kanban_reminder`, `settings_tasks_client_visibility`, `settings_tasks_billable`, `settings_tasks_kanban_date_created`, `settings_tasks_kanban_date_due`, `settings_tasks_kanban_date_start`, `settings_tasks_kanban_priority`, `settings_tasks_kanban_milestone`, `settings_tasks_kanban_client_visibility`, `settings_tasks_kanban_project_title`, `settings_tasks_kanban_client_name`, `settings_tasks_kanban_tags`, `settings_tasks_kanban_reminder`, `settings_tasks_send_overdue_reminder`, `settings_invoices_prefix`, `settings_invoices_recurring_grace_period`, `settings_invoices_default_terms_conditions`, `settings_invoices_show_view_status`, `settings_invoices_show_project_on_invoice`, `settings_projects_cover_images`, `settings_projects_permissions_basis`, `settings_projects_categories_main_menu`, `settings_projects_default_hourly_rate`, `settings_projects_allow_setting_permission_on_project_creation`, `settings_projects_clientperm_files_view`, `settings_projects_clientperm_files_upload`, `settings_projects_clientperm_comments_view`, `settings_projects_clientperm_comments_post`, `settings_projects_clientperm_tasks_view`, `settings_projects_clientperm_tasks_collaborate`, `settings_projects_clientperm_tasks_create`, `settings_projects_clientperm_timesheets_view`, `settings_projects_clientperm_expenses_view`, `settings_projects_clientperm_milestones_view`, `settings_projects_clientperm_assigned_view`, `settings_projects_clientperm_checklists`, `settings_projects_assignedperm_milestone_manage`, `settings_projects_assignedperm_tasks_collaborate`, `settings_projects_assignedperm_manage_checklists`, `settings_projects_events_show_task_status_change`, `settings_stripe_secret_key`, `settings_stripe_public_key`, `settings_stripe_webhooks_key`, `settings_stripe_default_subscription_plan_id`, `settings_stripe_currency`, `settings_stripe_display_name`, `settings_stripe_status`, `settings_subscriptions_prefix`, `settings_paypal_email`, `settings_paypal_currency`, `settings_paypal_display_name`, `settings_paypal_mode`, `settings_paypal_status`, `settings_mollie_live_api_key`, `settings_mollie_test_api_key`, `settings_mollie_display_name`, `settings_mollie_mode`, `settings_mollie_currency`, `settings_mollie_status`, `settings_bank_details`, `settings_bank_display_name`, `settings_bank_status`, `settings_razorpay_keyid`, `settings_razorpay_secretkey`, `settings_razorpay_currency`, `settings_razorpay_display_name`, `settings_razorpay_status`, `settings_completed_check_email`, `settings_expenses_billable_by_default`, `settings_tickets_edit_subject`, `settings_tickets_edit_body`, `settings_theme_name`, `settings_theme_head`, `settings_theme_body`, `settings_track_thankyou_session_id`, `settings_proposals_prefix`, `settings_proposals_show_view_status`, `settings_contracts_prefix`, `settings_contracts_show_view_status`, `settings_cronjob_has_run`, `settings_cronjob_last_run`) VALUES
+(1,	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	'saas',	NULL,	'',	0,	'',	'',	0,	0,	0,	'',	'',	'',	'',	'',	'',	'',	'',	'2025-08-02 14:34:44',	'3.0',	NULL,	'ABC Inc',	'10 Redcamp Road',	'Milehill',	'Kent',	'ZE12 8QT',	'United Kingdom',	'012 345 6789',	'',	'',	'',	'',	'enabled',	'enabled',	'disabled',	'enabled',	'toggled',	'toggled',	'toggled',	'toggled',	'toggled',	'{our_company_name}, {todays_date}, {email_signature}, {email_footer}, {dashboard_url}',	'info@example.com',	'ABC Inc',	'sendmail',	'',	'',	'',	'',	'tls',	'<p>Thank you for your business. We look forward to working with you on this project.</p>',	'EST-',	'yes',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'disabled',	'enabled',	'enabled',	'enabled',	5000,	'name-asc',	'no',	NULL,	NULL,	NULL,	'Europe/Amsterdam',	'm-d-Y',	'mm-dd-yyyy',	'collapsed',	'collapsed',	35,	35,	'USD',	'$',	'left',	'no',	'fullstop',	'comma',	'no',	'english',	'yes',	'logo-tenant.png',	'logo-tenant-small.png',	'2025-08-02 14:34:44',	'enabled',	'2025-08-02',	'yes',	'yes',	'yes',	'yes',	'show',	'show',	'hide',	'show',	'show',	'hide',	'show',	'',	'',	'visible',	'billable',	'show',	'show',	'hide',	'show',	'hide',	'hide',	'show',	'show',	'',	'',	'yes',	'INV-',	3,	'<p>Thank you for your business.</p>',	'no',	'no',	'enabled',	'user_roles',	'no',	NULL,	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'yes',	'no',	'participate',	'yes',	'yes',	'yes',	'yes',	'',	'',	'',	NULL,	'USD',	'Credit Card',	'disabled',	'SUB-',	'info@example.com',	'USD',	'Paypal',	'sandbox',	'disabled',	'',	'',	'Mollie',	'sandbox',	'USD',	'disabled',	'<p><strong>This is just an example:</strong></p>\r\n<p><strong>Bank Name:</strong>&nbsp;ABCD</p>\r\n<p><strong>Account Name:</strong>&nbsp;ABCD</p>\r\n<p><strong>Account Number:</strong>&nbsp;ABCD</p>',	'Bank Transfer',	'enabled',	'',	'',	'USD',	'RazorPay',	'disabled',	'yes',	'yes',	'yes',	'yes',	'default',	NULL,	NULL,	'',	'PROP-',	'yes',	'CO-',	'yes',	'no',	'0000-00-00 00:00:00');
 
 DROP TABLE IF EXISTS `settings2`;
 CREATE TABLE `settings2` (
@@ -2509,6 +2746,13 @@ CREATE TABLE `settings2` (
   `settings2_extras_dimensions_billing` varchar(10) DEFAULT 'disabled' COMMENT 'enabled|disabled',
   `settings2_extras_dimensions_default_unit` varchar(30) DEFAULT 'm2',
   `settings2_extras_dimensions_show_measurements` varchar(10) DEFAULT 'no' COMMENT 'show on the pd,web etc',
+  `settings2_importing_leads_duplicates_name` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_leads_duplicates_email` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_leads_duplicates_telephone` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_leads_duplicates_company` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_clients_duplicates_email` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_clients_duplicates_telephone` text DEFAULT NULL COMMENT 'yes|no',
+  `settings2_importing_clients_duplicates_company` text DEFAULT NULL COMMENT 'yes|no',
   `settings2_projects_automation_default_status` varchar(10) DEFAULT 'disabled' COMMENT 'disabled|enabled',
   `settings2_projects_automation_create_invoices` varchar(10) DEFAULT 'no' COMMENT 'yes|no',
   `settings2_projects_automation_convert_estimates_to_invoices` varchar(10) DEFAULT 'no' COMMENT 'yes|no',
@@ -2563,6 +2807,7 @@ CREATE TABLE `settings2` (
   `settings2_spaces_features_reminders` varchar(10) DEFAULT 'enabled' COMMENT 'enabled|disabled',
   `settings2_tickets_replying_interface` varchar(10) DEFAULT 'popup' COMMENT 'popup|inline',
   `settings2_tickets_archive_button` varchar(10) DEFAULT 'yes' COMMENT 'yes|no',
+  `settings2_timesheets_show_recorded_by` text DEFAULT NULL COMMENT 'yes|no',
   `settings2_projects_cover_images_show_on_project` varchar(10) DEFAULT 'no' COMMENT 'yes|no',
   `settings2_onboarding_status` varchar(10) DEFAULT 'disabled' COMMENT 'enabled|disabled',
   `settings2_onboarding_content` text DEFAULT NULL,
@@ -2574,8 +2819,21 @@ CREATE TABLE `settings2` (
   PRIMARY KEY (`settings2_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings2` (`settings2_id`, `settings2_created`, `settings2_updated`, `settings2_bills_pdf_css`, `settings2_calendar_projects_colour`, `settings2_calendar_tasks_colour`, `settings2_calendar_events_colour`, `settings2_calendar_reminder_duration`, `settings2_calendar_reminder_period`, `settings2_calendar_events_assigning`, `settings2_calendar_first_day`, `settings2_calendar_default_event_duration`, `settings2_calendar_send_reminder_projects`, `settings2_calendar_send_reminder_tasks`, `settings2_calendar_send_reminder_events`, `settings2_captcha_api_site_key`, `settings2_captcha_api_secret_key`, `settings2_captcha_status`, `settings2_estimates_automation_default_status`, `settings2_estimates_automation_create_project`, `settings2_estimates_automation_project_status`, `settings2_estimates_automation_project_title`, `settings2_estimates_automation_project_email_client`, `settings2_estimates_automation_create_invoice`, `settings2_estimates_automation_invoice_email_client`, `settings2_estimates_automation_invoice_due_date`, `settings2_estimates_automation_create_tasks`, `settings2_estimates_automation_copy_attachments`, `settings2_extras_dimensions_billing`, `settings2_extras_dimensions_default_unit`, `settings2_extras_dimensions_show_measurements`, `settings2_projects_automation_default_status`, `settings2_projects_automation_create_invoices`, `settings2_projects_automation_convert_estimates_to_invoices`, `settings2_projects_automation_skip_draft_estimates`, `settings2_projects_automation_skip_declined_estimates`, `settings2_projects_automation_invoice_unbilled_hours`, `settings2_projects_automation_invoice_hourly_rate`, `settings2_projects_automation_invoice_hourly_tax_1`, `settings2_projects_automation_invoice_email_client`, `settings2_projects_automation_invoice_due_date`, `settings2_tasks_manage_dependencies`, `settings2_tap_secret_key`, `settings2_tap_publishable_key`, `settings2_tap_currency_code`, `settings2_tap_language`, `settings2_tap_display_name`, `settings2_tap_status`, `settings2_theme_css`, `settings2_paystack_secret_key`, `settings2_paystack_public_key`, `settings2_paystack_currency_code`, `settings2_paystack_display_name`, `settings2_paystack_status`, `settings2_proposals_automation_default_status`, `settings2_proposals_automation_create_project`, `settings2_proposals_automation_project_status`, `settings2_proposals_automation_project_email_client`, `settings2_proposals_automation_create_invoice`, `settings2_proposals_automation_invoice_email_client`, `settings2_proposals_automation_invoice_due_date`, `settings2_proposals_automation_create_tasks`, `settings2_file_folders_status`, `settings2_file_folders_manage_assigned`, `settings2_file_folders_manage_project_manager`, `settings2_file_folders_manage_client`, `settings2_file_bulk_download`, `settings2_search_category_limit`, `settings2_spaces_team_space_id`, `settings2_spaces_team_space_status`, `settings2_spaces_user_space_status`, `settings2_spaces_team_space_title`, `settings2_spaces_user_space_title`, `settings2_spaces_team_space_menu_name`, `settings2_spaces_user_space_menu_name`, `settings2_spaces_features_files`, `settings2_spaces_features_notes`, `settings2_spaces_features_comments`, `settings2_spaces_features_tasks`, `settings2_spaces_features_whiteboard`, `settings2_spaces_features_checklists`, `settings2_spaces_features_todos`, `settings2_spaces_features_reminders`, `settings2_tickets_replying_interface`, `settings2_tickets_archive_button`, `settings2_projects_cover_images_show_on_project`, `settings2_onboarding_status`, `settings2_onboarding_content`, `settings2_onboarding_view_status`, `settings2_tweak_reports_truncate_long_text`, `settings2_tweak_imap_tickets_import_limit`, `settings2_tweak_imap_connection_timeout`, `settings2_dompdf_fonts`) VALUES
-(1,	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	'',	'#20AEE3',	'#6772E5',	'#24D2B5',	1,	'days',	'admin',	0,	30,	'due-date',	'due-date',	'start-date',	'',	'',	'disabled',	'disabled',	'yes',	'on_hold',	'New Project',	'yes',	'yes',	'yes',	7,	'yes',	'yes',	'disabled',	'm2',	'no',	'disabled',	'yes',	'yes',	'yes',	'yes',	'yes',	NULL,	NULL,	'yes',	7,	'super-users',	'',	'',	'',	'en',	'',	'disabled',	'',	'',	'',	'ZAR',	'',	'disabled',	'disabled',	'no',	'not_started',	'yes',	'no',	'yes',	7,	'yes',	'enabled',	'yes',	'yes',	'yes',	'enabled',	5,	NULL,	'enabled',	'enabled',	'Team Workspace',	'My Workspace',	'Team Workspace',	'My Workspace',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'inline',	'yes',	'no',	'disabled',	'',	'seen',	'yes',	5,	60,	'default');
+INSERT INTO `settings2` (`settings2_id`, `settings2_created`, `settings2_updated`, `settings2_bills_pdf_css`, `settings2_calendar_projects_colour`, `settings2_calendar_tasks_colour`, `settings2_calendar_events_colour`, `settings2_calendar_reminder_duration`, `settings2_calendar_reminder_period`, `settings2_calendar_events_assigning`, `settings2_calendar_first_day`, `settings2_calendar_default_event_duration`, `settings2_calendar_send_reminder_projects`, `settings2_calendar_send_reminder_tasks`, `settings2_calendar_send_reminder_events`, `settings2_captcha_api_site_key`, `settings2_captcha_api_secret_key`, `settings2_captcha_status`, `settings2_estimates_automation_default_status`, `settings2_estimates_automation_create_project`, `settings2_estimates_automation_project_status`, `settings2_estimates_automation_project_title`, `settings2_estimates_automation_project_email_client`, `settings2_estimates_automation_create_invoice`, `settings2_estimates_automation_invoice_email_client`, `settings2_estimates_automation_invoice_due_date`, `settings2_estimates_automation_create_tasks`, `settings2_estimates_automation_copy_attachments`, `settings2_extras_dimensions_billing`, `settings2_extras_dimensions_default_unit`, `settings2_extras_dimensions_show_measurements`, `settings2_importing_leads_duplicates_name`, `settings2_importing_leads_duplicates_email`, `settings2_importing_leads_duplicates_telephone`, `settings2_importing_leads_duplicates_company`, `settings2_importing_clients_duplicates_email`, `settings2_importing_clients_duplicates_telephone`, `settings2_importing_clients_duplicates_company`, `settings2_projects_automation_default_status`, `settings2_projects_automation_create_invoices`, `settings2_projects_automation_convert_estimates_to_invoices`, `settings2_projects_automation_skip_draft_estimates`, `settings2_projects_automation_skip_declined_estimates`, `settings2_projects_automation_invoice_unbilled_hours`, `settings2_projects_automation_invoice_hourly_rate`, `settings2_projects_automation_invoice_hourly_tax_1`, `settings2_projects_automation_invoice_email_client`, `settings2_projects_automation_invoice_due_date`, `settings2_tasks_manage_dependencies`, `settings2_tap_secret_key`, `settings2_tap_publishable_key`, `settings2_tap_currency_code`, `settings2_tap_language`, `settings2_tap_display_name`, `settings2_tap_status`, `settings2_theme_css`, `settings2_paystack_secret_key`, `settings2_paystack_public_key`, `settings2_paystack_currency_code`, `settings2_paystack_display_name`, `settings2_paystack_status`, `settings2_proposals_automation_default_status`, `settings2_proposals_automation_create_project`, `settings2_proposals_automation_project_status`, `settings2_proposals_automation_project_email_client`, `settings2_proposals_automation_create_invoice`, `settings2_proposals_automation_invoice_email_client`, `settings2_proposals_automation_invoice_due_date`, `settings2_proposals_automation_create_tasks`, `settings2_file_folders_status`, `settings2_file_folders_manage_assigned`, `settings2_file_folders_manage_project_manager`, `settings2_file_folders_manage_client`, `settings2_file_bulk_download`, `settings2_search_category_limit`, `settings2_spaces_team_space_id`, `settings2_spaces_team_space_status`, `settings2_spaces_user_space_status`, `settings2_spaces_team_space_title`, `settings2_spaces_user_space_title`, `settings2_spaces_team_space_menu_name`, `settings2_spaces_user_space_menu_name`, `settings2_spaces_features_files`, `settings2_spaces_features_notes`, `settings2_spaces_features_comments`, `settings2_spaces_features_tasks`, `settings2_spaces_features_whiteboard`, `settings2_spaces_features_checklists`, `settings2_spaces_features_todos`, `settings2_spaces_features_reminders`, `settings2_tickets_replying_interface`, `settings2_tickets_archive_button`, `settings2_timesheets_show_recorded_by`, `settings2_projects_cover_images_show_on_project`, `settings2_onboarding_status`, `settings2_onboarding_content`, `settings2_onboarding_view_status`, `settings2_tweak_reports_truncate_long_text`, `settings2_tweak_imap_tickets_import_limit`, `settings2_tweak_imap_connection_timeout`, `settings2_dompdf_fonts`) VALUES
+(1,	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	'',	'#20AEE3',	'#6772E5',	'#24D2B5',	1,	'days',	'admin',	0,	30,	'due-date',	'due-date',	'start-date',	'',	'',	'disabled',	'disabled',	'yes',	'on_hold',	'New Project',	'yes',	'yes',	'yes',	7,	'yes',	'yes',	'disabled',	'm2',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'disabled',	'yes',	'yes',	'yes',	'yes',	'yes',	NULL,	NULL,	'yes',	7,	'super-users',	'',	'',	'',	'en',	'',	'disabled',	'',	'',	'',	'ZAR',	'',	'disabled',	'disabled',	'no',	'not_started',	'yes',	'no',	'yes',	7,	'yes',	'enabled',	'yes',	'yes',	'yes',	'enabled',	5,	NULL,	'enabled',	'enabled',	'Team Workspace',	'My Workspace',	'Team Workspace',	'My Workspace',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'enabled',	'inline',	'yes',	'no',	'no',	'disabled',	'',	'seen',	'yes',	5,	60,	'default');
+
+DROP TABLE IF EXISTS `starred`;
+CREATE TABLE `starred` (
+  `starred_id` int(11) NOT NULL AUTO_INCREMENT,
+  `starred_created` datetime NOT NULL,
+  `starred_updated` datetime NOT NULL,
+  `starred_uniqueid` text DEFAULT NULL,
+  `starred_userid` int(11) DEFAULT NULL,
+  `starred_resource_type` text DEFAULT NULL COMMENT 'e.g. project-comments|notes',
+  `starred_resource_id` int(11) DEFAULT NULL COMMENT 'e.g. project id',
+  PRIMARY KEY (`starred_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 DROP TABLE IF EXISTS `subscriptions`;
 CREATE TABLE `subscriptions` (
@@ -2781,7 +3039,9 @@ CREATE TABLE `tasks` (
   `task_milestoneid` int(11) DEFAULT NULL COMMENT 'new tasks must be set to the [uncategorised] milestone',
   `task_previous_status` varchar(100) DEFAULT 'new',
   `task_priority` int(11) DEFAULT 1,
+  `task_date_status_changed` datetime DEFAULT NULL,
   `task_status` int(11) DEFAULT 1,
+  `task_completed_by_userid` int(11) DEFAULT NULL COMMENT 'the user that set the task to completed status',
   `task_active_state` varchar(100) DEFAULT 'active' COMMENT 'active|archived',
   `task_billable` varchar(5) DEFAULT 'yes' COMMENT 'yes | no',
   `task_billable_status` varchar(20) DEFAULT 'not_invoiced' COMMENT 'invoiced | not_invoiced',
@@ -2883,6 +3143,10 @@ CREATE TABLE `tasks` (
   `task_custom_field_68` decimal(10,2) DEFAULT NULL,
   `task_custom_field_69` decimal(10,2) DEFAULT NULL,
   `task_custom_field_70` decimal(10,2) DEFAULT NULL,
+  `taskresource_type` text DEFAULT NULL COMMENT 'optional references',
+  `taskresource_id` int(11) DEFAULT NULL,
+  `task_mapping_type` text DEFAULT NULL,
+  `task_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`task_id`),
   KEY `task_creatorid` (`task_creatorid`),
   KEY `task_clientid` (`task_clientid`),
@@ -2962,10 +3226,10 @@ CREATE TABLE `tasks_priority` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[do not truncate]  expected to have 2 system default statuses (ID: 1 & 2) ''new'' & ''converted'' statuses ';
 
 INSERT INTO `tasks_priority` (`taskpriority_id`, `taskpriority_created`, `taskpriority_creatorid`, `taskpriority_updated`, `taskpriority_title`, `taskpriority_position`, `taskpriority_color`, `taskpriority_system_default`) VALUES
-(1,	NULL,	0,	'2025-01-09 15:48:25',	'Normal',	1,	'lime',	'yes'),
-(2,	NULL,	0,	'2025-01-09 15:48:25',	'Low',	2,	'success',	'no'),
-(3,	NULL,	0,	'2025-01-09 15:48:25',	'High',	3,	'warning',	'no'),
-(4,	NULL,	0,	'2025-01-09 15:48:25',	'Urgent',	4,	'danger',	'no');
+(1,	NULL,	0,	'2025-08-02 14:34:44',	'Normal',	1,	'lime',	'yes'),
+(2,	NULL,	0,	'2025-08-02 14:34:44',	'Low',	2,	'success',	'no'),
+(3,	NULL,	0,	'2025-08-02 14:34:44',	'High',	3,	'warning',	'no'),
+(4,	NULL,	0,	'2025-08-02 14:34:44',	'Urgent',	4,	'danger',	'no');
 
 DROP TABLE IF EXISTS `tasks_status`;
 CREATE TABLE `tasks_status` (
@@ -3025,7 +3289,7 @@ CREATE TABLE `taxrates` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate]';
 
 INSERT INTO `taxrates` (`taxrate_id`, `taxrate_uniqueid`, `taxrate_created`, `taxrate_updated`, `taxrate_creatorid`, `taxrate_name`, `taxrate_value`, `taxrate_type`, `taxrate_clientid`, `taxrate_estimateid`, `taxrate_invoiceid`, `taxrate_status`) VALUES
-(1,	'zero-rated-tax-rate',	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	0,	'No Tax',	0.00,	'system',	NULL,	NULL,	NULL,	'enabled');
+(1,	'zero-rated-tax-rate',	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	0,	'No Tax',	0.00,	'system',	NULL,	NULL,	NULL,	'enabled');
 
 DROP TABLE IF EXISTS `tickets`;
 CREATE TABLE `tickets` (
@@ -3040,6 +3304,7 @@ CREATE TABLE `tickets` (
   `ticket_message` text DEFAULT NULL,
   `ticket_priority` varchar(50) NOT NULL DEFAULT 'normal' COMMENT 'normal | high | urgent',
   `ticket_last_updated` datetime DEFAULT NULL,
+  `ticket_date_status_changed` datetime DEFAULT NULL,
   `ticket_status` tinyint(4) NOT NULL DEFAULT 1 COMMENT 'numeric status id',
   `ticket_source` varchar(10) NOT NULL DEFAULT 'web' COMMENT 'web|email',
   `ticket_active_state` varchar(20) DEFAULT 'active' COMMENT 'active|archived',
@@ -3117,6 +3382,8 @@ CREATE TABLE `tickets` (
   `ticket_custom_field_68` tinytext DEFAULT NULL,
   `ticket_custom_field_69` tinytext DEFAULT NULL,
   `ticket_custom_field_70` tinytext DEFAULT NULL,
+  `ticket_mapping_type` text DEFAULT NULL,
+  `ticket_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`ticket_id`),
   KEY `ticket_creatorid` (`ticket_creatorid`),
   KEY `ticket_categoryid` (`ticket_categoryid`),
@@ -3173,6 +3440,8 @@ CREATE TABLE `timelines` (
   `timeline_eventid` int(11) NOT NULL,
   `timeline_resourcetype` varchar(50) DEFAULT NULL COMMENT 'invoices | projects | estimates | etc',
   `timeline_resourceid` int(11) DEFAULT NULL COMMENT 'the id of the item affected',
+  `timeline_mapping_type` text DEFAULT NULL,
+  `timeline_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`timeline_id`),
   KEY `timeline_eventid` (`timeline_eventid`),
   KEY `timeline_resourcetype` (`timeline_resourcetype`),
@@ -3186,6 +3455,7 @@ CREATE TABLE `timers` (
   `timer_created` datetime DEFAULT NULL,
   `timer_updated` datetime DEFAULT NULL,
   `timer_creatorid` int(11) DEFAULT NULL,
+  `timer_recorded_by` int(11) DEFAULT NULL,
   `timer_started` int(11) DEFAULT NULL COMMENT 'unix time stam for when the timer was started',
   `timer_stopped` int(11) DEFAULT 0 COMMENT 'unix timestamp for when the timer was stopped',
   `timer_time` int(11) DEFAULT 0 COMMENT 'seconds',
@@ -3195,6 +3465,8 @@ CREATE TABLE `timers` (
   `timer_status` varchar(20) DEFAULT 'running' COMMENT 'running | stopped',
   `timer_billing_status` varchar(50) DEFAULT 'not_invoiced' COMMENT 'invoiced | not_invoiced',
   `timer_billing_invoiceid` int(11) DEFAULT NULL COMMENT 'invoice id, if billed',
+  `timer_mapping_type` text DEFAULT NULL,
+  `timer_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`timer_id`),
   KEY `timer_creatorid` (`timer_creatorid`),
   KEY `timer_taskid` (`timer_taskid`),
@@ -3335,20 +3607,49 @@ CREATE TABLE `users` (
   `forgot_password_token` text DEFAULT NULL COMMENT 'random token',
   `forgot_password_token_expiry` datetime DEFAULT NULL,
   `force_password_change` varchar(10) DEFAULT 'no' COMMENT 'yes|no',
-  `notifications_system` varchar(10) DEFAULT 'no' COMMENT 'no| yes | yes_email [everyone] NB: database defaults for all notifications are ''no'' actual values must be set in the settings config file',
-  `notifications_new_project` varchar(10) DEFAULT 'no' COMMENT 'no| yes_email [client]',
-  `notifications_projects_activity` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email [everyone]',
-  `notifications_billing_activity` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email |[team]',
-  `notifications_new_assignement` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email [team]',
-  `notifications_leads_activity` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email [team]',
-  `notifications_tasks_activity` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email  [everyone]',
-  `notifications_tickets_activity` varchar(10) DEFAULT 'no' COMMENT 'no | yes | yes_email  [everyone]',
-  `notifications_reminders` varchar(10) DEFAULT 'yes_email' COMMENT 'yes_email | no',
-  `thridparty_stripe_customer_id` text DEFAULT NULL COMMENT 'optional - when customer pays via ',
+  `notifications_system` varchar(30) DEFAULT 'no' COMMENT 'no| yes | yes_email [everyone] NB: database defaults for all notifications are ''no'' actual values must be set in the settings config file',
+  `notifications_new_project` varchar(30) DEFAULT 'no' COMMENT 'no| yes_email [client]',
+  `notifications_projects_activity` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email |[everyone]',
+  `notifications_projects_comments` varchar(30) DEFAULT 'yes_email' COMMENT 'no | yes | yes_mentions | yes_email | yes_email_mentions | [everyone]',
+  `notifications_billing_activity` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email |[team]',
+  `notifications_new_assignement` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email [team]',
+  `notifications_leads_activity` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email [team]',
+  `notifications_leads_comments` varchar(30) DEFAULT 'yes_email' COMMENT 'no | yes | yes_mentions | yes_email | yes_email_mentions | [everyone]',
+  `notifications_tasks_activity` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email |[everyone]',
+  `notifications_tasks_comments` varchar(30) DEFAULT 'yes_email' COMMENT 'no | yes | yes_mentions | yes_email | yes_email_mentions | [everyone]',
+  `notifications_tickets_activity` varchar(30) DEFAULT 'no' COMMENT 'no | yes | yes_email  [everyone]',
+  `notifications_reminders` varchar(30) DEFAULT 'yes_email' COMMENT 'yes_email | no',
   `dashboard_access` varchar(150) DEFAULT 'yes' COMMENT 'yes|no',
   `welcome_email_sent` varchar(150) DEFAULT 'no' COMMENT 'yes|no',
   `space_uniqueid` text DEFAULT NULL,
   `timezone` text DEFAULT NULL COMMENT 'experimental',
+  `gateways_stripe_customer_id` text DEFAULT NULL COMMENT 'optional - when customer pays via ',
+  `gateways_paypal_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_square_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_braintree_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_authorize_net_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_adyen_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_worldpay_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_checkout_com_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_2checkout_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_lemonsqueezy_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_paddle_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_gumroad_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_fastspring_customer_id` text DEFAULT NULL COMMENT 'global gateway',
+  `gateways_razorpay_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_paytm_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_phonepe_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_ccavenue_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_billdesk_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_cashfree_customer_id` text DEFAULT NULL COMMENT 'indian gateway',
+  `gateways_flutterwave_customer_id` text DEFAULT NULL COMMENT 'african gateway',
+  `gateways_paystack_customer_id` text DEFAULT NULL COMMENT 'african gateway',
+  `gateways_pesapal_customer_id` text DEFAULT NULL COMMENT 'african gateway',
+  `gateways_dpo_customer_id` text DEFAULT NULL COMMENT 'african gateway',
+  `gateways_payfast_customer_id` text DEFAULT NULL COMMENT 'african gateway',
+  `gateways_mercadopago_customer_id` text DEFAULT NULL COMMENT 'brazil gateway',
+  `gateways_pagseguro_customer_id` text DEFAULT NULL COMMENT 'brazil gateway',
+  `gateways_stone_customer_id` text DEFAULT NULL COMMENT 'brazil gateway',
   PRIMARY KEY (`id`),
   KEY `clientid` (`clientid`),
   KEY `primary_contact` (`account_owner`),
@@ -3358,8 +3659,8 @@ CREATE TABLE `users` (
   KEY `dashboard_access` (`dashboard_access`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COMMENT='[truncate] except user id 0 & 1';
 
-INSERT INTO `users` (`id`, `unique_id`, `created`, `updated`, `deleted`, `creatorid`, `email`, `password`, `first_name`, `last_name`, `phone`, `position`, `clientid`, `account_owner`, `primary_admin`, `avatar_directory`, `avatar_filename`, `type`, `status`, `role_id`, `last_seen`, `theme`, `last_ip_address`, `social_facebook`, `social_twitter`, `social_linkedin`, `social_github`, `social_dribble`, `pref_language`, `pref_email_notifications`, `pref_leftmenu_position`, `pref_statspanel_position`, `pref_filter_own_tasks`, `pref_hide_completed_tasks`, `pref_filter_own_projects`, `pref_filter_show_archived_projects`, `pref_filter_show_archived_tasks`, `pref_filter_show_archived_leads`, `pref_filter_show_archived_tickets`, `pref_filter_own_leads`, `pref_view_tasks_layout`, `pref_view_leads_layout`, `pref_view_projects_layout`, `pref_theme`, `pref_calendar_dates_projects`, `pref_calendar_dates_tasks`, `pref_calendar_dates_events`, `pref_calendar_view`, `remember_token`, `remember_filters_tickets_status`, `remember_filters_tickets_payload`, `remember_filters_projects_status`, `remember_filters_projects_payload`, `remember_filters_invoices_status`, `remember_filters_invoices_payload`, `remember_filters_estimates_status`, `remember_filters_estimates_payload`, `remember_filters_contracts_status`, `remember_filters_contracts_payload`, `remember_filters_payments_status`, `remember_filters_payments_payload`, `remember_filters_proposals_status`, `remember_filters_proposals_payload`, `remember_filters_clients_status`, `remember_filters_clients_payload`, `remember_filters_leads_status`, `remember_filters_leads_payload`, `remember_filters_tasks_status`, `remember_filters_tasks_payload`, `remember_filters_subscriptions_status`, `remember_filters_subscriptions_payload`, `remember_filters_products_status`, `remember_filters_products_payload`, `remember_filters_expenses_status`, `remember_filters_expenses_payload`, `remember_filters_timesheets_status`, `remember_filters_timesheets_payload`, `forgot_password_token`, `forgot_password_token_expiry`, `force_password_change`, `notifications_system`, `notifications_new_project`, `notifications_projects_activity`, `notifications_billing_activity`, `notifications_new_assignement`, `notifications_leads_activity`, `notifications_tasks_activity`, `notifications_tickets_activity`, `notifications_reminders`, `thridparty_stripe_customer_id`, `dashboard_access`, `welcome_email_sent`, `space_uniqueid`, `timezone`) VALUES
-(1,	NULL,	'2025-01-09 15:48:25',	'2025-01-09 15:48:25',	NULL,	1,	'admin@example.com',	'$2y$10$iTsSjhyjWNdjECnmDM8/w.xUUAmeKlmrdDWdg4F5TAjrlWh.WBWFG',	'John',	'Doe',	NULL,	NULL,	NULL,	'no',	'yes',	NULL,	NULL,	'team',	'active',	1,	'2025-01-09 15:48:25',	'default',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'english',	'yes',	'collapsed',	'collapsed',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'kanban',	'kanban',	'list',	'default',	'due',	'due',	'due',	'all',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	NULL,	NULL,	'no',	'yes_email',	'no',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	NULL,	'yes',	'no',	NULL,	NULL);
+INSERT INTO `users` (`id`, `unique_id`, `created`, `updated`, `deleted`, `creatorid`, `email`, `password`, `first_name`, `last_name`, `phone`, `position`, `clientid`, `account_owner`, `primary_admin`, `avatar_directory`, `avatar_filename`, `type`, `status`, `role_id`, `last_seen`, `theme`, `last_ip_address`, `social_facebook`, `social_twitter`, `social_linkedin`, `social_github`, `social_dribble`, `pref_language`, `pref_email_notifications`, `pref_leftmenu_position`, `pref_statspanel_position`, `pref_filter_own_tasks`, `pref_hide_completed_tasks`, `pref_filter_own_projects`, `pref_filter_show_archived_projects`, `pref_filter_show_archived_tasks`, `pref_filter_show_archived_leads`, `pref_filter_show_archived_tickets`, `pref_filter_own_leads`, `pref_view_tasks_layout`, `pref_view_leads_layout`, `pref_view_projects_layout`, `pref_theme`, `pref_calendar_dates_projects`, `pref_calendar_dates_tasks`, `pref_calendar_dates_events`, `pref_calendar_view`, `remember_token`, `remember_filters_tickets_status`, `remember_filters_tickets_payload`, `remember_filters_projects_status`, `remember_filters_projects_payload`, `remember_filters_invoices_status`, `remember_filters_invoices_payload`, `remember_filters_estimates_status`, `remember_filters_estimates_payload`, `remember_filters_contracts_status`, `remember_filters_contracts_payload`, `remember_filters_payments_status`, `remember_filters_payments_payload`, `remember_filters_proposals_status`, `remember_filters_proposals_payload`, `remember_filters_clients_status`, `remember_filters_clients_payload`, `remember_filters_leads_status`, `remember_filters_leads_payload`, `remember_filters_tasks_status`, `remember_filters_tasks_payload`, `remember_filters_subscriptions_status`, `remember_filters_subscriptions_payload`, `remember_filters_products_status`, `remember_filters_products_payload`, `remember_filters_expenses_status`, `remember_filters_expenses_payload`, `remember_filters_timesheets_status`, `remember_filters_timesheets_payload`, `forgot_password_token`, `forgot_password_token_expiry`, `force_password_change`, `notifications_system`, `notifications_new_project`, `notifications_projects_activity`, `notifications_projects_comments`, `notifications_billing_activity`, `notifications_new_assignement`, `notifications_leads_activity`, `notifications_leads_comments`, `notifications_tasks_activity`, `notifications_tasks_comments`, `notifications_tickets_activity`, `notifications_reminders`, `dashboard_access`, `welcome_email_sent`, `space_uniqueid`, `timezone`, `gateways_stripe_customer_id`, `gateways_paypal_customer_id`, `gateways_square_customer_id`, `gateways_braintree_customer_id`, `gateways_authorize_net_customer_id`, `gateways_adyen_customer_id`, `gateways_worldpay_customer_id`, `gateways_checkout_com_customer_id`, `gateways_2checkout_customer_id`, `gateways_lemonsqueezy_customer_id`, `gateways_paddle_customer_id`, `gateways_gumroad_customer_id`, `gateways_fastspring_customer_id`, `gateways_razorpay_customer_id`, `gateways_paytm_customer_id`, `gateways_phonepe_customer_id`, `gateways_ccavenue_customer_id`, `gateways_billdesk_customer_id`, `gateways_cashfree_customer_id`, `gateways_flutterwave_customer_id`, `gateways_paystack_customer_id`, `gateways_pesapal_customer_id`, `gateways_dpo_customer_id`, `gateways_payfast_customer_id`, `gateways_mercadopago_customer_id`, `gateways_pagseguro_customer_id`, `gateways_stone_customer_id`) VALUES
+(1,	NULL,	'2025-08-02 14:34:44',	'2025-08-02 14:34:44',	NULL,	1,	'admin@example.com',	'$2y$10$iTsSjhyjWNdjECnmDM8/w.xUUAmeKlmrdDWdg4F5TAjrlWh.WBWFG',	'John',	'Doe',	NULL,	NULL,	NULL,	'no',	'yes',	NULL,	NULL,	'team',	'active',	1,	'2025-08-02 14:34:44',	'default',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'english',	'yes',	'collapsed',	'collapsed',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'no',	'kanban',	'kanban',	'list',	'default',	'due',	'due',	'due',	'all',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	'disabled',	NULL,	NULL,	NULL,	'no',	'yes_email',	'no',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes_email',	'yes',	'no',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL);
 
 DROP TABLE IF EXISTS `webforms`;
 CREATE TABLE `webforms` (
@@ -3383,6 +3684,8 @@ CREATE TABLE `webforms` (
   `webform_style_css` text DEFAULT NULL,
   `webform_recaptcha` varchar(15) DEFAULT 'disabled' COMMENT 'enabled|disabled',
   `webform_status` varchar(100) DEFAULT 'enabled' COMMENT 'enabled|disabled',
+  `webform_mapping_type` text DEFAULT NULL,
+  `webform_mapping_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`webform_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -3434,4 +3737,4 @@ CREATE TABLE `webmail_templates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
--- 2025-01-11 13:55:20
+-- 2025-08-04 12:19:08

@@ -189,6 +189,12 @@ class ListResponse implements Responsable {
                 'value' => $export_url,
             ];
 
+            //print button
+            $jsondata['dom_visibility'][] = [
+                'selector' => '#projects-print-button',
+                'action' => 'show',
+            ];
+
             //ajax response
             return response()->json($jsondata);
 

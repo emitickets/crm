@@ -175,6 +175,26 @@ class TaskPermissions {
         }
 
         /**
+         * [CREATOR]
+         * Grant almost full permission - except for specific actions that need further checks
+         * Testing as of 24 April 2025. Will release when ready.
+         */
+        /*
+        if ($task->task_creatorid == auth()->id()) {
+            //exclude certian actions (permission will be checked elsewhere)
+            $excluded = [
+                'assign-users',
+                'assigned',
+                'super-user',
+                'timers',
+            ];
+            if ($action && !in_array($action, $excluded)) {
+                return true;
+            }
+        }
+        */
+
+        /**
          * [ADMIN LEVEL USER]
          * Check if a user has super user/admin level permissions on the task
          *
@@ -373,7 +393,7 @@ class TaskPermissions {
          *   - other team assigned to the same project [if] team participation is enabled on the project
          *   - task creator
          *   - client [if] task collaboration is enabled on the project
-         * 
+         *
          * [PARTICATION ACTIONS]
          * - comments, attach files, create checklists, etc
          */

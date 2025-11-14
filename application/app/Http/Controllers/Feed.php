@@ -135,6 +135,19 @@ class Feed extends Controller {
     }
 
     /**
+     * ajax search results for projects
+     * @permissions team members only
+     * @return \Illuminate\Http\Response
+     */
+    public function usersProjects(ProjectRepository $projectrepo) {
+
+        $feed = $projectrepo->usersAssignedProjects(request('user_id'), 'feed');
+
+        //default
+        return response()->json($feed);
+    }
+
+    /**
      * ajax search results for leads
      * calls to this function MUST have a request('ref'), so that a specific check in done
      * @permissions team members only
@@ -244,10 +257,19 @@ class Feed extends Controller {
         }
 
         //filter for tasks assigned to the user and for this project
-        request()->merge([
-            'filter_my_tasks' => true,
-            'filter_task_projectid' => request('project_id'),
-        ]);
+        if (request()->filled('tasks_user_id')) {
+            request()->merge([
+                'filter_users_tasks' => true,
+                'filter_users_tasks_user_id' => request('tasks_user_id'),
+                'filter_task_projectid' => request('project_id'),
+            ]);
+        } else {
+            request()->merge([
+                'filter_my_tasks' => true,
+                'filter_task_projectid' => request('project_id'),
+            ]);
+        }
+        
         if (!$tasks = $taskrepo->search()) {
             Log::error("project could not be found", ['process' => '[Feed--projectAssignedUsers]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return response()->json([]);
@@ -296,7 +318,7 @@ class Feed extends Controller {
 
         //check users permissions
         if (!$projectpermissions->check('view', request('project_id'))) {
-            return response()->json([]);
+            //return response()->json([]);
         }
 
         $feed = $milestonerepo->autocompleteProjectsMilestones(request('project_id'));

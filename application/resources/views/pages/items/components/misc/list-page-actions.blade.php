@@ -31,6 +31,16 @@
         </button>
         @endif
 
+
+        <!--PRINT-->
+        <button type="button" data-toggle="tooltip" title="{{ cleanLang(__('lang.print')) }}"
+            id="projects-print-button"
+            class="list-actions-button btn btn-page-actions waves-effect waves-dark js-print-table {{ config('visibility.print_button') }}"
+            data-table="items-list-table">
+            <i class="sl-icon-printer"></i>
+        </button>
+
+
         <!--ADD NEW ITEM-->
         @if(config('visibility.list_page_actions_add_button'))
         <button type="button"

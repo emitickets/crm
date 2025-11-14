@@ -22,7 +22,9 @@ class ProposalsCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /*--------------------------------------------------------
          * Process expired proposals

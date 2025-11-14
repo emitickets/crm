@@ -55,7 +55,7 @@
 
 
                         @if(config('visibility.items_col_action'))
-                        <th class="items_col_action"><a href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a>
+                        <th class="items_col_action actions_column"><a href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a>
                         </th>
                         @endif
                     </tr>

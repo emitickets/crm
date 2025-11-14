@@ -35,7 +35,9 @@ class FixesCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //run the updates
         $this->projectTemplateFolders();

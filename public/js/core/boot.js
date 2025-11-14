@@ -10,6 +10,22 @@ function NXbootstrap($self, action) {
     $.fn.select2.defaults.set("allowClear", true);
     $.fn.select2.defaults.set("placeholder", ""); //we must have something to for allowClear to work
 
+    //[July 2025] - Fixed - Unable to add URL links in tinymce editor that is inside modals
+    $.fn.modal.Constructor.prototype._enforceFocus = function () {
+        var modal_this = this;
+        $(document)
+            .off('focusin.bs.modal') // Remove any previous handler
+            .on('focusin.bs.modal', function (e) {
+                if (
+                    $(e.target).closest('.mce-window, .tox-dialog').length
+                ) {
+                    return; // allow focus
+                }
+                if (modal_this._element !== e.target && !$(modal_this._element).has(e.target).length) {
+                    modal_this._element.focus();
+                }
+            });
+    };
 
     //validator.js defaults (required particularly for select2, to add 'error' class)
     $.validator.setDefaults({
@@ -57,50 +73,44 @@ function NXbootstrap($self, action) {
 
         //initialise tooltips
         $(function () {
-            //fixed tool tip positioning
-            $(document).on('mouseenter', '[data-toggle="tooltip"]:not([data-original-title])', function () {
-                $(this).tooltip().tooltip('show').tooltip('hide').tooltip('show');
-            });
+            // Initialize all tooltips once
+            $('[data-toggle="tooltip"], .data-toggle-tooltip').tooltip();
 
-            //fixed tool tip positioning
-            $(document).on('mouseenter', '.data-toggle-tooltip:not([data-original-title])', function () {
-                $(this).tooltip().tooltip('show').tooltip('hide').tooltip('show');
-            });
-
-            //specif tooltips for action buttons
             if (NX.show_action_button_tooltips) {
-                $(document).on('mouseenter', '.data-toggle-action-tooltip:not([data-original-title])', function () {
-                    $(this).tooltip().tooltip('show').tooltip('hide').tooltip('show');
+                $('.data-toggle-action-tooltip').tooltip();
+            }
+
+            // Show on hover
+            $(document).on('mouseenter', '[data-toggle="tooltip"], .data-toggle-tooltip', function () {
+                $(this).tooltip('show');
+            });
+
+            if (NX.show_action_button_tooltips) {
+                $(document).on('mouseenter', '.data-toggle-action-tooltip', function () {
+                    $(this).tooltip('show');
                 });
             }
         });
 
-
-        //initialise opovers
+        //initialise popovers
         $(function () {
             $('[data-toggle="popover"]').popover();
             $('.data-toggle-popover').popover();
         });
 
-        //hide tooltip when the button or link is clicked
-        $(document).on('click', '[data-toggle="tooltip"]', function () {
-            $('[data-toggle="tooltip"]').tooltip("hide");
-            $(this).off('click');
-        });
-        $(document).on('click', '.data-toggle-tooltip', function () {
-            $('[data-toggle="tooltip"]').tooltip("hide");
-            $(this).off('click');
-        });
-        //close oll tooltips when body has been clicked
-        $(document).on('click', '.data-toggle-action-tooltip, .data-toggle-tooltip', function (event) {
+        // Handle tooltip cleanup on click
+        $(document).on('click', '[data-toggle="tooltip"], .data-toggle-tooltip, .data-toggle-action-tooltip', function () {
             $(this).tooltip('hide');
-            $(this).off('click');
         });
 
-        //close oll tooltips when modal window is closed
-        $(document).on('click', '#commonModalCloseIcon', function (event) {
-            $('.tooltip').tooltip('hide');
-            $(this).off('click');
+        // Hide tooltips when clicking anywhere in the body
+        $('body').on('click', function (e) {
+            $('[data-toggle="tooltip"], .data-toggle-tooltip, .data-toggle-action-tooltip').tooltip('hide');
+        });
+
+        // Clean up tooltips when modal is closed
+        $(document).on('click', '#commonModalCloseIcon', function () {
+            $('[data-toggle="tooltip"], .data-toggle-tooltip, .data-toggle-action-tooltip').tooltip('hide');
         });
 
         //default date pickers
@@ -523,6 +533,7 @@ $(document).ready(function () {
  *  - tiny mce
  *  - basic fixed height of 300px
  *  - reinitialized by nextloop ajax
+ *  - to have the full html, including <html><head><body>, add 'fullpage' to the plugins array list
  * @param numeric tinyMCEHeight optional height setting
  * @param numeric tinyMCESelector optional element selector
  * ---------------------------------------------------------*/
@@ -555,7 +566,7 @@ function nxTinyMCEBasic(tinyMCEHeight = 300, tinyMCESelector = '.tinymce-textare
             "fullscreen image paste link code media autoresize codesample",
             "table hr pagebreak toc advlist lists textcolor",
             "imagetools contextmenu colorpicker",
-            "fullpage spellchecker",
+            "spellchecker",
         ],
         height: tinyMCEHeight,
         toolbar: 'bold link bullist numlist image media alignleft aligncenter alignright outdent indent hr table code fullscreen',
@@ -598,13 +609,13 @@ function nxTinyMCEBasic(tinyMCEHeight = 300, tinyMCESelector = '.tinymce-textare
             formData.append('file', blobInfo.blob(), blobInfo.filename());
             xhr.send(formData);
         },
-        init_instance_callback: function(editor) {
-            editor.on('click', function(e) {
+        init_instance_callback: function (editor) {
+            editor.on('click', function (e) {
                 e.stopPropagation();
             });
-            
+
             // Prevent Bootstrap modal from interfering with TinyMCE dialogs
-            $(document).on('focusin', function(e) {
+            $(document).on('focusin', function (e) {
                 if ($(e.target).closest(".tox-dialog, .tox-tinymce-aux").length) {
                     e.stopImmediatePropagation();
                 }
@@ -623,6 +634,7 @@ $(document).ready(function () {
  *  - tiny mce
  *  - basic fixed height of 300px
  *  - reinitialized by nextloop ajax
+ *  - to have the full html, including <html><head><body>, add 'fullpage' to the plugins array list
  * @param numeric tinyMCEHeight optional height setting
  * @param numeric tinyMCESelector optional element selector
  * ---------------------------------------------------------*/
@@ -712,6 +724,7 @@ $(document).ready(function () {
  *  - tiny mce
  *  - basic fixed height of 300px
  *  - reinitialized by nextloop ajax
+ *  - to have the full html, including <html><head><body>, add 'fullpage' to the plugins array list
  * @param numeric tinyMCEHeight optional height setting
  * @param numeric tinyMCESelector optional element selector
  * ---------------------------------------------------------*/
@@ -739,7 +752,7 @@ function nxTinyMCEExtendedLite(tinyMCEHeight = 400, tinyMCESelector = '.tinymce-
         forced_root_block: false,
         autoresize_min_height: 300,
         document_base_url: NX.site_url,
-        extended_valid_elements: 'head,body',  // Specifically allow <head> and <body>
+        extended_valid_elements: 'head,body', // Specifically allow <head> and <body>
         plugins: [
             "fullscreen image paste link code media codesample autoresize",
             "table hr pagebreak toc advlist lists textcolor",
@@ -803,6 +816,7 @@ $(document).ready(function () {
  *  - tiny mce
  *  - basic fixed height of 300px
  *  - reinitialized by nextloop ajax
+ *  - to have the full html, including <html><head><body>, add 'fullpage' to the plugins array list
  * @param numeric tinyMCEHeight optional height setting
  * @param numeric tinyMCESelector optional element selector
  * @param string plugins optional list of additional plugins to load e.g. 'fullpage link image'
@@ -855,6 +869,7 @@ function nxTinyMCEAdvanced(tinyMCEHeight = 300, tinyMCESelector = '.tinymce-text
  *  - tiny mce
  *  - basic fixed height of 300px
  *  - reinitialized by nextloop ajax
+ *  - to have the full html, including <html><head><body>, add 'fullpage' to the plugins array list
  * @param numeric tinyMCEHeight optional height setting
  * @param numeric tinyMCESelector optional element selector
  * ---------------------------------------------------------*/
@@ -1139,6 +1154,46 @@ NX.toggleSidePanel = function ($self) {
     if (overlay.is(":visible")) {
         $('body').addClass('overflow-hidden');
     }
+}
+
+
+/** ----------------------------------------------------------
+ * [generic side panel] - toggle and make ajax request
+ * ---------------------------------------------------------*/
+NX.toggleSidePanelAjax = function ($self) {
+
+
+    //data
+    var self = $self || {};
+    var panel_id = self.data('target');
+    var panel = $("#" + panel_id);
+    var overlay = $(".page-wrapper-overlay");
+    var body_id = $self.attr('data-reset-body-id');
+
+    //set sidepanel name on overlay
+    overlay.attr('data-target', panel_id);
+
+    //reset body
+    if (body_id) {
+        $("#" + body_id).html('');
+    }
+
+    //toggle the correct side panel
+    panel.slideDown(50);
+
+    //show hide side panel
+    panel.toggleClass("shw-rside");
+
+    //show/hide overlay
+    overlay.toggle();
+
+    //add body scroll bar
+    if (overlay.is(":visible")) {
+        $('body').addClass('overflow-hidden');
+    }
+
+    nxAjaxUxRequest(self);
+
 }
 
 /** ----------------------------------------------------------
@@ -1536,6 +1591,7 @@ NX.projectAssignedTasksToggle = function (e, $self) {
 
     //the projects dropdown list
     var task_dropdown = $("#" + $self.attr('data-task-dropdown'));
+    var user_id = $self.attr('data-user-id');
 
     //the no results found - block reset
     var no_results_found = $("#" + $self.attr('data-task-dropdown') + '_no_results');
@@ -1548,7 +1604,7 @@ NX.projectAssignedTasksToggle = function (e, $self) {
     //backend ajax call to get clients projects
     $.ajax({
         type: 'GET',
-        url: NX.site_url + "/feed/projects-my-assigned-task?project_id=" + project_id
+        url: NX.site_url + "/feed/projects-my-assigned-task?project_id=" + project_id + "&tasks_user_id=" + user_id
     }).then(function (data) {
 
         //loop through the returned array and create new select option items
@@ -1757,8 +1813,11 @@ NX.toggleEditTaskChecklist = function ($self) {
             $checklist.show();
             $(this).remove();
         });
-        //hide the checklist item
-        $self.hide();
+
+        //hide import dropzone
+        $("#import-checklist-container").removeClass('hidden');
+        $("#import-checklist-container").addClass('hidden');
+
         //add new text area
         $('#card-checklist').append($cloned);
         //reset and show

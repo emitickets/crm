@@ -844,6 +844,56 @@ NXINVOICE.DOM.addSelectedExpense = function (self) {
 
 
 /**----------------------------------------------------------------------
+ * [ADD TASK]
+ * -add the selected task as a bill line item
+ *--------------------------------------------------------------*/
+NXINVOICE.DOM.addSelectedTask = function (self) {
+
+    NXINVOICE.log("[billing] NXINVOICE.DOM.addSelectedTask() - adding tasks selected in add tasks modal");
+
+    //count
+    var count_selected = 0;
+
+    //duplicates checker
+    NXINVOICE.DATA.task_duplicate_count = 0;
+
+    //check if tasks were selected
+    $("#tasks-list-table").find(".tasks-checkbox").each(function () {
+        if ($(this).is(":checked")) {
+            //save to object
+            var data = {
+                'item_description': $(this).attr('data-description'),
+                'item_quantity': $(this).attr('data-quantity'),
+                'item_unit': $(this).attr('data-unit'),
+                'item_rate': $(this).attr('data-rate'),
+                'item_total': $(this).attr('data-rate'),
+                'item_linked_type': 'task',
+                'item_linked_id': $(this).attr('data-task-id'), //task_id
+            }
+
+            //create new line item
+            NXINVOICE.DOM.itemNewLine(data);
+        }
+
+        count_selected++;
+    });
+
+    //reclaculate bill
+    NXINVOICE.CALC.reclaculateBill();
+
+    //error message about duplicated task
+    if (NXINVOICE.DATA.task_duplicate_count) {
+        NX.notification({
+            type: 'error',
+            message: NXLANG.selected_task_is_already_on_invoice
+        });
+    }
+
+    //close modal
+    $("#tasksModal").modal('hide');
+};
+
+/**----------------------------------------------------------------------
  * [ADD TIME BILLING]
  * -add the selected time as a bill line item
  *--------------------------------------------------------------*/

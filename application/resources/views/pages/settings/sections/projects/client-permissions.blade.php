@@ -24,7 +24,7 @@
     </div>
     <!--permission - create tasks-->
     <div class="form-group form-group-checkbox row">
-        <label class="col-4 col-form-label text-left required">{{ cleanLang(__('lang.create_tasks')) }}**</label>
+        <label class="col-4 col-form-label text-left required">{{ cleanLang(__('lang.create_tasks')) }}</label>
         <div class="col-8 text-left p-t-5">
             <input type="checkbox" id="settings_projects_clientperm_tasks_create"
                 name="settings_projects_clientperm_tasks_create" class="filled-in chk-col-light-blue"
@@ -32,6 +32,22 @@
             <label for="settings_projects_clientperm_tasks_create"></label>
         </div>
     </div>
+
+    <!--manage project checklists-->
+    <div class="form-group row">
+        <label class="col-4 col-form-label text-left required">{{ cleanLang(__('lang.project_check_lists')) }}</label>
+        <div class="col-4 text-left p-t-5">
+            <select class="select2-basic form-control form-control-sm select2-preselected" id="settings_projects_clientperm_checklists"
+                name="settings_projects_clientperm_checklists" data-preselected="{{ $settings->settings_projects_clientperm_checklists ?? 'none'}}">
+                <option></option>
+                <option value="none">@lang('lang.none')</option>
+                <option value="view">@lang('lang.view')</option>
+                <option value="participate">@lang('lang.participate')</option>
+                <option value="manage">@lang('lang.manage')</option>
+            </select>
+        </div>
+    </div>
+
     <div class="line"></div>
     <!--permission - view timesheets-->
     <div class="form-group form-group-checkbox row">

@@ -28,7 +28,7 @@
         <button type="button" data-toggle="tooltip" title="{{ cleanLang(__('lang.my_projects')) }}"
             id="pref_filter_own_projects"
             class="list-actions-button btn btn-page-actions waves-effect waves-dark js-ajax-ux-request {{ runtimeActive(auth()->user()->pref_filter_own_projects) }}"
-            data-url="{{ url('/projects/search?action=search&toggle=pref_filter_own_projects&filter_category='.request('filter_category')) }}">
+            data-url="{{ url('/projects/search?action=search&toggle=pref_filter_own_projects&filter_category='.request('filter_category').'&projectresource_type='.request('projectresource_type').'&projectresource_id='.request('projectresource_id')) }}">
             <i class="sl-icon-user"></i>
         </button>
         @endif
@@ -86,6 +86,13 @@
             <i class="mdi mdi-filter-outline"></i>
         </button>
         @endif
+
+        <!--PRINT-->
+        <button type="button" data-toggle="tooltip" title="{{ cleanLang(__('lang.print')) }}" id="projects-print-button"
+            class="list-actions-button btn btn-page-actions waves-effect waves-dark js-print-table {{ config('visibility.print_button') }}"
+            data-table="projects-list-table">
+            <i class="sl-icon-printer"></i>
+        </button>
 
         <!--ADD NEW ITEM-->
         @if(config('visibility.list_page_actions_add_button'))

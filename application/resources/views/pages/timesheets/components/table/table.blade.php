@@ -36,12 +36,25 @@
                                     class="sorting-icons"><i class="ti-arrows-vertical"></i></span></a></th>
                         @endif
 
+                        @if(config('visibility.timesheets_col_recorded_by'))
+                        <th class="timesheets_col_recorded_by"><a class="js-ajax-ux-request js-list-sorting"
+                                id="sort_recorded_by" href="javascript:void(0)"
+                                data-url="{{ urlResource('/timesheets?action=sort&orderby=recorded_by&sortorder=asc') }}">{{ cleanLang(__('lang.recorded_by')) }}<span
+                                    class="sorting-icons"><i class="ti-arrows-vertical"></i></span></a></th>
+                        @endif
+
                         <!--date-->
-                        <th class="timesheets_col_start_time"><a class="js-ajax-ux-request js-list-sorting"
-                                id="sort_start_time" href="javascript:void(0)"
-                                data-url="{{ urlResource('/timesheets?action=sort&orderby=start_time&sortorder=asc') }}">{{ cleanLang(__('lang.date')) }}<span
+                        <th class="timesheets_col_start_date"><a class="js-ajax-ux-request js-list-sorting"
+                                id="sort_start_date" href="javascript:void(0)"
+                                data-url="{{ urlResource('/timesheets?action=sort&orderby=start_date&sortorder=asc') }}">{{ cleanLang(__('lang.date')) }}<span
                                     class="sorting-icons"><i class="ti-arrows-vertical"></i></span></a></th>
 
+                        <!--start time-->
+                        @if(config('visibility.timesheets_col_start_time'))
+                        <th class="timesheets_col_start_time"><a href="javascript:void(0)">@lang('lang.start_time')</a>
+                        </th>
+                        @endif
+                        
                         <!--billing status-->
                         <th class="timesheets_col_billing_status"><a class="js-ajax-ux-request js-list-sorting"
                                 id="sort_billing_status" href="javascript:void(0)"
@@ -54,7 +67,8 @@
                                     class="sorting-icons"><i class="ti-arrows-vertical"></i></span></a>
                         </th>
                         @if(config('visibility.timesheets_col_action'))
-                        <th class="timesheets_col_action"><a href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a></th>
+                        <th class="timesheets_col_action actions_column"><a
+                                href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a></th>
                         @endif
                     </tr>
                 </thead>

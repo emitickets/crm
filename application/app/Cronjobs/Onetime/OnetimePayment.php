@@ -41,7 +41,9 @@ class OnetimePayment {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /**
          *   - Find webhhoks waiting to be completed
@@ -70,10 +72,9 @@ class OnetimePayment {
                 //check if we have corresponding 'payment_session' for thie webhook
                 if (!$session = \App\Models\PaymentSession::Where('session_gateway_ref', $webhook->webhooks_matching_reference)->first()) {
                     //log error
-                    Log::critical("no corresponding (payment_session) record was found for this webhook (Checkout Session: $webhook->webhooks_matching_reference)", ['process' => '[mollie-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'session_gateway_ref' => $webhook->webhooks_matching_reference]);
+                    Log::info("no corresponding (payment_session) record was found for this webhook (Checkout Session: $webhook->webhooks_matching_reference)", ['process' => '[mollie-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'session_gateway_ref' => $webhook->webhooks_matching_reference]);
                     $webhook->update([
-                        'webhooks_status' => 'failed',
-                        'webhooks_comment' => "no corresponding (payment_session) record was found for this webhook. (Checkout Session: $webhook->webhooks_matching_reference)",
+                        'webhooks_status' => 'completed',
                     ]);
                     //skip to next webhook in the batch
                     continue;
@@ -82,10 +83,9 @@ class OnetimePayment {
                 //check if there is a corresponding invoice for the payment session
                 if (!$invoice = \App\Models\Invoice::Where('bill_invoiceid', $session->session_invoices)->first()) {
                     //log error
-                    Log::critical("no corresponding (invoice) (Invoice ID: $session->session_invoices) record was found for this payment session", ['process' => '[mollie-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payment_session' => $session]);
+                    Log::info("no corresponding (invoice) (Invoice ID: $session->session_invoices) record was found for this payment session", ['process' => '[mollie-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payment_session' => $session]);
                     $webhook->update([
-                        'webhooks_status' => 'failed',
-                        'webhooks_comment' => "no corresponding invoice (Invoice ID: $session->session_invoices) was found for the payment session (Checkout Session: $session->session_gateway_ref) associated with this webhook",
+                        'webhooks_status' => 'completed',
                     ]);
                     //skip to next webhook in the batch
                     continue;

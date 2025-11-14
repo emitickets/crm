@@ -129,10 +129,12 @@ class Timesheets extends Controller {
         }
 
         //validate if user is assigned to this task
-        if (!$taskpermissions->check('assigned', request('my_assigned_tasks'))) {
-            abort(409, __('lang.you_are_now_not_assigned_to_this_task'));
+        if (!auth()->user()->is_admin) {
+            if (!$taskpermissions->check('assigned', request('my_assigned_tasks'))) {
+                abort(409, __('lang.you_are_now_not_assigned_to_this_task'));
+            }
         }
-
+        
         //get task
         $task = \App\Models\Task::Where('task_id', request('my_assigned_tasks'))->first();
 
@@ -147,12 +149,13 @@ class Timesheets extends Controller {
         }
 
         $timer = new \App\Models\Timer();
-        $timer->timer_creatorid = auth()->id();
+        $timer->timer_creatorid = request('timesheet_user');
         $timer->timer_created = request('timer_created');
         $timer->timer_time = $total;
         $timer->timer_taskid = $task->task_id;
         $timer->timer_projectid = $task->task_projectid;
         $timer->timer_clientid = $task->task_clientid;
+        $timer->timer_recorded_by = auth()->id();
         $timer->timer_status = 'stopped';
         $timer->save();
 

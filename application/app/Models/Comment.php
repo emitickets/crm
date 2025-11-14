@@ -9,6 +9,7 @@ Relation::morphMap([
     'project' => 'App\Models\Project',
     'task' => 'App\Models\Task',
     'ticket' => 'App\Models\Ticket',
+    'checklist' => 'App\Models\Checklist',
 ]);
 
 class Comment extends Model {
@@ -53,5 +54,19 @@ class Comment extends Model {
      */
     public function attachments() {
         return $this->morphMany('App\Models\Attachment', 'attachmentresource');
+    }
+
+    /**
+     * accessor getDeletePermissionAttribute
+     * Check if current user can delete this comment
+     */
+    public function getDeletePermissionAttribute() {
+        if (auth()->check() && $this->comment_creatorid == auth()->id()) {
+            return true;
+        }
+        if (auth()->check() && auth()->user()->is_admin) {
+            return true;
+        }
+        return false;
     }
 }

@@ -33,7 +33,7 @@ class StoreResponse implements Responsable {
 
         //(1) we have zero errors and some rows were imported
         if ($count_passed > 0 && $error_count == 0) {
-            $html = view('pages/import/common/passed', compact('count_passed', 'error_count', 'error_ref', 'type'))->render();
+            $html = view('pages/import/common/passed', compact('count_passed', 'error_count', 'error_ref', 'skipped', 'type'))->render();
             $jsondata['dom_html'][] = array(
                 'selector' => '#importing-modal-container',
                 'action' => 'replace',
@@ -42,7 +42,7 @@ class StoreResponse implements Responsable {
 
         //(2) some rows passed and some failed
         if ($count_passed > 0 && $error_count > 0) {
-            $html = view('pages/import/common/partial', compact('count_passed', 'error_count', 'error_ref', 'type'))->render();
+            $html = view('pages/import/common/partial', compact('count_passed', 'error_count', 'error_ref', 'skipped', 'type'))->render();
             $jsondata['dom_html'][] = array(
                 'selector' => '#importing-modal-container',
                 'action' => 'replace',
@@ -51,7 +51,7 @@ class StoreResponse implements Responsable {
 
         //(3) nothing was imported and no error - perhaps a blank xls file?
         if ($count_passed == 0 && $error_count == 0) {
-            $html = view('pages/import/common/nothing', compact('count_passed', 'error_count', 'error_ref', 'type'))->render();
+            $html = view('pages/import/common/nothing', compact('count_passed', 'error_count', 'error_ref', 'skipped', 'type'))->render();
             $jsondata['dom_html'][] = array(
                 'selector' => '#importing-modal-container',
                 'action' => 'replace',
@@ -60,7 +60,7 @@ class StoreResponse implements Responsable {
 
         //(4) all rows failed
         if ($count_passed == 0 && $error_count > 0) {
-            $html = view('pages/import/common/failed', compact('count_passed', 'error_count', 'error_ref', 'type'))->render();
+            $html = view('pages/import/common/failed', compact('count_passed', 'error_count', 'error_ref', 'skipped', 'type'))->render();
             $jsondata['dom_html'][] = array(
                 'selector' => '#importing-modal-container',
                 'action' => 'replace',

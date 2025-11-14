@@ -13,6 +13,18 @@
             <div class="r-panel-body table-config-ajax" data-url="{{ url('preferences/tables') }}" data-type="form"
                 data-form-id="table-config-form" data-ajax-type="post" data-progress-bar="hidden">
 
+                <!--tableconfig_column_1 [project_title]-->
+                <div class="p-b-5">
+                    <label class="custom-control custom-checkbox table-config-checkbox-container">
+                        <input name="tableconfig_column_1" type="checkbox"
+                            class="custom-control-input table-config-checkbox cursor-pointer"
+                            {{ runtimePrechecked(config('table.tableconfig_column_1')) }}>
+                        <span class="custom-control-indicator"></span>
+                        <span class="custom-control-description">@lang('lang.id')</span>
+                    </label>
+                </div>
+
+
                 <!--tableconfig_column_2 [project_title]-->
                 <div class="p-b-5">
                     <label class="custom-control custom-checkbox table-config-checkbox-container">
@@ -218,7 +230,7 @@
                     </label>
                 </div>
                 @endif
-                
+
 
                 <!--tableconfig_column_18 [count_files]-->
                 <div class="p-b-5">

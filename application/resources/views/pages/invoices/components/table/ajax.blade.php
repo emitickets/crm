@@ -77,9 +77,17 @@
     <!--tableconfig_column_7 [created by] -->
     <td class="invoices_col_tableconfig_column_7 {{ config('table.tableconfig_column_7') }} tableconfig_column_7"
         id="invoices_col_tableconfig_column_7_{{ $invoice->bill_invoiceid }}">
-        <img src="{{ getUsersAvatar($invoice->avatar_directory, $invoice->avatar_filename, $invoice->bill_creatorid) }}"
-            alt="user" class="img-circle avatar-xsmall">
-        <span class="user-profile-first-name">{{ checkUsersName($invoice->first_name, $invoice->bill_creatorid)  }}</span>
+        <span class="printing_hidden">
+            <img src="{{ getUsersAvatar($invoice->avatar_directory, $invoice->avatar_filename, $invoice->bill_creatorid) }}"
+                alt="user" class="img-circle avatar-xsmall printing_hidden">
+            <span
+                class="user-profile-first-name">{{ checkUsersName($invoice->first_name, $invoice->bill_creatorid)  }}</span>
+        </span>
+
+        <!--print view-->
+        <span class="hidden printing_visible">
+            {{ $invoice->first_name ?? runtimeUnkownUser() }} {{ $invoice->last_name ?? '' }}
+        </span>
     </td>
 
     <!--tableconfig_column_8 [project] -->
@@ -276,11 +284,21 @@
                         {{ cleanLang(__('lang.quick_edit')) }}
                     </a>
                     <!--email to client-->
+                    @if(auth()->user()->role->role_invoices > 1)
                     <a class="dropdown-item confirm-action-info" href="javascript:void(0)"
                         data-confirm-title="{{ cleanLang(__('lang.email_to_client')) }}"
                         data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}"
                         data-url="{{ url('/invoices') }}/{{ $invoice->bill_invoiceid }}/resend?ref=list">
                         {{ cleanLang(__('lang.email_to_client')) }}</a>
+                    @endif
+                    <!--overdue invoice reminder-->
+                    @if(auth()->user()->role->role_invoices > 1 && $invoice->bill_status == 'overdue')
+                    <a class="dropdown-item confirm-action-info" href="javascript:void(0)"
+                        data-confirm-title="{{ cleanLang(__('lang.send_overdue_reminder_info')) }}"
+                        data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}"
+                        data-url="{{ url('/invoices') }}/{{ $invoice->bill_invoiceid }}/overdue-reminder?ref=list">
+                        {{ cleanLang(__('lang.send_overdue_reminder')) }}</a>
+                    @endif
                     <!--add payment-->
                     @if(auth()->user()->role->role_invoices > 1)
                     <a class="dropdown-item actions-modal-button js-ajax-ux-request reset-target-modal-form edit-add-modal-button"

@@ -13,6 +13,15 @@
         </div>
         @endif
 
+        <!--TOGGLE STATS-->
+        <button type="button" data-toggle="tooltip" title="{{ cleanLang(__('lang.quick_stats')) }}"
+            class="list-actions-button btn btn-page-actions waves-effect waves-dark js-toggle-stats-widget update-user-ux-preferences"
+            data-type="statspanel" data-progress-bar="hidden"
+            data-url-temp="{{ url('/') }}/{{ auth()->user()->team_or_contact }}/updatepreferences" data-url=""
+            data-target="list-pages-stats-widget">
+            <i class="ti-stats-up"></i>
+        </button>
+
         <!--IMPORTING-->
         @if(config('visibility.list_page_actions_importing'))
         <button type="button" title="{{ cleanLang(__('lang.import_clients')) }}" id="clients-import-button"

@@ -5,12 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
-
 Relation::morphMap([
     'lead' => 'App\Models\Lead',
     'task' => 'App\Models\Task',
+    'project' => 'App\Models\Project',
 ]);
-
 
 class Checklist extends Model {
 
@@ -29,11 +28,21 @@ class Checklist extends Model {
 
     /**
      * relatioship business rules:
-     *   - leads, tasks etc can have many checklists
+     *   - leads, tasks, projects etc can have many checklists
      *   - the checklist can be belong to just one of the above
      */
     public function checklistresource() {
         return $this->morphTo();
+    }
+
+    /**
+     * relatioship business rules:
+     *         - the Checklist can have many Comments
+     *         - the Comment belongs to one Checklist
+     *         - other Comments can belong to other tables
+     */
+    public function comments() {
+        return $this->morphMany('App\Models\Comment', 'commentresource')->orderBy('comment_created', 'desc');
     }
 
 }

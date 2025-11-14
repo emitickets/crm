@@ -7,7 +7,7 @@
 <div id="webform-builder-wraper" class="p-t-40">
 
     <!-- FORM BUILDER JAVASCRIPT-->
-    <script src="public/vendor/js/formbuilder/form-builder.min.js?v={{ config('system.versioning') }}"></script>
+    <script src="/public/vendor/js/formbuilder/form-builder.min.js?v={{ config('system.versioning') }}"></script>
     <script src="public/js/webforms/webforms.js?v={{ config('system.versioning') }}"></script>
 
     <div class="webform-builder-container" id="webform-builder-container">
@@ -29,14 +29,17 @@
 
     <!--DYNAMIC JAVASCRIPT-->
     <script>
-
         /*------------------------------------------------------------------------------------------------------------------------
          * [fix: oct 2023]
-         * clean up the special character `&#39;` that we added in the backend (Formbuilder) with actual `'` single quote
+         * clean up the special characters that we added in the backend (Formbuilder) with actual characters
+         * single quuote '
+         * question mark ?
          * ----------------------------------------------------------------------------------------------------------------------*/
         function nxRevertSpecialCharacter(key, value) {
             if (typeof value === 'string') {
-                return value.replace(/\&#39;/g, "'");
+                return value
+                    .replace(/\&#39;/g, "'")
+                    .replace(/\&#63;/g, "?");
             }
             return value;
         }

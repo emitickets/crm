@@ -299,6 +299,7 @@
     @include('pages.bill.components.modals.category-items')
     @include('pages.bill.components.modals.expenses')
     @include('pages.bill.components.timebilling.modal')
+    @include('pages.bill.components.modals.bill-tasks')
 
     <!--[DYNAMIC INLINE SCRIPT] - Get lavarel objects and convert to javascript onject-->
     <script>

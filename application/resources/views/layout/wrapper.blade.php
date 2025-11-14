@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="{{ auth()->user()->type ?? '' }} {{ config('visibility.page_rendering') }}">
+<html lang="en" class="{{ auth()->user()->type ?? '' }} {{ config('visibility.page_rendering') }} {{ config('active_theme') }}">
 
 <!--CRM - GROWCRM.IO-->
 @include('layout.header')
@@ -51,9 +51,12 @@
             <!--notifications panel-->
             @include('nav.notifications-panel')
             
-            <!--reminders panel-->
+            <!--panels-->
             @include('nav.reminders-panel')
+
         </div>
+        @include('pages.starred.panel')
+
         <!--page wrapper-->
     </div>
 

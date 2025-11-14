@@ -36,4 +36,23 @@ class Timer extends Model {
     public function task() {
         return $this->belongsTo('App\Models\Task', 'timer_taskid', 'task_id');
     }
+
+    /**
+     * timer_recorded_by field links to user user table
+     *         - first_name
+     *         - last_name
+     */
+    public function getRecordedByAttribute() {
+
+        // Find the user who recorded the timer
+        $user = User::find($this->timer_recorded_by);
+
+        // Return user's full name or a default value if user not found
+        if ($user) {
+            return $user->first_name . ' ' . $user->last_name;
+        }
+
+        return '---';
+    }
+
 }

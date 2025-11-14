@@ -49,7 +49,7 @@ class Index {
             if (auth()->user()->role->role_leads >= 1) {
                 //[limit] - for users with only local level scope
                 if (auth()->user()->role->role_leads_scope == 'own') {
-                    request()->merge(['filter_my_leads' => array(auth()->id())]);
+                    request()->merge(['filter_created_by_or_assigned_to_me' => array(auth()->id())]);
                 }
                 //toggle 'my leads' button opntions
                 $this->toggleOwnFilter();

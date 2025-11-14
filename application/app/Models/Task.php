@@ -134,4 +134,110 @@ class Task extends Model {
     public function reminders() {
         return $this->morphMany('App\Models\Reminder', 'reminderresource');
     }
+
+    /**
+     * relatioship business rules:
+     *         - the Task Status can have many Tasks
+     *         - the Task belongs to one Task Status
+     */
+    public function status() {
+        return $this->belongsTo('App\Models\TaskStatus', 'task_status', 'taskstatus_id');
+    }
+
+    /**
+     * Get total time logged for this task
+     * @return int (seconds)
+     */
+    public function getTimeLoggedAttribute() {
+        return $this->timers()
+            ->where('timer_status', 'stopped')
+            ->sum('timer_time');
+    }
+
+    /**
+     * Get time already billed for this task
+     * @return int (seconds)
+     */
+    public function getTimeBilledAttribute() {
+        return $this->timers()
+            ->where('timer_billing_status', 'invoiced')
+            ->where('timer_status', 'stopped')
+            ->sum('timer_time');
+    }
+
+    /**
+     * Get unbilled time for this task
+     * @return int (seconds)
+     */
+    public function getTimeUnbilledAttribute() {
+        return $this->timers()
+            ->where('timer_billing_status', 'not_invoiced')
+            ->where('timer_status', 'stopped')
+            ->sum('timer_time');
+    }
+
+    /**
+     * Get comma separated list of unbilled timer IDs for this task
+     * @return string
+     */
+    public function getTimeUnbilledTimersAttribute() {
+        return $this->timers()
+            ->where('timer_billing_status', 'not_invoiced')
+            ->where('timer_status', 'stopped')
+            ->pluck('timer_id')
+            ->implode(',');
+    }
+
+    /**
+     * Get the latest activity for this task
+     * @usage $task->latest_activity
+     * @return object with date and user properties
+     */
+    public function getLatestActivityAttribute() {
+        //get the latest event for this task
+        $event = \App\Models\Event::where('event_parent_type', 'task')
+            ->where('event_parent_id', $this->task_id)
+            ->with('creator')
+            ->orderBy('event_created', 'desc')
+            ->first();
+
+        //return object with date and user
+        if ($event) {
+            return (object) [
+                'date' => $event->event_created,
+                'user' => $event->creator,
+            ];
+        }
+
+        //return default object
+        return (object) [
+            'date' => '0000-00-00 00:00:00',
+            'user' => null,
+        ];
+    }
+
+    /**
+     * relatioship business rules:
+     *         - the Task can have many Starred entries
+     *         - the Starred belongs to one Task
+     *         - uses morphMany for polymorphic relationship
+     */
+    public function starred() {
+        return $this->morphMany('App\Models\Starred', 'starredresource', 'starred_resource_type', 'starred_resource_id');
+    }
+
+    /**
+     * check if the task is starred by the current user
+     * @return bool
+     */
+    public function getIsStarredAttribute() {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return \App\Models\Starred::where('starred_userid', auth()->id())
+            ->where('starred_resource_type', 'task')
+            ->where('starred_resource_id', $this->task_id)
+            ->exists();
+    }
 }

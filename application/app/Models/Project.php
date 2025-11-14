@@ -174,6 +174,27 @@ class Project extends Model {
     }
 
     /**
+     * Get all users associated with this project
+     * This includes assigned users, managers, and client users
+     */
+    public function users() {
+        // Get assigned users
+        $assigned = $this->assigned()->get();
+
+        // Get project managers
+        $managers = $this->managers()->get();
+
+        // Get client users
+        $clientUsers = collect();
+        if ($this->client) {
+            $clientUsers = $this->client->users()->get();
+        }
+
+        // Merge all collections and get unique users by id
+        return $assigned->merge($managers)->merge($clientUsers)->unique('id');
+    }
+
+    /**
      * The assigned users table records
      */
     public function assignedrecords() {
@@ -205,4 +226,65 @@ class Project extends Model {
         return $this->hasMany('App\Models\Ticket', 'ticket_projectid', 'project_id');
     }
 
+    /**
+     * relatioship business rules:
+     *         - the Project can have many Starred entries
+     *         - the Starred belongs to one Project
+     *         - uses morphMany for polymorphic relationship
+     */
+    public function starred() {
+        return $this->morphMany('App\Models\Starred', 'starredresource', 'starred_resource_type', 'starred_resource_id');
+    }
+
+    /**
+     * check if the project is starred by the current user
+     * @return bool
+     */
+    public function getIsStarredAttribute() {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return \App\Models\Starred::where('starred_userid', auth()->id())
+            ->where('starred_resource_type', 'project')
+            ->where('starred_resource_id', $this->project_id)
+            ->exists();
+    }
+
+    
+    /**
+     * check if the project's comments are starred by the current user
+     * @return bool
+     */
+    public function getIsCommentStarredAttribute() {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return \App\Models\Starred::where('starred_userid', auth()->id())
+            ->where('starred_resource_type', 'project-comments')
+            ->where('starred_resource_id', $this->project_id)
+            ->exists();
+    }
+
+    /**
+     * get the latest activity for this project
+     * @return object|null
+     */
+    public function getLatestActivityAttribute() {
+        $latestEvent = \App\Models\Event::where('eventresource_type', 'project')
+            ->where('eventresource_id', $this->project_id)
+            ->with('creator')
+            ->orderBy('event_created', 'desc')
+            ->first();
+
+        if (!$latestEvent) {
+            return null;
+        }
+
+        return (object) [
+            'date' => $latestEvent->event_created,
+            'user' => $latestEvent->creator,
+        ];
+    }
 }

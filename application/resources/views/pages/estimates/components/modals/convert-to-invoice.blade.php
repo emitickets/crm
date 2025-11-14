@@ -20,7 +20,7 @@
                 <input type="text" class="form-control  form-control-sm pickadate" autocomplete="off"
                     name="bill_due_date_edit" value=""
                     autocomplete="off">
-                <input class="mysql-date" type="hidden" name="bill_date" id="bill_due_date_edit"
+                <input class="mysql-date" type="hidden" name="bill_due_date" id="bill_due_date_edit"
                     value="">
             </div>
         </div>

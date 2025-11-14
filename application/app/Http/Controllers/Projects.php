@@ -13,9 +13,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Projects\ProjectUpdateAutomation;
 use App\Http\Requests\Projects\ProjectValidation;
 use App\Http\Responses\Common\ChangeCategoryResponse;
-use App\Http\Responses\Projects\PinningResponse;
 use App\Http\Responses\Projects\ActivateResponse;
 use App\Http\Responses\Projects\ArchiveResponse;
+use App\Http\Responses\Projects\BulkActionsResponse;
 use App\Http\Responses\Projects\BulkChangeStatusResponse;
 use App\Http\Responses\Projects\BulkChangeStatusUpdateResponse;
 use App\Http\Responses\Projects\ChangeAssignedResponse;
@@ -30,6 +30,7 @@ use App\Http\Responses\Projects\DestroyResponse;
 use App\Http\Responses\Projects\DetailsResponse;
 use App\Http\Responses\Projects\EditAutomationResponse;
 use App\Http\Responses\Projects\EditResponse;
+use App\Http\Responses\Projects\PinningResponse;
 use App\Http\Responses\Projects\PrefillProjectResponse;
 use App\Http\Responses\Projects\RemoveCoverResponse;
 use App\Http\Responses\Projects\SetFileCoverResponse;
@@ -168,6 +169,11 @@ class Projects extends Controller {
             'updateAutomation',
             'BulkChangeStatusUpdate',
             'BulkchangeAssignedUpdate',
+            'bulkArchive',
+            'bulkRestore',
+            'bulkChangeProgress',
+            'bulkChangeProgressUpdate',
+            'bulkStopTimers',
         ]);
 
         $this->middleware('projectsMiddlewareShow')->only([
@@ -208,6 +214,10 @@ class Projects extends Controller {
         $this->middleware('projectsMiddlewareBulkEdit')->only([
             'changeCategoryUpdate',
             'BulkChangeStatusUpdate',
+            'bulkArchive',
+            'bulkRestore',
+            'bulkChangeProgressUpdate',
+            'bulkStopTimers',
         ]);
 
         $this->middleware('projectsMiddlewareBulkAssign')->only([
@@ -631,6 +641,7 @@ class Projects extends Controller {
         case 'payments':
         case 'timesheets':
         case 'notes':
+        case 'checklists':
         case 'tickets':
         case 'milestones':
         case 'tasks':
@@ -1112,6 +1123,139 @@ class Projects extends Controller {
         return new ActivateResponse($payload);
     }
 
+    /**
+     * Archive multiple projects
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkArchive() {
+
+        //update projects using whereIn
+        $allrows = array();
+        foreach (request('ids') as $project_id => $value) {
+            if ($value == 'on') {
+                //get project and update status
+                if ($project = \App\Models\Project::Where('project_id', $project_id)->first()) {
+                    $project->project_active_state = 'archived';
+                    $project->save();
+
+                    //get refreshed project
+                    $projects = $this->projectrepo->search($project_id, ['apply_filters' => false]);
+                    $project = $projects->first();
+
+                    //apply permissions
+                    $this->applyPermissions($project);
+
+                    //add to array
+                    $allrows[] = $projects;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'archive',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
+     * Restore multiple projects
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkRestore() {
+
+        //update projects using whereIn
+        $allrows = array();
+        foreach (request('ids') as $project_id => $value) {
+            if ($value == 'on') {
+
+                //get project and update status
+                if ($project = \App\Models\Project::Where('project_id', $project_id)->first()) {
+                    $project->project_active_state = 'active';
+                    $project->save();
+
+                    //get refreshed project
+                    $projects = $this->projectrepo->search($project_id, ['apply_filters' => false]);
+                    $project = $projects->first();
+
+                    //apply permissions
+                    $this->applyPermissions($project);
+
+                    //add to array
+                    $allrows[] = $projects;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'restore',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
+     * Show the form for bulk updating projects progress
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkChangeProgress() {
+
+        //mimic a single project
+        $project['project_progress_manually'] = 'yes';
+
+        //reponse payload
+        $payload = [
+            'type' => 'show',
+            'project' => $project,
+        ];
+
+        //show the form
+        return new UpdateProgressResponse($payload);
+    }
+
+    /**
+     * Update multiple projects progress
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkChangeProgressUpdate() {
+        //update projects using whereIn
+        $allrows = array();
+        foreach (request('ids') as $project_id => $value) {
+            if ($value == 'on') {
+                //get project and update progress
+                if ($project = \App\Models\Project::Where('project_id', $project_id)->first()) {
+                    $project->project_progress = request('project_progress');
+                    $project->project_progress_manually = (request('project_progress_manually') == 'on') ? 'yes' : 'no';
+                    $project->save();
+
+                    //get refreshed project
+                    $projects = $this->projectrepo->search($project_id, ['apply_filters' => false]);
+                    $project = $projects->first();
+
+                    //apply permissions
+                    $this->applyPermissions($project);
+
+                    //add to array
+                    $allrows[] = $projects;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'update-progress',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
+    }
     /**
      * change status project status
      * @return \Illuminate\Http\Response
@@ -2174,6 +2318,45 @@ class Projects extends Controller {
         //generate a response
         return new PinningResponse($payload);
 
+    }
+
+    /**
+     * Stop all timers on multiple projects
+     * @param object TimerRepository instance of the repository
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkStopTimers(TimerRepository $timerepo) {
+
+        //process all selected projects
+        $allrows = array();
+        foreach (request('ids') as $project_id => $value) {
+            if ($value == 'on') {
+                //stop all running timers for this project
+                $data = [
+                    'timer_projectid' => $project_id,
+                ];
+                $timerepo->stopRunningTimers($data);
+
+                //get refreshed project
+                $projects = $this->projectrepo->search($project_id, ['apply_filters' => false]);
+                $project = $projects->first();
+
+                //apply permissions
+                $this->applyPermissions($project);
+
+                //add to array
+                $allrows[] = $projects;
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'stop-timers',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
     }
 
     /**

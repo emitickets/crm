@@ -11,6 +11,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\Timeline\IndexResponse;
+use App\Http\Responses\Timeline\UserActivityResponse;
 use App\Permissions\ProjectPermissions;
 use App\Repositories\ClientRepository;
 use App\Repositories\EventRepository;
@@ -139,6 +140,36 @@ class Timeline extends Controller {
 
         //response
         return new IndexResponse($payload);
+    }
+
+    /**
+     * Users activity feed (timeline feed)
+     *
+     * @param string $id users unique_id
+     * @return UserActivityResponse
+     */
+    public function user($id) {
+
+        //filter by user's creator id
+        request()->merge([
+            'event_creatorid' => $id,
+        ]);
+
+        //get timeline events for this user
+        $events = $this->eventrepo->search('', ['stats' => 'count-events']);
+
+        //default settings
+        $page = $this->pageSettings('timeline');
+
+        //payload
+        $payload = [
+            'page' => $page,
+            'events' => $events,
+            'count' => $events->total(),
+        ];
+
+        //response
+        return new UserActivityResponse($payload);
     }
 
     /**

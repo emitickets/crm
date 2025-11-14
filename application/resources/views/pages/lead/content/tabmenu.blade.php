@@ -26,8 +26,8 @@
             data-loading-target="card-leads-left-panel"><span class="hidden-sm-up"><i class="ti-notepad"></i></span><span class="hidden-xs-down">@lang('lang.my_notes')</span></a>
     </li>
 
-    <!--log [FUTURE]-->
-    <li class="nav-item hidden"> <a class="nav-link ajax-request" data-toggle="tab" href="javascript:void(0);" role="tab"
-            data-url="{{ url('leads/content/'.$lead->lead_id.'/show-logs') }}" data-loading-class="loading-before-centre"
-            data-loading-target="card-leads-left-panel"><span class="hidden-sm-up"><i class="ti-comment-alt"></i></span><span class="hidden-xs-down">@lang('lang.log')</span></a> </li>
+     <!--logs-->
+     <li class="nav-item"> <a class="nav-link ajax-request" data-toggle="tab" href="javascript:void(0);" role="tab"
+        data-url="{{ url('leads/content/'.$lead->lead_id.'/show-logs') }}" data-loading-class="loading-before-centre"
+        data-loading-target="card-leads-left-panel"><span class="hidden-sm-up"><i class="ti-comment-alt"></i></span><span class="hidden-xs-down">@lang('lang.log')</span></a> </li>
 </ul>

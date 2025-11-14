@@ -42,7 +42,9 @@ class SubscriptionPayment {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+        
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /**
          *  process the web hoooks. This only processes one subscription at a time (to avoid timeouts)
@@ -75,10 +77,10 @@ class SubscriptionPayment {
                 //check if we have corresponding 'payment_session' for thie webhook
                 if (!$session = \App\Models\PaymentSession::Where('session_gateway_ref', $webhook->webhooks_matching_reference)->first()) {
                     //log error
-                    Log::critical("no corresponding (payment_session) record was found for this webhook (Checkout Session: $webhook->webhooks_matching_reference)", ['process' => '[cronjob][stripe-subscription-payment]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'session_gateway_ref' => $webhook->webhooks_matching_reference]);
+                    Log::info("no corresponding (payment_session) record was found for this webhook (Checkout Session: $webhook->webhooks_matching_reference)", ['process' => '[cronjob][stripe-subscription-payment]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'session_gateway_ref' => $webhook->webhooks_matching_reference]);
                     $webhook->update([
-                        'webhooks_status' => 'failed',
-                        'webhooks_comment' => "no corresponding (payment_session) record was found for this webhook. (Checkout Session: $webhook->webhooks_matching_reference)",
+                        'webhooks_status' => 'completed',
+                        'webhooks_completed_at' => now(),
                     ]);
                     //skip to next webhook in the batch
                     continue;
@@ -87,10 +89,10 @@ class SubscriptionPayment {
                 //check if there is a corresponding subscription for the payment session
                 if (!$subscription = \App\Models\Subscription::Where('subscription_id', $session->session_subscription)->first()) {
                     //log error
-                    Log::critical("no corresponding (subscription) (ID: $session->session_subscription) record was found for this payment session", ['process' => '[cronjob][stripe-subscription-payment]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payment_session' => $session]);
+                    Log::info("no corresponding (subscription) (ID: $session->session_subscription) record was found for this payment session", ['process' => '[cronjob][stripe-subscription-payment]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payment_session' => $session]);
                     $webhook->update([
-                        'webhooks_status' => 'failed',
-                        'webhooks_comment' => "no corresponding invoice (Invoice ID: $session->session_invoices) was found for the payment session (Checkout Session: $session->session_gateway_ref) associated with this webhook",
+                        'webhooks_status' => 'completed',
+                        'webhooks_completed_at' => now(),
                     ]);
                     //skip to next webhook in the batch
                     continue;

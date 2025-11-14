@@ -40,9 +40,9 @@ class StripeRepository {
             $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
             //make asimple request to check key is valide
             $stripe->webhookEndpoints->all(['limit' => 3]);
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             return __('lang.stripe_authentication_error');
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             return __('lang.stripe_network_error');
         } catch (Exception $e) {
             return __('lang.stripe_generic_error');
@@ -65,10 +65,10 @@ class StripeRepository {
         try {
             $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
             $products = $stripe->products->all();
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-products]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-products]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return false;
         } catch (Exception $e) {
@@ -106,10 +106,10 @@ class StripeRepository {
         try {
             $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
             $prices = $stripe->prices->all(['product' => $product_id]);
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-products-prices]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'product_id' => $product_id]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-products-prices]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'product_id' => $product_id]);
             return false;
         } catch (Exception $e) {
@@ -146,10 +146,10 @@ class StripeRepository {
         try {
             $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
             $product = $stripe->products->retrieve($product_id, []);
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-product]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'product_id' => $product_id]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-product]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'product_id' => $product_id]);
             return false;
         } catch (Exception $e) {
@@ -184,10 +184,10 @@ class StripeRepository {
         try {
             $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
             $price = $stripe->prices->retrieve($price_id, []);
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-products-prices]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'price_id' => $price_id]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-products-prices]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'price_id' => $price_id]);
             return false;
         } catch (Exception $e) {
@@ -225,10 +225,10 @@ class StripeRepository {
                 $subscription_stripe_id,
                 []
             );
-        } catch (\Stripe\Exception\AuthenticationException $e) {
+        } catch (\Stripe\Exception\AuthenticationException$e) {
             Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_stripe_id' => $subscription_stripe_id]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
+        } catch (\Stripe\Exception\ApiConnectionException$e) {
             Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_stripe_id' => $subscription_stripe_id]);
             return false;
         } catch (Exception $e) {
@@ -251,36 +251,32 @@ class StripeRepository {
      * @param string $subscription_stripe_id the unique stripe id
      * @return mixed error message or true
      */
-    public function cancelSubscription($subscription_stripe_id = '') {
+    public function cancelSubscription($subscription_id) {
 
-        //validation
-        if ($subscription_stripe_id == '') {
-            Log::error("Stripe Error - a subscription id was not provided", ['process' => '[stripe-cancel-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_id' => $subscription_stripe_id]);
-            return false;
-        }
+        Log::info("attempting to cancel stripe subscription", ['process' => 'stripe.cancel', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'subscription_id' => $subscription_id]);
 
-        //get the subscription
         try {
-            $stripe = new \Stripe\StripeClient(config('system.settings_stripe_secret_key'));
-            $stripe->subscriptions->cancel(
-                $subscription_stripe_id,
-                []
-            );
-        } catch (\Stripe\Exception\AuthenticationException $e) {
-            Log::error("Stripe Error - Unable to authenticate with Stripe. Check your API keys", ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_id' => $subscription_stripe_id]);
+            //set stripe key
+            \Stripe\Stripe::setApiKey(config('system.settings_stripe_secret_key'));
+
+            //cancel the subscription
+            $subscription = \Stripe\Subscription::retrieve($subscription_id);
+            $subscription->cancel();
+
+            Log::info("stripe subscription was cancelled successfully", ['process' => 'stripe.cancel', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'subscription_id' => $subscription_id]);
+
+            return true;
+
+        } catch (\Stripe\Exception\InvalidRequestException$e) {
+            Log::error("stripe subscription cancellation failed - invalid request", ['process' => 'stripe.cancel', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'subscription_id' => $subscription_id, 'error' => $e->getMessage()]);
             return false;
-        } catch (\Stripe\Exception\ApiConnectionException $e) {
-            Log::error("Stripe Network Error - Your server was unable to connect to api.stripe.com", ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_id' => $subscription_stripe_id]);
+        } catch (\Stripe\Exception\AuthenticationException$e) {
+            Log::error("stripe subscription cancellation failed - authentication error", ['process' => 'stripe.cancel', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'subscription_id' => $subscription_id, 'error' => $e->getMessage()]);
             return false;
-        } catch (\Stripe\Exception\InvalidRequestException $e) {
-            Log::error($e->getMessage(), ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_id' => $subscription_stripe_id]);
-            return false;
-        } catch (Exception $e) {
-            Log::error($e->getMessage(), ['process' => '[stripe-get-subscription]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'subscription_id' => $subscription_stripe_id]);
+        } catch (\Exception$e) {
+            Log::error("stripe subscription cancellation failed - general error", ['process' => 'stripe.cancel', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'subscription_id' => $subscription_id, 'error' => $e->getMessage()]);
             return false;
         }
-
-        //return the subscription
-        return true;
     }
+
 }

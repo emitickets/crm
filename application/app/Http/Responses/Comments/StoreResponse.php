@@ -36,7 +36,7 @@ class StoreResponse implements Responsable {
         //prepend content on top of list
         $html = view('pages/comments/components/ajax', compact('comments'))->render();
         $jsondata['dom_html'][] = array(
-            'selector' => '#comments-container',
+            'selector' => '.comments-container',
             'action' => 'prepend',
             'value' => $html);
 

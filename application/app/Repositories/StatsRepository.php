@@ -493,4 +493,34 @@ class StatsRepository {
         //results
         return $results;
     }
+
+    /**
+     * Get available years for filtering (current year back to oldest invoice)
+     *
+     * @return array of years
+     */
+    public function getAvailableYears() {
+        
+        //current year
+        $current_year = \Carbon\Carbon::now()->format('Y');
+        
+        //get the oldest invoice date
+        $oldest_invoice = \App\Models\Invoice::orderBy('bill_date', 'asc')->first();
+        
+        //default to current year if no invoices found
+        if (!$oldest_invoice) {
+            return [$current_year];
+        }
+        
+        //get the year from oldest invoice
+        $oldest_year = \Carbon\Carbon::parse($oldest_invoice->bill_date)->format('Y');
+        
+        //create array of years from current year back to oldest
+        $years = [];
+        for ($year = $current_year; $year >= $oldest_year; $year--) {
+            $years[] = $year;
+        }
+        
+        return $years;
+    }
 }

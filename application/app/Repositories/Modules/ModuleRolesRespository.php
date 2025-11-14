@@ -29,11 +29,11 @@ class ModuleRolesRespository {
                 $this->updateRoleModulePermissions($role, $active_modules);
             }
 
-            Log::info("Completed syncing module permissions", ['process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__]);
+            Log::info("MODULES - Completed syncing module permissions", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__]);
 
         } catch (\Exception$e) {
-            Log::error("Failed to sync module permissions: {$e->getMessage()}", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::error("MODULES - Failed to sync module permissions: {$e->getMessage()}", [
+                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
             ]);
         }
     }
@@ -49,13 +49,14 @@ class ModuleRolesRespository {
             $modules = Module::where('module_status', 'enabled')
                 ->get();
 
-            Log::info("retrive active modules", ['process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__]);
+            $count = $modules->count();
+
+            Log::info("MODULES - Retrieved ($count) active modules", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__]);
 
             return $modules;
 
         } catch (\Exception$e) {
-            Log::error("Failed to retrieve active modules: {$e->getMessage()}", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::error("MODULES - Failed to retrieve active modules: {$e->getMessage()}", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
             ]);
             return collect([]); // Return empty collection if query fails
         }
@@ -70,16 +71,16 @@ class ModuleRolesRespository {
         try {
             $roles = Role::all();
 
-            Log::info("Retrieved all roles", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            $count = $roles->count();
+
+            Log::info("MODULES - Retrieved ($count) user roles", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
                 'role_count' => $roles->count(),
             ]);
 
             return $roles;
 
         } catch (\Exception$e) {
-            Log::error("Failed to retrieve roles: {$e->getMessage()}", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::error("MODULES - Failed to retrieve roles: {$e->getMessage()}", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
             ]);
             return collect([]); // Return empty collection if query fails
         }
@@ -101,14 +102,12 @@ class ModuleRolesRespository {
             $role->modules = $updated_permissions;
             $role->save();
 
-            Log::info("Updated role module permissions", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::info("MODULES - Updated modules permissions for user role ($role->role_name)", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
                 'role_id' => $role->role_id, 'module_count' => count($updated_permissions),
             ]);
 
         } catch (\Exception$e) {
-            Log::error("Failed to update role module permissions: {$e->getMessage()}", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::error("MODULES - Failed to update modules permissions for user role ($role->role_name): {$e->getMessage()}", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
                 'role_id' => $role->role_id ?? 'unknown',
             ]);
         }
@@ -123,8 +122,7 @@ class ModuleRolesRespository {
     public function parseModulePermissions($modules_data = '') {
         // If no data exists, log and return an empty array
         if (empty($modules_data)) {
-            Log::info("No existing module permissions found", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::info("MODULES - No existing module permissions found", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
             ]);
             return [];
         }
@@ -138,8 +136,7 @@ class ModuleRolesRespository {
         try {
             return json_decode($modules_data, true, 512, JSON_THROW_ON_ERROR) ?? [];
         } catch (\JsonException$e) {
-            Log::error("Failed to parse module permissions JSON: {$e->getMessage()}", [
-                'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
+            Log::error("MODULES - Failed to parse module permissions JSON: {$e->getMessage()}", ['cron.sync-module-permissions', 'function' => __FUNCTION__, __FILE__,
             ]);
             return [];
         }
@@ -191,12 +188,6 @@ class ModuleRolesRespository {
                 'module_permission' => $existing_permission ?? $default_permission,
             ];
         }
-
-        Log::info("Built updated permissions array", [
-            'process' => 'cron.sync-module-permissions', 'function' => __FUNCTION__,
-            'permission_count' => count($updated_permissions),
-        ]);
-
         return $updated_permissions;
     }
 

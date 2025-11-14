@@ -311,4 +311,14 @@ class User extends Authenticatable {
         });
     }
 
+
+    /**
+     * relatioship business rules:
+     *         - the User can have many Starred entries
+     *         - the Starred belongs to one User
+     */
+    public function starred() {
+        return $this->hasMany('App\Models\Starred', 'starred_userid', 'id');
+    }
+
 }

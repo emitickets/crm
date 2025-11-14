@@ -49,11 +49,13 @@ class Clients extends Controller {
         $page = $this->pageSettings();
 
         $settings = \App\Models\Settings::find(1);
+        $settings2 = \App\Models\Settings2::find(1);
 
         //reponse payload
         $payload = [
             'page' => $page,
             'settings' => $settings,
+            'settings2' => $settings2,
         ];
 
         //show the view
@@ -68,6 +70,9 @@ class Clients extends Controller {
      */
     public function update() {
 
+        $settings = \App\Models\Settings::find(1);
+        $settings2 = \App\Models\Settings2::find(1);
+
         //custom error messages
         $messages = [];
 
@@ -75,6 +80,13 @@ class Clients extends Controller {
         if (!$this->settingsrepo->updateClients()) {
             abort(409);
         }
+
+        //update other settings
+        $settings2->settings2_importing_clients_duplicates_email = request('settings2_importing_clients_duplicates_email') == 'on' ? 'yes' : 'no';
+        $settings2->settings2_importing_clients_duplicates_telephone = request('settings2_importing_clients_duplicates_telephone') == 'on' ? 'yes' : 'no';
+        $settings2->settings2_importing_clients_duplicates_company = request('settings2_importing_clients_duplicates_company') == 'on' ? 'yes' : 'no';
+        $settings2->save();
+
 
         //reponse payload
         $payload = [];

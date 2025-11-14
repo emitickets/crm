@@ -72,6 +72,8 @@
                 role="progressbar"></div>
             @endif
         </div>
+        <!--print view-->
+        <div class="printing_progress_bar hidden">{{ round($project->project_progress) }}%</div>
     </td>
 
     <!--tableconfig_column_8 [count_pending_tasks]-->
@@ -155,7 +157,8 @@
 
     <!--tableconfig_column_21 [assigned]-->
     @if(config('visibility.projects_col_team'))
-    <td class="projects_col_team {{ config('table.tableconfig_column_21') }} tableconfig_column_21">
+    <td
+        class="projects_col_team column_assigned_users {{ config('table.tableconfig_column_21') }} tableconfig_column_21">
         <!--assigned users-->
         @if(count($project->assigned ?? []) > 0)
         @foreach($project->assigned->take(2) as $user)
@@ -190,10 +193,8 @@
         <span class="list-table-action dropdown font-size-inherit">
             <div class="dropdown-menu" aria-labelledby="quick-access-button">
                 <!--recurring settings-->
-                <a class="dropdown-item js-toggle-side-panel js-quick-access-button"
-                    href="javascript:void(0)"
-                    data-title="@lang('lang.project_files')"
-                    data-target="quick-access-sidepanel"
+                <a class="dropdown-item js-toggle-side-panel js-quick-access-button" href="javascript:void(0)"
+                    data-title="@lang('lang.project_files')" data-target="quick-access-sidepanel"
                     data-url="{{ url('/projects/'.$project->project_id.'/quick-access/files') }}"
                     data-loading-target="commonModalBody"
                     data-action-ajax-loading-target="invoices-td-container">@lang('lang.files')</a>
@@ -272,6 +273,30 @@
                 class="data-toggle-action-tooltip btn btn-outline-default-light btn-circle btn-sm opacity-4 js-toggle-pinning">
                 <i class="ti-pin2"></i>
             </a>
+        </span>
+
+        <!--star button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.star_project')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle opacity-4 btn-sm ajax-request {{ $project->is_starred ? 'hidden' : '' }}"
+                id="starred-star-button-{{ $project->project_id }}"
+                data-url="{{ url('/starred/togglestatus?action=star&resource_type=project&resource_id='.$project->project_id) }}"
+                data-loading-target="starred-star-button-{{ $project->project_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
+        </span>
+
+        <!--unstar button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.unstar_project')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm ajax-request text-warning {{ !$project->is_starred ? 'hidden' : '' }}"
+                id="starred-unstar-button-{{ $project->project_id }}"
+                data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=project&resource_id='.$project->project_id) }}"
+                data-loading-target="starred-unstar-button-{{ $project->project_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
         </span>
     </td>
     @endif

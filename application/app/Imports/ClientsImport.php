@@ -16,6 +16,7 @@ class ClientsImport implements ToModel, WithStartRow, WithHeadingRow, WithValida
     use Importable, SkipsFailures;
 
     private $rows = 0;
+    private $skipped = 0;
 
     /**
      * @param array $row
@@ -23,6 +24,12 @@ class ClientsImport implements ToModel, WithStartRow, WithHeadingRow, WithValida
      * @return \Illuminate\Database\Eloquent\Model|null
      */
     public function model(array $row) {
+
+        // Check for duplicates before creating the client
+        if ($this->isDuplicate($row)) {
+            $this->skipped++;
+            return null;
+        }
 
         ++$this->rows;
 
@@ -121,6 +128,51 @@ class ClientsImport implements ToModel, WithStartRow, WithHeadingRow, WithValida
         ]);
     }
 
+    /**
+     * Check if the client is a duplicate based on system settings
+     * Each setting is checked individually, and if any match is found, it's a duplicate
+     * @param array $row
+     * @return bool
+     */
+    protected function isDuplicate($row) {
+
+        // Check each enabled setting separately
+        $duplicate_found = false;
+
+        // Get duplicate checking settings
+        $check_email = config('system.settings2_importing_clients_duplicates_email') == 'yes';
+        $check_phone = config('system.settings2_importing_clients_duplicates_telephone') == 'yes';
+        $check_company = config('system.settings2_importing_clients_duplicates_company') == 'yes';
+
+        // If no duplicate checking is enabled, return false
+        if (!$check_email && !$check_phone && !$check_company) {
+            return false;
+        }
+
+        // Check email
+        if (!$duplicate_found && $check_email && !empty($row['email'])) {
+            if (\App\Models\User::where('email', $row['email'])->where('type', 'client')->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        // Check telephone
+        if (!$duplicate_found && $check_phone && !empty($row['phone'])) {
+            if (\App\Models\Client::where('client_phone', (string) $row['phone'])->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        // Check company name
+        if (!$duplicate_found && $check_company && !empty($row['companyname'])) {
+            if (\App\Models\Client::where('client_company_name', $row['companyname'])->exists()) {
+                $duplicate_found = true;
+            }
+        }
+
+        return $duplicate_found;
+    }
+
     public function rules(): array
     {
         return [
@@ -155,5 +207,13 @@ class ClientsImport implements ToModel, WithStartRow, WithHeadingRow, WithValida
      */
     public function getRowCount(): int {
         return $this->rows;
+    }
+
+    /**
+     * get count of skipped duplicate rows
+     * @return int
+     */
+    public function getSkippedCount(): int {
+        return $this->skipped;
     }
 }

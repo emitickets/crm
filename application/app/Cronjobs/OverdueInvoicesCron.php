@@ -28,7 +28,9 @@ class OverdueInvoicesCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //boot theme for pdf css
         middlewareBootTheme();

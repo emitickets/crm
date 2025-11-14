@@ -11,6 +11,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Log;
+use Modules\ActivityReport\Repositories\ActivityReportRepository;
+use PDF;
 
 class Test extends Controller {
 
@@ -31,10 +33,33 @@ class Test extends Controller {
      *
      * @return bool
      */
-    public function index() {
+    public function index(ActivityReportRepository $reportrepo) {
 
-        dd(config('modules'));
-        
+
+    }
+
+    /**
+     * do something
+     *
+     * @return bool
+     */
+    public function index2(ActivityReportRepository $reportrepo) {
+
+        $start_date = \Carbon\Carbon::now()->format('Y-m-d');
+        $end_date = \Carbon\Carbon::now()->format('Y-m-d');
+
+        //invoices
+        $data = $reportrepo->invoicesReport($start_date, $end_date);
+        $pdf = PDF::loadView('activityreport::reports/invoices', compact('data'));
+        $filename = __('activityreport::lang.invoices_report') . '.pdf';
+        return $pdf->download($filename);
+
+        //contracts
+        $data = $reportrepo->invoicesReport($start_date, $end_date);
+        $pdf = PDF::loadView('activityreport::reports/invoices', compact('data'));
+        $filename = __('activityreport::lang.invoices_report') . '.pdf';
+        return $pdf->download($filename);
+
     }
 
 }

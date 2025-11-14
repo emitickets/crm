@@ -11,8 +11,8 @@ class VerifyCsrfToken extends Middleware {
      * @var array
      */
     protected $except = [
-        'install*',
-        'login*',
+        'login',
+        'install',
         'webform',
         'webform/submit/*',
         'webform/fileupload',
@@ -22,12 +22,12 @@ class VerifyCsrfToken extends Middleware {
         'api/paystack/webhooks',
         'payments/thankyou',
         'payments/thankyou/razorpay',
-        'account/signup*',
-        'account/login*',
+        'modules/*/api/*',
+        'modules/*/webhooks/*',
+
 
         //[MT]
         'app-admin/webhooks/*',
         'app/settings/account/thankyou',
-        'app-admin/login*',
     ];
 }

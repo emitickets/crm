@@ -12,7 +12,6 @@
 
 namespace App\Cronjobs;
 use App\Mail\SendQueued;
-use App\Mail\SendIMAPQueued;
 use Illuminate\Support\Facades\Mail;
 
 class EmailCron {
@@ -28,7 +27,9 @@ class EmailCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //delete emails without an email address
         \App\Models\EmailQueue::Where('emailqueue_to', '')->delete();

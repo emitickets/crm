@@ -18,9 +18,10 @@ use App\Http\Responses\Common\ChangeCategoryResponse;
 use App\Http\Responses\Estimates\AcceptResponse;
 use App\Http\Responses\Estimates\AttachFilesResponse;
 use App\Http\Responses\Estimates\AttachProjectResponse;
+use App\Http\Responses\Estimates\BulkActionsResponse;
 use App\Http\Responses\Estimates\ChangeCategoryUpdateResponse;
 use App\Http\Responses\Estimates\ChangeStatusResponse;
-use App\Http\Responses\Estimates\ConvertToEstimate;
+use App\Http\Responses\Estimates\ConvertToInvoice;
 use App\Http\Responses\Estimates\CreateCloneResponse;
 use App\Http\Responses\Estimates\CreateResponse;
 use App\Http\Responses\Estimates\DeclineResponse;
@@ -161,6 +162,9 @@ class Estimates extends Controller {
             'changeStatusUpdate',
             'EditAutomationResponse',
             'updateAutomation',
+            'bulkEmailClient',
+            'bulkChangeStatusUpdate',
+            'bulkConvertToInvoiceAction',
         ]);
 
         $this->middleware('estimatesMiddlewareCreate')->only([
@@ -202,7 +206,12 @@ class Estimates extends Controller {
         $this->middleware('estimatesMiddlewareDestroy')->only(['destroy']);
 
         //only needed for the [action] methods
-        $this->middleware('estimatesMiddlewareBulkEdit')->only(['changeCategoryUpdate']);
+        $this->middleware('estimatesMiddlewareBulkEdit')->only([
+            'changeCategoryUpdate',
+            'bulkEmailClient',
+            'bulkChangeStatusUpdate',
+            'bulkConvertToInvoiceAction',
+        ]);
 
         //repos
         $this->estimaterepo = $estimaterepo;
@@ -1109,7 +1118,7 @@ class Estimates extends Controller {
         ];
 
         //show the form
-        return new ConvertToEstimate($payload);
+        return new ConvertToInvoice($payload);
     }
 
     /**
@@ -1123,7 +1132,7 @@ class Estimates extends Controller {
 
         //update invoice
         $invoice->bill_date = request('bill_date');
-        $invoice->bill_due_date = request('bill_date');
+        $invoice->bill_due_date = request('bill_due_date');
         $invoice->bill_creatorid = auth()->id();
         $invoice->bill_uniqueid = str_unique();
         $invoice->save();
@@ -1684,6 +1693,67 @@ class Estimates extends Controller {
     }
 
     /**
+     * bulk email estimates to clients
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkEmailClient() {
+
+        //process all selected estimates
+        $allrows = array();
+        foreach (request('ids') as $bill_estimateid => $value) {
+            if ($value == 'on') {
+                //validate the estimate exists
+                if (!$estimate = \App\Models\Estimate::Where('bill_estimateid', $bill_estimateid)->first()) {
+                    continue;
+                }
+
+                //skip draft
+                if ($estimate->bill_status == 'draft') {
+                    continue;
+                }
+
+                //generate the estimate
+                if (!$payload = $this->estimategenerator->generate($bill_estimateid)) {
+                    continue;
+                }
+
+                //update the estimate - marked as emailed
+                $estimate->bill_date_sent_to_customer = now();
+                $estimate->save();
+
+                //estimate
+                $estimate = $payload['bill'];
+
+                /** ----------------------------------------------
+                 * send email [queued]
+                 * ----------------------------------------------*/
+                if ($users = $this->userrepo->getClientUsers($estimate->bill_clientid, 'owner', 'collection')) {
+                    $data = [];
+                    foreach ($users as $user) {
+                        $mail = new \App\Mail\PublishEstimate($user, $data, $estimate);
+                        $mail->build();
+                    }
+                }
+
+                //get refreshed estimate
+                $estimates = $this->estimaterepo->search($bill_estimateid);
+
+                //add to array
+                $allrows[] = $estimates;
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'email-clients',
+        ];
+
+        //show the response
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
      * basic page setting for this section of the app
      * @param string $section page section (optional)
      * @param array $data any other data (optional)
@@ -1780,6 +1850,146 @@ class Estimates extends Controller {
 
         //return
         return $page;
+    }
+
+    /**
+     * Show the form for bulk changing estimate status
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkChangeStatus() {
+
+        //reponse payload
+        $payload = [
+            'estimate' => [], //mimic an estimate
+        ];
+
+        //show the form
+        return new ChangeStatusResponse($payload);
+    }
+
+/**
+ * bulk change status of estimates
+ * @return \Illuminate\Http\Response
+ */
+    public function bulkChangeStatusUpdate(EstimateAutomationRepository $automationrepo) {
+
+        //process all selected estimates
+        $allrows = array();
+        foreach (request('ids') as $bill_estimateid => $value) {
+            if ($value == 'on') {
+                //validate the estimate exists
+                if (!$estimate = \App\Models\Estimate::Where('bill_estimateid', $bill_estimateid)->first()) {
+                    continue;
+                }
+
+                //current status
+                $initial_status = $estimate->bill_status;
+
+                //if revised - mark as unread
+                if (request('bill_status') == 'revised' || request('bill_status') == 'new') {
+                    \App\Models\Estimate::where('bill_estimateid', $bill_estimateid)
+                        ->update(['bill_viewed_by_client' => 'no']);
+                }
+
+                //update the estimate
+                $estimate->bill_status = request('bill_status');
+                $estimate->save();
+
+                //get refreshed estimate
+                $estimates = $this->estimaterepo->search($bill_estimateid);
+
+                //manually run the automation (for accepted estimates)
+                if ($initial_status != $estimate->bill_status && $estimate->bill_status == 'accepted') {
+                    $automationrepo->process($estimate);
+                }
+
+                //add to array
+                $allrows[] = $estimates;
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'stats' => $this->statsWidget(),
+            'response' => 'change-status',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
+     * Show the form for bulk converting estimates to invoices
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkConvertToInvoice() {
+
+        //reponse payload
+        $payload = [
+            'estimate_id' => 0, //mimic a single estimate
+        ];
+
+        //show the form
+        return new ConvertToInvoice($payload); // Reusing existing response class
+    }
+
+    /**
+     * bulk convert estimates to invoices
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkConvertToInvoiceAction(DestroyRepository $destroyrepo) {
+
+        //process all selected estimates
+        $allrows = array();
+        $deleted_rows = array();
+        $invoice_ids = [];
+
+        foreach (request('ids') as $bill_estimateid => $value) {
+            if ($value == 'on') {
+                //validate the estimate exists
+                if (!$estimate = \App\Models\Estimate::Where('bill_estimateid', $bill_estimateid)->first()) {
+                    continue;
+                }
+
+                //convert to invoice
+                $invoice = $this->estimaterepo->convertEstimateToInvoice($bill_estimateid);
+
+                //update invoice
+                $invoice->bill_date = request('bill_date');
+                $invoice->bill_due_date = request('bill_due_date');
+                $invoice->bill_creatorid = auth()->id();
+                $invoice->bill_uniqueid = str_unique();
+                $invoice->save();
+
+                // Track invoices created
+                $invoice_ids[] = $invoice->bill_invoiceid;
+
+                //delete original estimate if requested
+                if (request('delete_original_estimate') == 'on') {
+                    $destroyrepo->destroyEstimate($bill_estimateid);
+                    // Record deleted estimate ID
+                    $deleted_rows[] = $bill_estimateid;
+                } else {
+                    //get refreshed estimate
+                    $estimates = $this->estimaterepo->search($bill_estimateid);
+                    //add to array
+                    $allrows[] = $estimates;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'deleted_rows' => $deleted_rows,
+            'stats' => $this->statsWidget(),
+            'response' => 'convert-to-invoice',
+            'invoice_ids' => $invoice_ids,
+        ];
+
+        //show the response
+        return new BulkActionsResponse($payload);
     }
 
     /**

@@ -74,7 +74,7 @@
                         @endif
 
                         @if(config('visibility.payments_col_action'))
-                        <th class="payments_col_action"><a href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a></th>
+                        <th class="payments_col_action actions_column"><a href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a></th>
                         @endif
                     </tr>
                 </thead>

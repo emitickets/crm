@@ -127,8 +127,6 @@ $(document).ready(function () {
 });
 
 
-
-
 /**--------------------------------------------------------------------------------------
  * [MAIN MENU SCROLL BAR]
  * @description: show scroll bar
@@ -794,7 +792,6 @@ function NXBootCards() {
     }
 
 
-
     /**-------------------------------------------------------------
      * FILE UPLOAD
      * ------------------------------------------------------------*/
@@ -1023,10 +1020,11 @@ function NXPostGeneralComment() {
         document_base_url: NX.site_url,
         plugins: [
             "advlist autolink lists paste link image preview code",
-            "table paste autoresize imagetools hr"
+            "table paste autoresize imagetools hr",
+            "fullscreen spellchecker"
         ],
         height: 200,
-        toolbar: 'formatselect undo redo bold | image link | alignleft aligncenter alignright outdent indent bullist numlist | hr table blockquote code',
+        toolbar: 'formatselect undo redo bold | image link | alignleft aligncenter alignright outdent indent bullist numlist | hr table blockquote code fullscreen',
         //autosave/update text area
         setup: function (editor) {
             editor.on('change', function () {
@@ -1385,79 +1383,31 @@ function NXHomeAdmin() {
         });
     }
 
-
-
-    //income vs expenses
-
-    if ($("#admin-dhasboard-income-vs-expenses").length) {
-        var chart = new Chartist.Line('.incomeexpenses', {
-            labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-            series: [
-                NX.admin_home_chart_income,
-                NX.admin_home_chart_expenses
-            ]
-        }, {
-            lineSmooth: Chartist.Interpolation.simple({
-                divisor: 2
-            }),
-            showArea: true,
-            low: 0,
-            fullWidth: true,
-            plugins: [
-                Chartist.plugins.tooltip()
-            ],
-        });
-
-        chart.on('draw', function (ctx) {
-            if (ctx.type === 'point') {
-                // Adding custom attribute to point elements to store value
-                ctx.element.attr({
-                    'ct:value': ctx.value.y
-                });
+    //tickets chart
+    if ($("#ticketsWidget").length) {
+        var chart = c3.generate({
+            bindto: '#ticketsWidget',
+            data: {
+                columns: NX.admin_home_c3_tickets_data,
+                type: 'donut',
+                onclick: function (d, i) {},
+                onmouseover: function (d, i) {},
+                onmouseout: function (d, i) {}
+            },
+            donut: {
+                label: {
+                    show: false
+                },
+                title: NX.admin_home_c3_tickets_title,
+                width: 20,
+            },
+            legend: {
+                hide: true
+            },
+            color: {
+                pattern: NX.admin_home_c3_tickets_colors
             }
         });
-
-        chart.on('created', function (ctx) {
-            var defs = ctx.svg.elem('defs');
-            defs.elem('linearGradient', {
-                id: 'gradient',
-                x1: 0,
-                y1: 1,
-                x2: 0,
-                y2: 0
-            }).elem('stop', {
-                offset: 0,
-                'stop-color': 'rgba(255, 255, 255, 1)'
-            }).parent().elem('stop', {
-                offset: 1,
-                'stop-color': 'rgba(36, 210, 181, 1)'
-            });
-
-            // Customizing tooltip position
-            $('.ct-point').on('mouseenter', function () {
-                var $tooltip = $('.chartist-tooltip');
-                var $point = $(this);
-
-                // Check if tooltip and point exist
-                if ($tooltip.length && $point.length) {
-                    var chartOffset = $('.ct-chart').offset();
-                    var x = $point.attr('cx');
-                    var y = $point.attr('cy');
-                    var value = $point.attr('ct:value');
-
-                    $tooltip.css({
-                        left: chartOffset.left + parseInt(x) + 'px',
-                        top: chartOffset.top + parseInt(y) + 'px'
-                    }).html('Value: ' + value).show();
-                }
-            });
-
-            $('.ct-point').on('mouseleave', function () {
-                $('.chartist-tooltip').hide();
-            });
-        });
-
-        var chart = [chart];
     }
 
 }
@@ -3965,8 +3915,12 @@ function NXremindersDatePicker() {
 
 
     $('#reminders-datetimepicker').on('change.datetimepicker', function (event) {
-        var formatted_date = event.date.format('YYYY-MM-DD HH:mm');
-        $('#reminder_datetime').val(formatted_date);
+        if (event.date) {
+            var formatted_date = event.date.format('YYYY-MM-DD HH:mm');
+            $('#reminder_datetime').val(formatted_date);
+        } else {
+            $('#reminder_datetime').val(''); // Or handle accordingly
+        }
     });
 
 }
@@ -5177,4 +5131,201 @@ function NXCodeMirrorCSSEditor() {
             $('#css-editor-textarea').val(editor.getValue());
         });
     });
+}
+
+
+/**--------------------------------------------------------------------------------------
+ * [CHECKLIST FILE UPLOAD]
+ * @description: handle checklist file upload via dropzone - refactored for ajax framework
+ * -------------------------------------------------------------------------------------*/
+function nxChecklistFileUpload() {
+
+    if ($("#import-checklist-file").length) {
+
+        // Get the upload URL from the import container's data-initial-url attribute
+        var upload_url = $("#import-checklist-container").attr('data-initial-url');
+
+        // Destroy existing dropzone instance if it exists
+        var existingDropzone = $("#import-checklist-file").get(0).dropzone;
+        if (existingDropzone) {
+            existingDropzone.destroy();
+        }
+
+        // Initialize the dropzone for checklist import
+        $("#import-checklist-file").dropzone({
+            url: upload_url,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            maxFiles: 1,
+            maxFilesize: 2, // MB
+            acceptedFiles: '.csv,.xlsx,.xls,.txt',
+            init: function () {
+                this.on("error", function (file, message, xhr) {
+
+                    // Handle backend error responses
+                    if (typeof xhr != 'undefined' && typeof xhr.response != 'undefined') {
+                        var error = $.parseJSON(xhr.response);
+                        if (typeof error === 'object' && typeof error.notification != 'undefined') {
+                            var message = error.notification.value;
+                        } else {
+                            var message = NXLANG.generic_error;
+                        }
+                    }
+
+                    // Handle system generated errors (e.g. apache)
+                    if (typeof xhr != 'undefined' && typeof xhr.statusText != 'undefined') {
+                        // File too large (php.ini settings)
+                        if (xhr.statusText == 'Payload Too Large') {
+                            var message = NXLANG.file_too_big;
+                        }
+                    }
+
+                    // Handle any other message types
+                    var message = (typeof message == 'undefined' || message == '' ||
+                        typeof message == 'object') ? NXLANG.generic_error : message;
+
+                    // Error notification
+                    NX.notification({
+                        type: 'error',
+                        message: message
+                    });
+
+                    // Remove the file
+                    this.removeFile(file);
+                });
+            },
+            success: function (file, response) {
+                // Get the preview box dom element
+                var $preview = $(file.previewElement);
+
+                // Add hidden field to the import container for the uploaded file
+                $("#import-checklist-file-payload").html('<input type="hidden" name="attachments[' + response.uniqueid +
+                    ']" value="' + response.filename + '">');
+
+                // Now trigger the ajax request to import the checklist items
+                nxAjaxUxRequest($("#import-checklist-container"));
+            }
+        });
+    }
+}
+
+
+//income vs expenses chart function
+function dashboardChartIncomeExpenses() {
+    if ($("#admin-dhasboard-income-vs-expenses").length) {
+        var chart = new Chartist.Line('.incomeexpenses', {
+            labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            series: [
+                NX.admin_home_chart_income,
+                NX.admin_home_chart_expenses
+            ]
+        }, {
+            lineSmooth: Chartist.Interpolation.simple({
+                divisor: 2
+            }),
+            showArea: true,
+            low: 0,
+            fullWidth: true,
+            plugins: [
+                Chartist.plugins.tooltip()
+            ],
+        });
+
+        chart.on('draw', function (ctx) {
+            if (ctx.type === 'point') {
+                // Adding custom attribute to point elements to store value
+                ctx.element.attr({
+                    'ct:value': ctx.value.y
+                });
+            }
+        });
+
+        chart.on('created', function (ctx) {
+            var defs = ctx.svg.elem('defs');
+            defs.elem('linearGradient', {
+                id: 'gradient',
+                x1: 0,
+                y1: 1,
+                x2: 0,
+                y2: 0
+            }).elem('stop', {
+                offset: 0,
+                'stop-color': 'rgba(255, 255, 255, 1)'
+            }).parent().elem('stop', {
+                offset: 1,
+                'stop-color': 'rgba(36, 210, 181, 1)'
+            });
+
+            // Customizing tooltip position
+            $('.ct-point').on('mouseenter', function () {
+                var $tooltip = $('.chartist-tooltip');
+                var $point = $(this);
+
+                // Check if tooltip and point exist
+                if ($tooltip.length && $point.length) {
+                    var chartOffset = $('.ct-chart').offset();
+                    var x = $point.attr('cx');
+                    var y = $point.attr('cy');
+                    var value = $point.attr('ct:value');
+
+                    $tooltip.css({
+                        left: chartOffset.left + parseInt(x) + 'px',
+                        top: chartOffset.top + parseInt(y) + 'px'
+                    }).html('Value: ' + value).show();
+                }
+            });
+
+            $('.ct-point').on('mouseleave', function () {
+                $('.chartist-tooltip').hide();
+            });
+        });
+
+        var chart = [chart];
+    }
+}
+
+
+/**--------------------------------------------------------------------------------------
+ * [TASK & LEADS CHECKLIST - DRAG & DROP]
+ * @description: drag and drop checklist items
+ * -------------------------------------------------------------------------------------*/
+function NXChecklistDragDrop() {
+
+    //drag and drop lead positions
+    var container = document.getElementById('card-checklists-container');
+    if (container) {
+        var stagesDraggable = dragula([container], {
+            moves: function (el, source, handle, sibling) {
+                // Exclude checklist comment body from being draggable
+                if (handle.closest('.comment-text') ||
+                    handle.classList.contains('comment-text')) {
+                    return false;
+                }
+
+                return true;
+            }
+        });
+
+        //make every board dragable area
+        stagesDraggable.on('drag', function (stage) {
+            // add 'is-moving' class to element being dragged
+            stage.classList.add('is-moving');
+        });
+        stagesDraggable.on('dragend', function (stage) {
+            // remove 'is-moving' class from element after dragging has stopped
+            stage.classList.remove('is-moving');
+            // add the 'is-moved' class for 600ms then remove it
+            window.setTimeout(function () {
+                stage.classList.add('is-moved');
+                window.setTimeout(function () {
+                    stage.classList.remove('is-moved');
+                }, 600);
+            }, 100);
+
+            //update the list
+            nxAjaxUxRequest($("#card-checklists-container"));
+
+        });
+    }
 }

@@ -46,6 +46,8 @@ class TimerRepository {
         // all client fields
         $timers->selectRaw('*');
 
+        $timers->selectRaw('(SELECT CONCAT(first_name, " ", last_name) FROM users WHERE id = timers.timer_recorded_by) as recorded_by_name');
+
         //sum all of a tasks total timers
         if (request()->filled('filter_grouping') && in_array(request('filter_grouping'), ['task', 'user', 'tasks_unbilled'])) {
             $timers->selectRaw('(SELECT sum(timer_time))
@@ -165,6 +167,9 @@ class TimerRepository {
                 break;
             case 'time':
                 $timers->orderBy('timer_time', request('sortorder'));
+                break;
+            case 'recorded_by':
+                $timers->orderBy('recorded_by_first_name', request('sortorder'));
                 break;
             case 'related':
                 //$timers->orderBy('lead_title', request('sortorder'));
@@ -331,6 +336,7 @@ class TimerRepository {
         $timer = new $this->timer;
         $timer->timer_taskid = $task->task_id;
         $timer->timer_projectid = $task->task_projectid;
+        $timer->timer_recorded_by = auth()->id();
         $timer->timer_clientid = $task->task_clientid;
         $timer->timer_started = \Carbon\Carbon::now()->timestamp;
         $timer->timer_creatorid = auth()->id();

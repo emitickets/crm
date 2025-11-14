@@ -159,6 +159,16 @@ class ShowResponse implements Responsable {
             'value' => 'NXBootCards',
         ];
 
+        //drag and drop checklist itens
+        $jsondata['postrun_functions'][] = [
+            'value' => 'NXChecklistDragDrop',
+        ];
+
+        //import checklist items
+        $jsondata['postrun_functions'][] = [
+            'value' => 'nxChecklistFileUpload',
+        ];
+
         //ajax response
         return response()->json($jsondata);
 

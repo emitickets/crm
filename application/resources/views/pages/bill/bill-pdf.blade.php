@@ -31,28 +31,62 @@
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: normal;
-            src: url('{{ storage_path("app/default/DejaVuSans.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/notosans/NotoSans-Regular.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: 400;
-            src: url('{{ storage_path("app/default/DejaVuSans.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/notosans/NotoSans-Regular.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: bold;
-            src: url('{{ storage_path("app/default/DejaVuSans-Bold.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/notosans/NotoSans-Bold.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: 600;
-            src: url('{{ storage_path("app/default/DejaVuSans-Bold.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/notosans/NotoSans-Bold.ttf") }}') format("truetype");
+        }
+    </style>
+    @endif
+
+
+    <!-- dompdf font - regular latin characters-->
+    @if(config('system.settings2_dompdf_fonts') == 'dejavu')
+    <style>
+        @font-face {
+            font-family: 'DynamicFont';
+            font-style: normal;
+            font-weight: normal;
+            src: url('{{ storage_path("app/fonts/default/DejaVuSans.ttf") }}') format("truetype");
+        }
+
+        @font-face {
+            font-family: 'DynamicFont';
+            font-style: normal;
+            font-weight: 400;
+            src: url('{{ storage_path("app/fonts/default/DejaVuSans.ttf") }}') format("truetype");
+        }
+
+        @font-face {
+            font-family: 'DynamicFont';
+            font-style: normal;
+            font-weight: bold;
+            src: url('{{ storage_path("app/fonts/default/DejaVuSans-Bold.ttf") }}') format("truetype");
+        }
+
+        @font-face {
+            font-family: 'DynamicFont';
+            font-style: normal;
+            font-weight: 600;
+            src: url('{{ storage_path("app/fonts/default/DejaVuSans-Bold.ttf") }}') format("truetype");
         }
     </style>
     @endif
@@ -64,28 +98,28 @@
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: normal;
-            src: url('{{ storage_path("app/japanese/Meiryo.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/japanese/Meiryo.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: 400;
-            src: url('{{ storage_path("app/japanese/Meiryo.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/japanese/Meiryo.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: bold;
-            src: url('{{ storage_path("app/japanese/Meiryo-Bold.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/japanese/Meiryo-Bold.ttf") }}') format("truetype");
         }
 
         @font-face {
             font-family: 'DynamicFont';
             font-style: normal;
             font-weight: 600;
-            src: url('{{ storage_path("app/japanese/Meiryo-Bold.ttf") }}') format("truetype");
+            src: url('{{ storage_path("app/fonts/japanese/Meiryo-Bold.ttf") }}') format("truetype");
         }
     </style>
     @endif
@@ -341,86 +375,86 @@
                 <tbody>
                     <tr>
                         <!--company-->
-                        <td class="x-left">
+                        <td class="x-left bill-addresses-company">
                             <div class="x-company-name">
                                 <h5 class="p-b-0 m-b-0"><strong>{{ config('system.settings_company_name') }}</strong>
                                 </h5>
                             </div>
                             @if(config('system.settings_company_address_line_1'))
-                            <div class="x-line">{{ config('system.settings_company_address_line_1') }}
-                            </div>
-                            @endif
-                            @if(config('system.settings_company_state'))
-                            <div class="x-line">
-                                {{ config('system.settings_company_state') }}
+                            <div class="x-line x-address-line">{{ config('system.settings_company_address_line_1') }}
                             </div>
                             @endif
                             @if(config('system.settings_company_city'))
-                            <div class="x-line">
+                            <div class="x-line x-city">
                                 {{ config('system.settings_company_city') }}
                             </div>
                             @endif
+                            @if(config('system.settings_company_state'))
+                            <div class="x-line x-state">
+                                {{ config('system.settings_company_state') }}
+                            </div>
+                            @endif
                             @if(config('system.settings_company_zipcode'))
-                            <div class="x-line">
+                            <div class="x-line x-zip">
                                 {{ config('system.settings_company_zipcode') }}
                             </div>
                             @endif
                             @if(config('system.settings_company_country'))
-                            <div class="x-line">
+                            <div class="x-line x-country">
                                 {{ config('system.settings_company_country') }}
                             </div>
                             @endif
 
                             <!--custom company fields-->
                             @if(config('system.settings_company_customfield_1') != '')
-                            <div class="x-line">
+                            <div class="x-line x-custom-1">
                                 {{ config('system.settings_company_customfield_1') }}
                             </div>
                             @endif
                             @if(config('system.settings_company_customfield_2') != '')
-                            <div class="x-line">
+                            <div class="x-line x-custom-2">
                                 {{ config('system.settings_company_customfield_2') }}
                             </div>
                             @endif
                             @if(config('system.settings_company_customfield_3') != '')
-                            <div class="x-line">
+                            <div class="x-line x-custom-3">
                                 {{ config('system.settings_company_customfield_3') }}
                             </div>
                             @endif
                             @if(config('system.settings_company_customfield_4') != '')
-                            <div class="x-line">
+                            <div class="x-line x-custom-4">
                                 {{ config('system.settings_company_customfield_4') }}
                             </div>
                             @endif
                         </td>
                         <td></td>
                         <!--customer-->
-                        <td class="x-right">
+                        <td class="x-right bill-addresses-client">
                             <div class="x-company-name">
                                 <h5 class="p-b-0 m-b-0"><strong>{{ $bill->client_company_name }}</strong></h5>
                             </div>
                             @if($bill->client_billing_street)
-                            <div class="x-line">
+                            <div class="x-line x-street">
                                 {{ $bill->client_billing_street }}
                             </div>
                             @endif
                             @if($bill->client_billing_city)
-                            <div class="x-line">
+                            <div class="x-line x-city">
                                 {{ $bill->client_billing_city }}
                             </div>
                             @endif
                             @if($bill->client_billing_state)
-                            <div class="x-line">
+                            <div class="x-line x-state">
                                 {{ $bill->client_billing_state }}
                             </div>
                             @endif
                             @if($bill->client_billing_zip)
-                            <div class="x-line">
+                            <div class="x-line x-zip">
                                 {{ $bill->client_billing_zip }}
                             </div>
                             @endif
                             @if($bill->client_billing_country)
-                            <div class="x-line">
+                            <div class="x-line x-country">
                                 {{ $bill->client_billing_country }}
                             </div>
                             @endif

@@ -17,6 +17,7 @@
         </div>
     </div>
 
+    <!--task collaboration-->
     <div class="form-group form-group-checkbox row">
         <label class="col-4 col-form-label text-left">{{ cleanLang(__('lang.tasks_collaboration')) }}</label>
         <div class="col-8 text-left p-t-5">
@@ -26,6 +27,20 @@
             <label for="settings_projects_assignedperm_tasks_collaborate"></label>
         </div>
     </div>
+
+    <!--manage project checklists-->
+    <div class="form-group form-group-checkbox row">
+        <label class="col-4 col-form-label text-left">{{ cleanLang(__('lang.manage_project_checklist')) }}</label>
+        <div class="col-8 text-left p-t-5">
+            <input type="checkbox" id="settings_projects_assignedperm_manage_checklists"
+                name="settings_projects_assignedperm_manage_checklists" class="filled-in chk-col-light-blue"
+                {{ runtimePrechecked($settings['settings_projects_assignedperm_manage_checklists'] ?? '') }}>
+            <label for="settings_projects_assignedperm_manage_checklists"></label>
+        </div>
+    </div>
+
+
+
     <div class="alert alert-warning">
         <h5 class="text-warning"><i class="sl-icon-info"></i> @lang('lang.warning')</h5>
         @lang('lang.changing_project_permissions_warning')

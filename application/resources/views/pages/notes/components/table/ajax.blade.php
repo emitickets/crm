@@ -17,6 +17,7 @@
             class="img-circle avatar-xsmall">
         {{ $note->first_name ?? runtimeUnkownUser() }}
     </td>
+    <!--open note-->
     <td class="notes_col_title">
         <a href="javascript:void(0)" class="show-modal-button js-ajax-ux-request" data-toggle="modal"
             data-url="{{ url('/') }}/notes/{{  $note->note_id }}" data-target="#plainModal"
@@ -52,8 +53,9 @@
             @if($note->permission_edit_delete_note)
             <button type="button" title="{{ cleanLang(__('lang.delete')) }}"
                 class="data-toggle-action-tooltip btn btn-outline-danger btn-circle btn-sm confirm-action-danger"
-                data-confirm-title="{{ cleanLang(__('lang.delete_note')) }}" data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}"
-                data-ajax-type="DELETE" data-url="{{ url( '/') }}/notes/{{  $note->note_id }} ">
+                data-confirm-title="{{ cleanLang(__('lang.delete_note')) }}"
+                data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}" data-ajax-type="DELETE"
+                data-url="{{ url( '/') }}/notes/{{  $note->note_id }} ">
                 <i class="sl-icon-trash"></i>
             </button>
             <button type="button" title="{{ cleanLang(__('lang.edit')) }}"
@@ -67,16 +69,45 @@
             </button>
             @else
             <span class="btn btn-outline-default btn-circle btn-sm disabled  {{ runtimePlaceholdeActionsButtons() }}"
-                data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}"><i class="sl-icon-trash"></i></span>
+                data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}"><i
+                    class="sl-icon-trash"></i></span>
             <span class="btn btn-outline-default btn-circle btn-sm disabled  {{ runtimePlaceholdeActionsButtons() }}"
-                data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}"><i class="sl-icon-note"></i></span>
+                data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}"><i
+                    class="sl-icon-note"></i></span>
             @endif
+            <!--view note-->
             <a href="javascript:void(0)" title="{{ cleanLang(__('lang.view')) }}"
                 class="data-toggle-action-tooltip btn btn-outline-info btn-circle btn-sm show-modal-button js-ajax-ux-request"
                 data-toggle="modal" data-url="{{ url( '/') }}/notes/{{  $note->note_id }} " data-target="#plainModal"
                 data-loading-target="plainModalBody" data-modal-title="">
                 <i class="ti-new-window"></i>
             </a>
+
+
+            <!--star note-->
+            <span class="list-table-action">
+                <button type="button" title="@lang('lang.star')"
+                    class="btn btn-outline-default-light btn-circle btn-sm opacity-4 ajax-request {{ $note->is_starred ? 'hidden' : '' }}"
+                    id="starred-star-button-{{ $note->note_id }}"
+                    data-url="{{ url('/starred/togglestatus?action=star&resource_type=note&resource_id='.$note->note_id) }}"
+                    data-ajax-type="POST" data-loading-target="starred-star-button-{{ $note->note_id }}"
+                    data-on-start-submit-button="disable">
+                    <i class="sl-icon-star"></i>
+                </button>
+            </span>
+
+            <!--unstar note-->
+            <span class="list-table-action">
+                <button type="button" title="@lang('lang.unstar')"
+                    class="btn btn-outline-warning btn-circle btn-sm opacity-4 ajax-request {{ !$note->is_starred ? 'hidden' : '' }}"
+                    id="starred-unstar-button-{{ $note->note_id }}"
+                    data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=note&resource_id='.$note->note_id) }}"
+                    data-ajax-type="POST" data-loading-target="starred-unstar-button-{{ $note->note_id }}"
+                    data-on-start-submit-button="disable">
+                    <i class="sl-icon-star"></i>
+                </button>
+            </span>
+
         </span>
         <!--action button-->
     </td>

@@ -142,4 +142,41 @@ class PublishInvoiceRepository {
         ];
 
     }
+
+    /**
+     *  - send an email to the customer
+     * @param int $id invoice id
+     * @return obj invoice
+     */
+    public function emailInvoice($id = '') {
+
+        //validate invoice id
+        if (!is_numeric($id)) {
+            return [
+                'status' => false,
+                'message' => __('lang.error_loading_item'),
+            ];
+        }
+
+        //generate the invoice
+        if (!$payload = $this->invoicegenerator->generate($id)) {
+            return [
+                'status' => false,
+                'message' => __('lang.error_loading_item'),
+            ];
+        }
+
+        //invoice
+        $invoice = $payload['bill'];
+
+        /** ----------------------------------------------
+         * send email [queued]
+         * ----------------------------------------------*/
+        if ($users = $this->userrepo->getClientUsers($invoice->bill_clientid, 'owner', 'ids')) {
+            foreach ($users as $user) {
+                $mail = new \App\Mail\PublishInvoice($user, $data, $invoice);
+                $mail->build();
+            }
+        }
+    }
 }

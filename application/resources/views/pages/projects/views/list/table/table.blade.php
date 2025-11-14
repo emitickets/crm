@@ -198,7 +198,7 @@
                             <!--tableconfig_column_21 [assigned]-->
                             @if(config('visibility.projects_col_team'))
                             <th
-                                class="projects_col_team {{ config('table.tableconfig_column_21') }} tableconfig_column_21">
+                                class="projects_col_team column_assigned_users {{ config('table.tableconfig_column_21') }} tableconfig_column_21">
                                 <a href="javascript:void(0)">{{ cleanLang(__('lang.team')) }}</a></th>
                             @endif
                             <!--tableconfig_column_22 [project_status]-->
@@ -210,7 +210,7 @@
                                         class="sorting-icons"><i class="ti-arrows-vertical"></i></span></a>
                             </th>
                             @if(config('visibility.projects_col_actions'))
-                            <th class="projects_col_action with-table-config-icon"><a
+                            <th class="projects_col_action with-table-config-icon actions_column"><a
                                     href="javascript:void(0)">{{ cleanLang(__('lang.action')) }}</a>
 
                                 <!--[tableconfig]-->

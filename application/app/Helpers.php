@@ -3642,3 +3642,184 @@ function modulesSanitizeModuleName($module_name = '') {
     return $module_name;
 
 }
+
+/**
+ * ISO4127 Currencies
+ * Based on the settings in the currencies table. Using this for modules for now, but will add
+ * ability to modify and add new currencies to this table.
+ * @param string $number unformatted numerical value
+ * @param string $currency_code ISO curreny code (i.e. USD)
+ * @return string a formatted money string e.g. $1,324.99
+ */
+function moneyFormat($number = '', $currency_code = '') {
+
+    //validate both required attributes have been passed to the function
+    if ($number == '' || $currency_code == '') {
+        return $number;
+    }
+
+    //get currency from config (already loaded during bootstrapping)
+    $currency = collect(config('currencies'))->firstWhere('currency_code', strtoupper($currency_code));
+
+    //if currency does not exist, just return the $number as it was passed
+    if (!$currency) {
+        return $number;
+    }
+
+    //number of decimal places to use
+    $decimals = (config('system.settings_system_currency_hide_decimal') == 'yes') ? 0 : 2;
+
+    //format the number with correct separators
+    $formatted = number_format(
+        $number,
+        $decimals,
+        str_replace('&nbsp;', ' ', $currency->currency_decimal_separator),
+        str_replace('&nbsp;', ' ', $currency->currency_thousands_separator)
+    );
+
+    //place currency symbol on correct side
+    if ($currency->currency_symbol_position == 'left') {
+        $formatted = $currency->currency_symbol . $formatted;
+    } else {
+        $formatted = $formatted . $currency->currency_symbol;
+    }
+
+    return $formatted;
+}
+
+/**
+ * Recurring payments cycle language
+ * @param string $cycle e.g. month, year, etc
+ * @param int $interval e.g. 1, 2 etc
+ * @return string month | 3 months
+ */
+function recurringCycleFormat($cycle = '', $interval = 1) {
+
+    switch ($cycle) {
+    case 'day':
+    case 'daily':
+        return ($interval > 1) ? $interval . ' ' . __('lang.days') : __('lang.day');
+        break;
+    case 'week':
+    case 'weekly':
+        return ($interval > 1) ? $interval . ' ' . __('lang.weeks') : __('lang.week');
+        break;
+    case 'month':
+    case 'monthly':
+        return ($interval > 1) ? $interval . ' ' . __('lang.months') : __('lang.month');
+        break;
+    case 'year':
+    case 'yearly':
+        return ($interval > 1) ? $interval . ' ' . __('lang.years') : __('lang.year');
+        break;
+    default:
+        $foo = $bar;
+    }
+
+}
+
+/**
+ * format a checklist comment for use in email the templates. 
+ * This added the original checklist as part of the comment passed to the email template
+ * @param object $comment comment model
+ * @param int $checklist checklist model
+ * @return string month | 3 months
+ */
+function formatChecklistComment($comment = [], $checklist = []) {
+
+    $posted_by = $comment->first_name ?? __('lang.comment');
+
+    $message = '<div style="margin-bottom:15px;background-color: #ffffff;padding: 8px;border-radius: 8px;margin-left: 5px;margin-right: 5px;margin-top: 10px;">
+    <strong>' . __('lang.checklist') . ': </strong>' . $checklist->checklist_text . '</div>
+    <div style="padding-left: 8px; padding-right: 8px;margin-bottom: 15px;"><strong>' . $posted_by . ':</strong> ' . $comment->comment_text . '</div>';
+
+    return $message;
+}
+
+/**
+ * Convert textarea content to HTML with proper formatting
+ *
+ * @param string $text The raw text from textarea
+ * @param array $options Configuration options that can be passed as an array
+ * @return string Formatted HTML
+ */
+function convertTextareaToHtml($text, $options = []) {
+
+    // Default options
+    $defaultOptions = [
+        'convert_urls' => true, // Convert URLs to clickable links
+        'convert_emails' => false, // Convert emails to clickable links
+        'nl2br' => true, // Convert newlines to <br> tags
+        'preserve_paragraphs' => true, // Convert double newlines to paragraphs
+        'strip_tags' => false, // Strip existing HTML tags for security
+        'trim_whitespace' => true, // Trim excess whitespace
+        'max_length' => null, // Maximum character length (null for no limit)
+    ];
+
+    $options = array_merge($defaultOptions, $options);
+
+    // Return empty string if input is null or empty
+    if (empty($text)) {
+        return '';
+    }
+
+    // Trim whitespace if enabled
+    if ($options['trim_whitespace']) {
+        $text = trim($text);
+    }
+
+    // Truncate if max length is specified
+    if ($options['max_length'] && strlen($text) > $options['max_length']) {
+        $text = substr($text, 0, $options['max_length']) . '...';
+    }
+
+    // Strip HTML tags for security if enabled
+    if ($options['strip_tags']) {
+        $text = strip_tags($text);
+    }
+
+    // Escape HTML entities
+    $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    // Convert URLs to clickable links
+    if ($options['convert_urls']) {
+        $text = preg_replace(
+            '/(https?:\/\/[^\s<>"]+)/i',
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+            $text
+        );
+    }
+
+    // Convert email addresses to clickable links
+    if ($options['convert_emails']) {
+        $text = preg_replace(
+            '/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i',
+            '<a href="mailto:$1">$1</a>',
+            $text
+        );
+    }
+
+    // Handle paragraph formatting vs simple line breaks
+    if ($options['preserve_paragraphs']) {
+        // Convert double newlines to paragraph breaks
+        $paragraphs = preg_split('/\n\s*\n/', $text);
+        $paragraphs = array_map('trim', $paragraphs);
+        $paragraphs = array_filter($paragraphs); // Remove empty paragraphs
+
+        if (!empty($paragraphs)) {
+            $text = '<p>' . implode('</p><p>', $paragraphs) . '</p>';
+
+            // Convert single newlines within paragraphs to <br> if nl2br is enabled
+            if ($options['nl2br']) {
+                $text = preg_replace('/(?<!<p>)\n(?!<\/p>)/', '<br>', $text);
+            }
+        }
+    } else {
+        // Simple newline to <br> conversion
+        if ($options['nl2br']) {
+            $text = nl2br($text);
+        }
+    }
+
+    return $text;
+}

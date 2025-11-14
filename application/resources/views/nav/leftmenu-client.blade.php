@@ -9,6 +9,9 @@
         <nav class="sidebar-nav">
             <ul data-modular-id="main_menu_client" id="sidebarnav">
 
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent1') !!}
+
                 <!--home-->
                 <li data-modular-id="main_menu_client_home"
                     class="sidenav-menu-item {{ $page['mainmenu_home'] ?? '' }} menu-tooltip menu-with-tooltip"
@@ -21,6 +24,8 @@
                 </li>
                 <!--home-->
 
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent2') !!}
 
                 <!--projects[home]-->
                 @if(config('visibility.modules.projects'))
@@ -36,6 +41,10 @@
                 </li>
                 @endif
                 <!--projects-->
+
+
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent3') !!}
 
                 @if(auth()->user()->is_client_owner)
                 <li data-modular-id="main_menu_client_billing"
@@ -76,7 +85,10 @@
                     </ul>
                 </li>
                 @endif
-
+                                            
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent4') !!}
+            
                 <!--proposals-->
                 @if(config('visibility.modules.proposals') && auth()->user()->is_client_owner)
                 <li data-modular-id="main_menu_client_proposals"
@@ -90,7 +102,9 @@
                 </li>
                 @endif
 
-
+                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent5') !!}
 
                 <!--contracts-->
                 @if(config('visibility.modules.contracts') && auth()->user()->is_client_owner)
@@ -106,6 +120,10 @@
                 @endif
 
 
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent5') !!}
+
                 <!--users-->
                 @if(auth()->user()->is_client_owner)
                 <li data-modular-id="main_menu_client_users"
@@ -120,6 +138,10 @@
                 @endif
                 <!--users-->
 
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent7') !!}
+
                 <!--tickets-->
                 @if(config('visibility.modules.tickets'))
                 <li data-modular-id="main_menu_client_tickets"
@@ -133,6 +155,10 @@
                 </li>
                 @endif
                 <!--tickets-->
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent8') !!}
 
                 <!--knowledgebase-->
                 @if(config('visibility.modules.knowledgebase'))
@@ -149,8 +175,29 @@
                 @endif
                 <!--knowledgebase-->
 
+                                
                 <!--[MODULES] - dynamic menu-->
-                {!! config('modules.menus.client.parent') !!}
+                {!! config('modules.menus.main.parent9') !!}
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent10') !!}
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent11') !!}
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent12') !!}
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent13') !!}
+
+                                                
+                <!--[MODULES] - dynamic menu-->
+                {!! config('modules.menus.main.parent14') !!}
 
             </ul>
         </nav>

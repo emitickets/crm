@@ -189,6 +189,12 @@ class CardResponse implements Responsable {
                 'value' => $export_url,
             ];
 
+            //print button
+            $jsondata['dom_visibility'][] = [
+                'selector' => '#projects-print-button',
+                'action' => 'hide',
+            ];
+
             //ajax response
             return response()->json($jsondata);
 

@@ -27,13 +27,9 @@ class BootMail {
             return $next($request);
         }
 
-        //boot mail settings
-        if (env('MT_TPYE')) {
-            middlewareSaaSBootMail();
-        } else {
-            middlewareBootMail();
-        }
-
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
+        
         return $next($request);
 
     }

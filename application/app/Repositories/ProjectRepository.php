@@ -267,6 +267,11 @@ class ProjectRepository {
                 }
             }
 
+            //filter: start date (end)
+            if (request()->filled('filter_project_status')) {
+                $projects->where('project_status',  request('filter_project_status'));
+            }
+
             //stats: - counting
             if (isset($data['stats']) && $data['stats'] == 'count-in-progress') {
                 $projects->where('project_status', 'in_progress');
@@ -468,10 +473,12 @@ class ProjectRepository {
     }
 
     /**
-     * Create a new record
+     * NOTES: January 2025
+     * This function is used by other processes and so the following must be noted when making changes to this method
+     *  - some processes are cron and have no auth() user. Any data such data must be passed explicitly to this method (using request merge)
      * @return mixed int|bool project model object or false
      */
-    public function create() {
+    public function create($return = '') {
 
         //save new user
         $project = new $this->projects;
@@ -480,14 +487,14 @@ class ProjectRepository {
         $project->project_uniqueid = str_unique();
         $project->project_title = request('project_title');
         $project->project_clientid = request('project_clientid');
-        $project->project_creatorid = auth()->id();
+        $project->project_creatorid = request()->filled('project_creatorid') ? request('project_creatorid') : auth()->id();
         $project->project_description = request('project_description');
         $project->project_categoryid = request('project_categoryid');
         $project->project_date_start = request('project_date_start');
         $project->project_date_due = request('project_date_due');
         $project->project_calendar_timezone = config('system.settings_system_timezone');
 
-        if (auth()->user()->role->role_projects_billing == 2) {
+        if (auth()->check() && auth()->user()->role->role_projects_billing == 2) {
             $project->project_billing_type = (in_array(request('project_billing_type'), ['hourly', 'fixed'])) ? request('project_billing_type') : 'hourly';
             $project->project_billing_rate = (is_numeric(request('project_billing_rate'))) ? request('project_billing_rate') : 0;
             $project->project_billing_estimated_hours = (is_numeric(request('project_billing_estimated_hours'))) ? request('project_billing_estimated_hours') : 0;
@@ -509,11 +516,20 @@ class ProjectRepository {
         $project->clientperm_tasks_create = (request('clientperm_tasks_create') == 'on') ? 'yes' : 'no';
         $project->clientperm_timesheets_view = (request('clientperm_timesheets_view') == 'on') ? 'yes' : 'no';
         $project->assignedperm_tasks_collaborate = (request('assignedperm_tasks_collaborate') == 'on') ? 'yes' : 'no';
+        $project->clientperm_checklists = (request('clientperm_checklists') == 'on') ? 'yes' : 'no';
+        $project->clientperm_checklists = (request('clientperm_checklists') == 'on') ? 'yes' : 'no';
 
         //save and return id
         if ($project->save()) {
             //apply custom fields data
             $this->applyCustomFields($project->project_id);
+
+            //return project
+            if (isset($return) && $return == 'project') {
+                return $project;
+            }
+
+            //return project id
             return $project->project_id;
         } else {
             Log::error("record could not be created - database error", ['process' => '[ProjectRepository]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
@@ -548,6 +564,7 @@ class ProjectRepository {
         $project->clientperm_tasks_create = (request('clientperm_tasks_create') == 'on') ? 'yes' : 'no';
         $project->clientperm_timesheets_view = (request('clientperm_timesheets_view') == 'on') ? 'yes' : 'no';
         $project->clientperm_expenses_view = (request('clientperm_expenses_view') == 'on') ? 'yes' : 'no';
+        $project->clientperm_checklists = (request('clientperm_checklists') == 'on') ? 'yes' : 'no';
         $project->assignedperm_tasks_collaborate = (request('assignedperm_tasks_collaborate') == 'on') ? 'yes' : 'no';
 
         if (auth()->user()->role->role_projects_billing == 2) {
@@ -606,6 +623,7 @@ class ProjectRepository {
         $project->clientperm_tasks_create = (request('clientperm_tasks_create') == 'on') ? 'yes' : 'no';
         $project->clientperm_timesheets_view = (request('clientperm_timesheets_view') == 'on') ? 'yes' : 'no';
         $project->clientperm_expenses_view = (request('clientperm_expenses_view') == 'on') ? 'yes' : 'no';
+        $project->clientperm_checklists = (request('clientperm_checklists') == 'on') ? 'yes' : 'no';
         $project->assignedperm_tasks_collaborate = (request('assignedperm_tasks_collaborate') == 'on') ? 'yes' : 'no';
 
         //save and return id
@@ -643,6 +661,7 @@ class ProjectRepository {
         $project->clientperm_tasks_create = (request('clientperm_tasks_create') == 'on') ? 'yes' : 'no';
         $project->clientperm_timesheets_view = (request('clientperm_timesheets_view') == 'on') ? 'yes' : 'no';
         $project->clientperm_expenses_view = (request('clientperm_expenses_view') == 'on') ? 'yes' : 'no';
+        $project->clientperm_checklists = (request('clientperm_checklists') == 'on') ? 'yes' : 'no';
         $project->assignedperm_tasks_collaborate = (request('assignedperm_tasks_collaborate') == 'on') ? 'yes' : 'no';
 
         $project->project_billing_type = (in_array(request('project_billing_type'), ['hourly', 'fixed'])) ? request('project_billing_type') : 'hourly';

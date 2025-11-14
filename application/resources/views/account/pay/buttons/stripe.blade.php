@@ -9,4 +9,4 @@
 <script src="https://js.stripe.com/v3/"></script>
 
 <!--STRIPE-->
-<script src="public/js/landlord/dynamic/stripe/checkout.stripe.js?v={{ config('system.versioning') }}"></script>
+<script src="/public/js/landlord/dynamic/stripe/checkout.stripe.js?v={{ config('system.versioning') }}"></script>

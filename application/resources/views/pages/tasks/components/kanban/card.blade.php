@@ -191,9 +191,29 @@
         <div class="x-footer row">
             <div class="col-6 x-icons">
 
+                <!--star button-->
+                <span title="{{ cleanLang(__('lang.star_task')) }}"
+                    class="x-icon vm p-t-2 data-toggle-action-tooltip opacity-4 font-14 ajax-request {{ $task->is_starred ? 'hidden' : '' }}"
+                    id="starred-star-button-{{ $task->task_id }}" data-stop-propagation="yes"
+                    data-url="{{ url('/starred/togglestatus?action=star&resource_type=task&resource_id='.$task->task_id) }}"
+                    data-loading-target="starred-star-button-{{ $task->task_id }}" data-ajax-type="POST"
+                    data-on-start-submit-button="disable">
+                    <i class="sl-icon-star"></i>
+                </span>
+
+                <!--unstar button-->
+                <span title="{{ cleanLang(__('lang.unstar_task')) }}"
+                    class="x-icon vm p-t-2 data-toggle-action-tooltip font-14 ajax-request text-warning {{ !$task->is_starred ? 'hidden' : '' }}"
+                    id="starred-unstar-button-{{ $task->task_id }}" data-stop-propagation="yes"
+                    data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=task&resource_id='.$task->task_id) }}"
+                    data-loading-target="starred-unstar-button-{{ $task->task_id }}" data-ajax-type="POST"
+                    data-on-start-submit-button="disable">
+                    <i class="sl-icon-star"></i>
+                </span>
+
                 <!--pin-->
-                <span title="{{ cleanLang(__('lang.pinning')) }}"
-                    data-parent="task_{{ $task->task_id }}" data-url="{{ url('/tasks/'.$task->task_id.'/pinning') }}"
+                <span title="{{ cleanLang(__('lang.pinning')) }}" data-parent="task_{{ $task->task_id }}"
+                    data-url="{{ url('/tasks/'.$task->task_id.'/pinning') }}"
                     class="x-icon display-inline-block vm p-t-2 data-toggle-action-tooltip opacity-4 js-toggle-pinning font-14">
                     <i class="ti-pin2"></i>
                 </span>

@@ -104,6 +104,7 @@ class Index {
             'visibility.timesheets_col_related' => true,
             'visibility.timesheets_col_action' => true,
             'visibility.filter_panel_resource' => true,
+            'visibility.timesheets_col_start_time' => true,
         ]);
 
         //permissions -viewing
@@ -174,6 +175,20 @@ class Index {
                 //visibility
                 'visibility.timesheets_col_related' => false,
                 'visibility.filter_panel_resource' => false,
+            ]);
+        }
+
+        //hide start time, when filtering
+        if(request()->filled('filter_grouping') && request('filter_grouping') != 'none'){
+            config([
+                'visibility.timesheets_col_start_time' => false,
+            ]);
+        }
+
+        //recorded by
+        if(config('system.settings2_timesheets_show_recorded_by') == 'yes'){
+            config([
+                'visibility.timesheets_col_recorded_by' => true,
             ]);
         }
 

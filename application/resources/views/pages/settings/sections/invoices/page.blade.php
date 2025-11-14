@@ -47,11 +47,17 @@
                 name="settings2_dompdf_fonts" data-preselected="{{ $settings2->settings2_dompdf_fonts ?? ''}}">
                 <option></option>
                 <option value="default">@lang('lang.default')</option>
-                <option value="chinese-simplified">Chinese Simplified</option>
-                <option value="chinese-traditional">Chinese Traditional</option>
-                <option value="japanese">Japanese</option>
-                <option value="korean">Korean</option>
+                <option value="dejavu">@lang('lang.language_support_1')</option>
+                <option value="chinese-simplified">@lang('lang.language_support_2')</option>
+                <option value="chinese-traditional">@lang('lang.language_support_3')</option>
+                <option value="japanese">@lang('lang.language_support_4')</option>
+                <option value="korean">@lang('lang.language_support_5')</option>
             </select>
+        </div>
+        <div class="col-sm-12 p-t-20">
+            <div class="alert alert-danger">
+                @lang('lang.language_support_help')
+            </div>
         </div>
     </div>
 

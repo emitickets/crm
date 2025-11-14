@@ -392,6 +392,24 @@
                     </ul>
                 </li>
 
+                <!--timesheetes-->
+                <li class="sidenav-menu-item">
+                    <a class="has-arrow waves-effect waves-dark" href="javascript:void(0);" aria-expanded="false"
+                        id="settings-menu-timesheets">
+                        <span class="hide-menu">@lang('lang.timesheets')
+                        </span>
+                    </a>
+                    <ul aria-expanded="false" class="collapse">
+                        <li>
+                            <a href="javascript:void(0);" data-url="/settings/timesheets"
+                                id="settings-menu-timesheets-general"
+                                class="settings-menu-link js-ajax-ux-request js-submenu-ajax js-dynamic-settings-url">@lang('lang.general_settings')</a>
+                        </li>
+                        <!--[MODULES] - dynamic menu-->
+                        {!! config('modules.menus.settings.timesheets') !!}
+                    </ul>
+                </li>
+
                 <!--[MODULES] - dynamic menu-->
                 {!! config('modules.menus.settings.parent11') !!}
 
@@ -747,6 +765,12 @@
                         <li><a href="javascript:void(0);" data-url="/settings/updates" id="settings-menu-other-updates"
                                 class="settings-menu-link js-ajax-ux-request js-submenu-ajax js-dynamic-settings-url">{{ cleanLang(__('lang.updates')) }}</a>
                         </li>
+
+                        <!--system information-->
+                        <li><a href="javascript:void(0);" data-url="/settings/system/info"
+                                id="settings-menu-other-system-info"
+                                class="settings-menu-link js-ajax-ux-request js-submenu-ajax js-dynamic-settings-url">@lang('lang.system_information')</a>
+                        </li>
                         @endif
                         <!--reCaptcha-->
                         <li><a href="javascript:void(0);" data-url="/settings/recaptcha"
@@ -757,6 +781,8 @@
                         <li><a href="javascript:void(0);" data-url="/settings/tweak" id="settings-menu-other-tweak"
                                 class="settings-menu-link js-ajax-ux-request js-submenu-ajax js-dynamic-settings-url">@lang('lang.tweak')</a>
                         </li>
+
+                        <!--[todo] 'Server Info' menu link-->
                         <!--[MODULES] - dynamic menu-->
                         {!! config('modules.menus.settings.other') !!}
                     </ul>

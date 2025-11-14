@@ -10,7 +10,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\PinnedRepository;
 use App\Http\Requests\Invoices\InvoiceClone;
 use App\Http\Requests\Invoices\InvoiceRecurrringSettings;
 use App\Http\Requests\Invoices\InvoiceSave;
@@ -18,12 +17,14 @@ use App\Http\Requests\Invoices\InvoiceStoreUpdate;
 use App\Http\Responses\Common\ChangeCategoryResponse;
 use App\Http\Responses\Invoices\AttachFilesResponse;
 use App\Http\Responses\Invoices\AttachProjectResponse;
+use App\Http\Responses\Invoices\BulkActionsResponse;
 use App\Http\Responses\Invoices\ChangeCategoryUpdateResponse;
 use App\Http\Responses\Invoices\CreateCloneResponse;
 use App\Http\Responses\Invoices\CreateResponse;
 use App\Http\Responses\Invoices\DestroyResponse;
 use App\Http\Responses\Invoices\EditResponse;
 use App\Http\Responses\Invoices\IndexResponse;
+use App\Http\Responses\Invoices\OverdueReminderResponse;
 use App\Http\Responses\Invoices\PDFResponse;
 use App\Http\Responses\Invoices\PinningResponse;
 use App\Http\Responses\Invoices\PublishResponse;
@@ -34,6 +35,7 @@ use App\Http\Responses\Invoices\SaveResponse;
 use App\Http\Responses\Invoices\ShowResponse;
 use App\Http\Responses\Invoices\StoreCloneResponse;
 use App\Http\Responses\Invoices\StoreResponse;
+use App\Http\Responses\Invoices\TaskBillingResponse;
 use App\Http\Responses\Invoices\UpdateResponse;
 use App\Http\Responses\Invoices\UpdateTaxtypeResponse;
 use App\Http\Responses\Pay\MolliePaymentResponse;
@@ -57,12 +59,14 @@ use App\Repositories\LineitemRepository;
 use App\Repositories\MolliePaymentRepository;
 use App\Repositories\PaypalPaymentRepository;
 use App\Repositories\PaystackPaymentRepository;
+use App\Repositories\PinnedRepository;
 use App\Repositories\ProjectRepository;
 use App\Repositories\PublishInvoiceRepository;
 use App\Repositories\RazorpayPaymentRepository;
 use App\Repositories\StripePaymentRepository;
 use App\Repositories\TagRepository;
 use App\Repositories\TapPaymentRepository;
+use App\Repositories\TaskRepository;
 use App\Repositories\TaxRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
@@ -141,7 +145,9 @@ class Invoices extends Controller {
         EventTrackingRepository $trackingrepo,
         EmailerRepository $emailerrepo,
         InvoiceGeneratorRepository $invoicegenerator,
-        CustomFieldsRepository $customrepo
+        CustomFieldsRepository $customrepo,
+        TaskRepository $taskrepo,
+
     ) {
 
         //core controller instantation
@@ -161,6 +167,7 @@ class Invoices extends Controller {
             'dettachProject',
             'stopRecurring',
             'recurringSettingsUpdate',
+            'bulkDettachFromProject',
         ]);
 
         $this->middleware('invoicesMiddlewareCreate')->only([
@@ -183,6 +190,7 @@ class Invoices extends Controller {
             'recurringSettingsUpdate',
             'publishInvoice',
             'publishScheduledInvoice',
+            'overdueReminder',
         ]);
 
         $this->middleware('invoicesMiddlewareShow')->only([
@@ -198,6 +206,7 @@ class Invoices extends Controller {
         //only needed for the [action] methods
         $this->middleware('invoicesMiddlewareBulkEdit')->only([
             'changeCategoryUpdate',
+            'bulkDettachFromProject',
         ]);
 
         $this->invoicerepo = $invoicerepo;
@@ -210,6 +219,7 @@ class Invoices extends Controller {
         $this->emailerrepo = $emailerrepo;
         $this->invoicegenerator = $invoicegenerator;
         $this->customrepo = $customrepo;
+        $this->taskrepo = $taskrepo;
 
         //global settings for use in urls
         config([
@@ -957,19 +967,91 @@ class Invoices extends Controller {
     }
 
     /**
-     * email a pdf versio to the client
+     * email the client the invoice
      * @return \Illuminate\Http\Response
      */
-    public function emailClient() {
+    public function emailClient($id) {
 
         //validate the invoice exists
-        $invoice = \App\Models\Invoice::Where('bill_invoiceid', request('id'))->first();
+        if (!$invoice = \App\Models\Invoice::Where('bill_invoiceid', $id)->first()) {
+            abort(404);
+        }
 
-        //notice
-        $jsondata['notification'] = array('type' => 'success', 'value' => '[TODO]');
+        //generate the invoice
+        if (!$payload = $this->invoicegenerator->generate($id)) {
+            abort(409);
+        }
 
-        //response
-        return response()->json($jsondata);
+        //invoice
+        $invoice = $payload['bill'];
+
+        /** ----------------------------------------------
+         * send email [queued]
+         * ----------------------------------------------*/
+        if ($users = $this->userrepo->getClientUsers($invoice->bill_clientid, 'owner', 'collection')) {
+            $data = [];
+            foreach ($users as $user) {
+                $mail = new \App\Mail\PublishInvoice($user, $data, $invoice);
+                $mail->build();
+            }
+        }
+
+        //succes
+        return response()->json(array(
+            'notification' => [
+                'type' => 'success',
+                'value' => __('lang.request_has_been_completed'),
+            ],
+            'skip_dom_reset' => true,
+        ));
+    }
+
+    /**
+     * email the client the invoice
+     * @return \Illuminate\Http\Response
+     */
+    public function overdueReminder($id) {
+
+        //validate the invoice exists
+        if (!$invoice = \App\Models\Invoice::Where('bill_invoiceid', $id)->first()) {
+            abort(403);
+        }
+
+        //generate the invoice
+        if (!$payload = $this->invoicegenerator->generate($id)) {
+            abort(409);
+        }
+
+        //invoice
+        $invoice = $payload['bill'];
+
+        /** ----------------------------------------------
+         * send email [queued]
+         * ----------------------------------------------*/
+        if ($users = $this->userrepo->getClientUsers($invoice->bill_clientid, 'owner', 'collection')) {
+            $data = [];
+            foreach ($users as $user) {
+                $mail = new \App\Mail\OverdueInvoice($user, $data, $invoice);
+                $mail->build();
+            }
+        }
+
+        //update count
+        $reminder_count = $invoice->bill_overdue_reminder_counter + 1;
+        \App\Models\Invoice::Where('bill_invoiceid', $id)
+            ->update([
+                'bill_overdue_reminder_counter' => $reminder_count,
+                'bill_overdue_reminder_last_sent' => now(),
+            ]);
+
+        //reponse payload
+        $payload = [
+            'id' => $id,
+            'reminder_count' => $reminder_count,
+        ];
+
+        //show the form
+        return new OverdueReminderResponse($payload);
     }
 
     /**
@@ -1643,6 +1725,146 @@ class Invoices extends Controller {
 
         //return
         return $page;
+    }
+
+    /**
+     * bulk dettach invoices from projects
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkDettachFromProject() {
+
+        //update invoices using whereIn
+        $allrows = array();
+        foreach (request('ids') as $invoice_id => $value) {
+            if ($value == 'on') {
+                //get invoice and update status
+                if ($invoice = \App\Models\Invoice::Where('bill_invoiceid', $invoice_id)->first()) {
+                    //update the invoice
+                    $invoice->bill_projectid = null;
+                    $invoice->save();
+
+                    //get refreshed invoice
+                    $invoices = $this->invoicerepo->search($invoice_id, ['apply_filters' => false]);
+
+                    //get all payments and remove project
+                    if ($payments = \App\Models\Payment::Where('payment_invoiceid', $invoice_id)->get()) {
+                        foreach ($payments as $payment) {
+                            $payment->payment_projectid = null;
+                            $payment->save();
+                        }
+                    }
+
+                    //add to array
+                    $allrows[] = $invoices;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'dettach-project',
+        ];
+
+        //show the form
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
+     * bulk email invoices to clients
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkEmailClient() {
+
+        //process all selected invoices
+        $allrows = array();
+        foreach (request('ids') as $bill_invoiceid => $value) {
+            if ($value == 'on') {
+                //validate the invoice exists
+                if (!$invoice = \App\Models\Invoice::Where('bill_invoiceid', $bill_invoiceid)->first()) {
+                    continue;
+                }
+
+                //skip draft
+                if ($invoice->bill_status == 'draft') {
+                    continue;
+                }
+
+                //generate the invoice
+                if (!$payload = $this->invoicegenerator->generate($bill_invoiceid)) {
+                    continue;
+                }
+
+                //update the invoice - marked as emailed
+                $invoice->bill_date_sent_to_customer = now();
+                $invoice->save();
+
+                //invoice
+                $invoice = $payload['bill'];
+
+                /** ----------------------------------------------
+                 * send email [queued]
+                 * ----------------------------------------------*/
+                if ($users = $this->userrepo->getClientUsers($invoice->bill_clientid, 'owner', 'collection')) {
+                    $data = [];
+                    foreach ($users as $user) {
+                        $mail = new \App\Mail\PublishInvoice($user, $data, $invoice);
+                        $mail->build();
+                    }
+                }
+
+                //get refreshed invoice
+                $invoices = $this->invoicerepo->search($bill_invoiceid);
+
+                //add to array
+                $allrows[] = $invoices;
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'email-clients',
+        ];
+
+        //show the response
+        return new BulkActionsResponse($payload);
+    }
+
+    /**
+     * Get all unbilled tasks for a project that can be added to an invoice
+     * @param int $id project id
+     * @return \Illuminate\Http\Response
+     */
+    public function taskBilling($id) {
+
+        //get the project
+        $project = \App\Models\Project::Where('project_id', $id)->first();
+
+        //project exists
+        if (!$project) {
+            abort(404);
+        }
+
+        //sync tasks billing status to ensure we only get valid unbilled tasks
+        $this->taskrepo->syncTasksBilledStatus(['project_id' => $id]);
+
+        //get unbilled tasks for this project
+        $tasks = \App\Models\Task::Where('task_projectid', $id)
+            ->where('task_billable_status', 'not_invoiced')
+            ->with(['status', 'project'])
+            ->orderBy('task_date_status_changed', 'desc')
+            ->get();
+
+        //payload
+        $payload = [
+            'page' => $this->pageSettings('taskbilling'),
+            'tasks' => $tasks,
+            'project' => $project,
+        ];
+
+        //response
+        return new TaskBillingResponse($payload);
     }
 
     /**

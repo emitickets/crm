@@ -57,6 +57,7 @@ class ProjectPermissions {
             'users',
             'assigned',
             'manage-folders',
+            'project-checklist',
         ];
         return $checks;
     }
@@ -824,6 +825,33 @@ class ProjectPermissions {
                     if (config('system.settings2_file_folders_manage_client') == 'yes') {
                         return true;
                     }
+                }
+            }
+        }
+
+        /**
+         * [PROJECT CHECKLIST]
+         */
+        if ($action == 'project-checklist') {
+            //team
+            if (auth()->user()->is_team) {
+                //admin
+                if (auth()->user()->is_admin) {
+                    return true;
+                }
+                //managers
+                if ($project_managers->contains(auth()->id())) {
+                    return true;
+                }
+                //assigned
+                if ($assigned_users->contains(auth()->id()) && auth()->user()->role->role_tasks > 1) {
+                    return true;
+                }
+            }
+            //client on project that is enabled to participate
+            if (auth()->user()->is_client) {
+                if ($project->client->client_id == auth()->user()->clientid && $project->clientperm_checklists == 'yes') {
+                    return true;
                 }
             }
         }

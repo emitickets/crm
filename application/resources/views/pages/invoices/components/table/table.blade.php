@@ -216,7 +216,7 @@
                         </th>
 
                         <!--actions-->
-                        <th class="invoices_col_action with-table-config-icon"><a
+                        <th class="invoices_col_action with-table-config-icon actions_column"><a
                                 href="javascript:void(0)">@lang('lang.action')</a>
 
                             <!--[tableconfig]-->

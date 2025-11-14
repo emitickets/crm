@@ -611,6 +611,19 @@
                     </div>
                 </div>
                 <div class="line"></div>
+                <!--permission - project checklist-->
+                <div class="form-group form-group-checkbox row">
+                    <label
+                        class="col-5 col-form-label text-left required">{{ cleanLang(__('lang.project_checklist')) }}</label>
+                    <div class="col-7 text-left p-t-5">
+                        <input type="checkbox" id="clientperm_checklists" name="clientperm_checklists"
+                            class="filled-in chk-col-light-blue"
+                            {{ runtimePrechecked($project['clientperm_checklists'] ?? '') }}>
+                        <label for="clientperm_checklists"></label>
+                    </div>
+                </div>
+
+                <div class="line"></div>
                 <!--permission - view timesheets-->
                 <div class="form-group form-group-checkbox row">
                     <label class="col-5 col-form-label text-left">{{ cleanLang(__('lang.view_time_sheets')) }}</label>

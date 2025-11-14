@@ -26,7 +26,9 @@ class SendTicketsImap extends Mailable {
         $this->data = $data;
 
         middlewareBootSettings();
-        middlewareBootMail();
+        
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
     }
 

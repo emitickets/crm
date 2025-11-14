@@ -1,7 +1,7 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This classes renders the response for the [destroy] process for the fooos
+ * [EXAMPLE] Response Class for deleting bulk items from the view
  * controller
  * @package    Grow CRM
  * @author     NextLoop

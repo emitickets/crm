@@ -32,7 +32,9 @@ class ScheduledCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //publish scheduled invoices
         $this->publishScheduledInvoices($publishinvoicerepo);

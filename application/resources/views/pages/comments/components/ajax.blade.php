@@ -7,7 +7,15 @@
     </div>
     <div class="comment-text w-100 js-hover-actions">
         <div class="row">
-            <div class="col-sm-6 x-name">{{ $comment->first_name ?? runtimeUnkownUser() }}</div>
+            <div class="col-sm-6 x-name">
+                <a href="javascript:void(0);" class="edit-add-modal-button js-ajax-ux-request reset-target-modal-form"
+                data-toggle="modal" data-target="#commonModal" data-url="{{ url('contacts/'.$comment->id ?? 0) }}"
+                data-loading-target="commonModalBody" data-modal-title="" data-modal-size="modal-md"
+                data-header-close-icon="hidden" data-header-extra-close-icon="visible" data-footer-visibility="hidden"
+                data-action-ajax-loading-target="commonModalBody">
+                {{ $comment->first_name ?? runtimeUnkownUser() }}
+                </a>
+            </div>
             <div class="col-sm-6 x-meta text-right">
                 <!--actions-->
                 @if($comment->permission_delete_comment)

@@ -44,7 +44,9 @@ class SubscriptionRenewal {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //log that its run
         Log::info("Cronjob has started", ['process' => '[cronjob][stripe-subscription-renewal]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
@@ -81,11 +83,11 @@ class SubscriptionRenewal {
                 if (!$subscription = \App\Models\Subscription::Where('subscription_gateway_id', $webhook->webhooks_matching_reference)->first()) {
 
                     //log error
-                    Log::critical("no corresponding (subscription) (Stripe Subscription ID: $webhook->webhooks_matching_reference) record was found", ['process' => '[stripe-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::info("no corresponding (subscription) (Stripe Subscription ID: $webhook->webhooks_matching_reference) record was found", ['process' => '[stripe-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
                     $webhook->update([
-                        'webhooks_status' => 'failed',
-                        'webhooks_comment' => "no corresponding (subscription) (Stripe Subscription ID: $webhook->webhooks_matching_reference) record was found",
+                        'webhooks_status' => 'completed',
+                        'webhooks_completed_at' => now(),
                     ]);
                     //skip to next webhook in the batch
                     continue;
@@ -95,6 +97,10 @@ class SubscriptionRenewal {
                 if (\App\Models\Payment::Where('payment_transaction_id', $webhook->webhooks_payment_amount)->exists()) {
                     Log::info("A payment for this event already exists in the database. Will now skip", ['process' => '[stripe-cron]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                     //skip to next webhook in the batch
+                    $webhook->update([
+                        'webhooks_status' => 'completed',
+                        'webhooks_completed_at' => now(),
+                    ]);
                     continue;
                 }
 

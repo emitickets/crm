@@ -1,6 +1,6 @@
 @foreach($projects as $project)
-<div class="col-sm-12 col-md-4 col-lg-3 click-url {{ $project->pinned_status ?? '' }}" id="project_{{ $project->project_id }}"
-    data-url="{{ url('/projects/'.$project->project_id) }}">
+<div class="col-sm-12 col-md-4 col-lg-3 click-url {{ $project->pinned_status ?? '' }}"
+    id="project_{{ $project->project_id }}" data-url="{{ url('/projects/'.$project->project_id) }}">
 
     <div class="grid-card m-b-35">
 
@@ -103,15 +103,39 @@
                     </div>
                     <div class="pull-right">
                         <!--pin-->
-                        <span class="list-table-action">
-                            <a href="javascript:void(0);"
-                                title="{{ cleanLang(__('lang.pinning')) }}"
+                        <span class="list-table-action display-inline-block">
+                            <a href="javascript:void(0);" title="{{ cleanLang(__('lang.pinning')) }}"
                                 data-parent="project_{{ $project->project_id }}"
                                 data-url="{{ url('/projects/'.$project->project_id.'/pinning') }}"
                                 class="data-toggle-action-tooltip btn btn-outline-default-light btn-circle btn-sm opacity-4 js-toggle-pinning">
                                 <i class="ti-pin2"></i>
                             </a>
                         </span>
+
+                        <!--star button-->
+                        <span class="list-table-action display-inline-block">
+                            <button type="button" title="{{ cleanLang(__('lang.star_project')) }}"
+                                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm opacity-4 ajax-request {{ $project->is_starred ? 'hidden' : '' }}"
+                                id="starred-star-button-{{ $project->project_id }}"
+                                data-url="{{ url('/starred/togglestatus?action=star&resource_type=project&resource_id='.$project->project_id) }}"
+                                data-loading-target="starred-star-button-{{ $project->project_id }}"
+                                data-ajax-type="POST" data-on-start-submit-button="disable">
+                                <i class="sl-icon-star"></i>
+                            </button>
+                        </span>
+
+                        <!--unstar button-->
+                        <span class="list-table-action display-inline-block">
+                            <button type="button" title="{{ cleanLang(__('lang.unstar_project')) }}"
+                                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm ajax-request text-warning {{ !$project->is_starred ? 'hidden' : '' }}"
+                                id="starred-unstar-button-{{ $project->project_id }}"
+                                data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=project&resource_id='.$project->project_id) }}"
+                                data-loading-target="starred-unstar-button-{{ $project->project_id }}"
+                                data-ajax-type="POST" data-on-start-submit-button="disable">
+                                <i class="sl-icon-star"></i>
+                            </button>
+                        </span>
+
                     </div>
                 </div>
 

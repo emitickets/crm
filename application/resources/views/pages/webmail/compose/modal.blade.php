@@ -80,4 +80,6 @@
 </div>
 
 <!--warning-->
+@if(config('system.settings_email_server_type') == 'sendmail')
 <div class="alert alert-warning">@lang('lang.email_address_warning')</div>
+@endif

@@ -1,7 +1,7 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This middleware class validates input requests for the template controller
+ * {EXAMPLE] Request Class for validating form submission
  *
  * @package    Grow CRM
  * @author     NextLoop
@@ -12,8 +12,6 @@ namespace App\Http\Requests\Fooo;
 use App\Rules\NoTags;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-
 
 class StoreUpdate extends FormRequest {
 
@@ -30,14 +28,18 @@ class StoreUpdate extends FormRequest {
     }
 
     /**
-     * custom error messages for specific valdation checks
+     * add messages for all checked items here (e.g. required|int|email|min|max|etc)
      * @optional
      * @return array
      */
     public function messages() {
         return [
             'fooo_bar.required' => __('lang.fooo') . ' - ' . __('lang.is_required'),
-            'fooo_bar.exists' => __('lang.item_not_found'),
+            'fooo_bar.int' => __('lang.fooo') . ' - ' . __('lang.is_not_a_valid_number'),
+            'fooo_bar.email' => __('lang.fooo') . ' - ' . __('lang.is_not_a_valid_email_address'),
+            'fooo_bar.min' => __('lang.fooo') . ' - ' . __('lang.must_be_greater_than_or_equal_to') . ' 100',
+            'fooo_bar.max' => __('lang.fooo') . ' - ' . __('lang.must_be_less_than_or_equal_to') . ' 100',
+            'fooo_bar.url' => __('lang.fooo') . ' - ' . __('lang.is_not_a_valid_url'),
         ];
     }
 
@@ -105,7 +107,7 @@ class StoreUpdate extends FormRequest {
         foreach ($errors->all() as $message) {
             $messages .= "<li>$message</li>";
         }
-        
+
         abort(409, $messages);
     }
 }

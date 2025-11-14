@@ -40,14 +40,14 @@ class IndexResponse implements Responsable {
             //typically from the loadmore button
             case 'load':
                 $template = 'pages/comments/components/ajax';
-                $dom_container = '#comments-td-container';
+                $dom_container = '#comments-container';
                 $dom_action = 'append';
                 break;
 
             //from the sorting links
             case 'sort':
                 $template = 'pages/comments/components/ajax';
-                $dom_container = '#comments-td-container';
+                $dom_container = '#comments-container';
                 $dom_action = 'replace';
                 break;
 
@@ -61,7 +61,7 @@ class IndexResponse implements Responsable {
             //template and dom - for ajax initial loading
             default:
                 $template = 'pages/comments/wrapper';
-                $dom_container = '#embed-content-container';
+                $dom_container = $loading_target ? "#$loading_target" : '#embed-content-container';
                 $dom_action = 'replace';
                 break;
             }
@@ -93,7 +93,7 @@ class IndexResponse implements Responsable {
             }
 
             //render the view and save to json
-            $html = view($template, compact('page', 'comments'))->render();
+            $html = view($template, compact('page', 'comments', 'project'))->render();
             $jsondata['dom_html'][] = array(
                 'selector' => $dom_container,
                 'action' => $dom_action,
@@ -149,13 +149,13 @@ class IndexResponse implements Responsable {
         } else {
             //standard view
             $page['url'] = loadMoreButtonUrl($comments->currentPage() + 1, request('source'));
-            $page['loading_target'] = 'comments-td-container';
+            $page['loading_target'] = '#comments-td-container';
             $page['visibility_show_load_more'] = ($comments->currentPage() < $comments->lastPage()) ? true : false;
             // POSTRUN FUNCTIONS------
             $jsondata['postrun_functions'][] = [
                 'value' => 'NXPostGeneralComment',
             ];
-            return view('pages/comments/wrapper', compact('page', 'comments'))->render();
+            return view('pages/comments/wrapper', compact('page', 'comments', 'project'))->render();
         }
 
     }

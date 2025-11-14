@@ -33,4 +33,4 @@
 </div>
 
 <!--GENERAL CHECKOUT JS-->
-<script src="public/js/landlord/frontend/offline.js?v={{ config('system.versioning') }}"></script>
+<script src="/public/js/landlord/frontend/offline.js?v={{ config('system.versioning') }}"></script>

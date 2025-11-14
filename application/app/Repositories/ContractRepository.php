@@ -390,11 +390,13 @@ class ContractRepository {
         //end date
         $end_date = \Carbon\Carbon::parse($contract->doc_date_end);
 
-        //update expired
+        //update expired to active
         if ($contract->doc_date_end != null && $contract->doc_date_end != '') {
             if ($end_date->diffInDays(today(), false) < 0) {
-                $contract->doc_status = 'active';
-                $contract->save();
+                if ($contract->doc_status == 'expired') {
+                    $contract->doc_status = 'active';
+                    $contract->save();
+                }
             }
         }
 
@@ -410,7 +412,7 @@ class ContractRepository {
             $contract->save();
         }
 
-        //update to [expired]
+        //update active to expired
         if ($contract->doc_date_end != null && $contract->doc_date_end != '') {
             if ($end_date->diffInDays(today(), false) > 0) {
                 //only update if contract was marked as active

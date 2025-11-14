@@ -3,7 +3,8 @@ body {
     color: #67757c;
     font-family: Verdana, Arial, Helvetica, sans-serif;
     font-weight: 200;
-    font-size: 14px;
+    font-size: 13px;
+    line-height: 18px;
     padding: 0px 10px;
     padding-top: 2px;
     scrollbar-3dlight-color: #F0F0EE;
@@ -248,4 +249,8 @@ th[data-mce-selected] {
     border: solid 1px #dddddd;
     background-color: #ffffff;
     padding: 13px;
+}
+
+.mce-content-body strong {
+    font-weight:600;
 }

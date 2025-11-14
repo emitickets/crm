@@ -8,7 +8,8 @@
             data-toggle="modal" data-target="#commonModal" data-url="{{ url('contacts/'.$team->id) }}"
             data-loading-target="commonModalBody" data-modal-title="" data-modal-size="modal-md"
             data-header-close-icon="hidden" data-header-extra-close-icon="visible" data-footer-visibility="hidden"
-            data-action-ajax-loading-target="commonModalBody">{{ $team->first_name }} {{ runtimeCheckBlank($team->last_name) }}
+            data-action-ajax-loading-target="commonModalBody">{{ $team->first_name }}
+            {{ runtimeCheckBlank($team->last_name) }}
         </a>
         <!--administrator-->
         @if($team->primary_admin == 'yes')
@@ -97,6 +98,30 @@
                 data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}"><i
                     class="sl-icon-lock"></i></span>
             @endif
+
+            <!--more button (team)-->
+            @if(auth()->user()->is_admin)
+            <span class="list-table-action dropdown font-size-inherit">
+                <button type="button" id="listTableAction" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false" title="{{ cleanLang(__('lang.more')) }}"
+                    class="data-toggle-action-tooltip btn btn-outline-default-light btn-circle btn-sm">
+                    <i class="ti-more"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="listTableAction">
+                    <!--view activity-->
+                    <a class="dropdown-item edit-add-modal-button js-ajax-ux-request reset-target-modal-form"
+                        href="javascript:void(0)" data-toggle="modal" data-target="#commonModal"
+                        data-url="{{ url('timeline/user/'.$team->id) }}" data-loading-target="commonModalBody"
+                        data-modal-title="@lang('lang.view_activity') - {{ $team->first_name }} {{ $team->last_name }}"
+                        data-modal-size="modal-lg" data-header-close-icon="hidden"
+                        data-header-extra-close-icon="visible" data-footer-visibility="hidden"
+                        data-action-ajax-loading-target="commonModalBody">
+                        @lang('lang.view_activity')
+                    </a>
+                </div>
+            </span>
+            @endif
+
         </span>
         <!--action buttons-->
     </td>

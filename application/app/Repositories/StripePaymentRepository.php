@@ -163,10 +163,10 @@ class StripePaymentRepository {
         }
 
         //check if the current user is a stripe customer.
-        if ($user->thridparty_stripe_customer_id != '') {
+        if ($user->gateways_stripe_customer_id != '') {
             //get the customer
             try {
-                $customer = \Stripe\Customer::retrieve(auth()->user()->thridparty_stripe_customer_id);
+                $customer = \Stripe\Customer::retrieve(auth()->user()->gateways_stripe_customer_id);
                 return $customer;
             } catch (exception $e) {
                 Log::info("this user has a stripe customer id, but the user was not found in stripe - will recreate the user", ['process' => '[StripePaymentRepository]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'user_id' => $user_id, 'error_message' => $e->getMessage()]);
@@ -184,7 +184,7 @@ class StripePaymentRepository {
                 ],
             ]);
             //update customer profile with stripe id
-            $user->thridparty_stripe_customer_id = $customer->id;
+            $user->gateways_stripe_customer_id = $customer->id;
             $user->save();
             //return
             return $customer;

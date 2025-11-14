@@ -267,6 +267,9 @@ class User extends Controller {
         $user->notifications_tasks_activity = request('notifications_tasks_activity');
         $user->notifications_tickets_activity = request('notifications_tickets_activity');
         $user->notifications_reminders = request('notifications_reminders');
+        $user->notifications_projects_comments = request('notifications_projects_comments');
+        $user->notifications_leads_comments = request('notifications_leads_comments');
+        $user->notifications_tasks_comments = request('notifications_tasks_comments');
 
         //update team user
         if (auth()->user()->is_team) {
@@ -290,6 +293,21 @@ class User extends Controller {
 
         //generate a response
         return new CommonResponse($payload);
+
+    }
+
+    /**
+     * update a users full screen preference
+     *
+     * @return bool
+     */
+    public function modalsFullScreenPreference() {
+
+        /** ---------------------------------------------------------------------------------------------
+         * [todo]
+         * 1. get the current auth user model; $user
+         * 2. Update the 
+         * ---------------------------------------------------------------------------------------------*/
 
     }
 

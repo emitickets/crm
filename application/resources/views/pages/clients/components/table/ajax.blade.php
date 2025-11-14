@@ -266,6 +266,17 @@
         </span>
         <!--more button-->
 
+        <!--impersonate a client-->
+        @if(auth()->user()->is_admin)
+        <span class="list-table-action">
+            <a href="javascript:void(0);" title="@lang('lang.log_in')" data-parent="client_{{ $client->client_id }}"
+                data-url="{{ url('/clients/'.$client->client_id.'/impersonate') }}"
+                class="data-toggle-action-tooltip btn btn-outline-success btn-circle btn-sm ajax-request">
+                <i class="sl-icon-people"></i>
+            </a>
+        </span>
+        @endif
+
         <!--pin-->
         <span class="list-table-action">
             <a href="javascript:void(0);" title="{{ cleanLang(__('lang.pinning')) }}"
@@ -275,6 +286,31 @@
                 <i class="ti-pin2"></i>
             </a>
         </span>
+
+        <!--star button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.star_client')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm opacity-4 ajax-request {{ $client->is_starred ? 'hidden' : '' }}"
+                id="starred-star-button-{{ $client->client_id }}"
+                data-url="{{ url('/starred/togglestatus?action=star&resource_type=client&resource_id='.$client->client_id) }}"
+                data-loading-target="starred-star-button-{{ $client->client_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
+        </span>
+
+        <!--unstar button-->
+        <span class="list-table-action">
+            <button type="button" title="{{ cleanLang(__('lang.unstar_client')) }}"
+                class="data-toggle-action-tooltip btn btn-outline-default btn-circle btn-sm ajax-request text-warning {{ !$client->is_starred ? 'hidden' : '' }}"
+                id="starred-unstar-button-{{ $client->client_id }}"
+                data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=client&resource_id='.$client->client_id) }}"
+                data-loading-target="starred-unstar-button-{{ $client->client_id }}" data-ajax-type="POST"
+                data-on-start-submit-button="disable">
+                <i class="sl-icon-star"></i>
+            </button>
+        </span>
+
     </td>
     @endif
 

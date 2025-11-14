@@ -15,6 +15,7 @@ use App\Http\Requests\Tasks\TaskStoreUpdate;
 use App\Http\Responses\Tasks\ActivateResponse;
 use App\Http\Responses\Tasks\ArchiveResponse;
 use App\Http\Responses\Tasks\AttachFilesResponse;
+use App\Http\Responses\Tasks\ChecklistCommentsResponse;
 use App\Http\Responses\Tasks\ChecklistResponse;
 use App\Http\Responses\Tasks\CloneResponse;
 use App\Http\Responses\Tasks\CloneStoreResponse;
@@ -22,8 +23,10 @@ use App\Http\Responses\Tasks\contentResponse;
 use App\Http\Responses\Tasks\CreateResponse;
 use App\Http\Responses\Tasks\DeleteTaskDependencyResponse;
 use App\Http\Responses\Tasks\DestroyResponse;
+use App\Http\Responses\Tasks\ImportChecklistResponse;
 use App\Http\Responses\Tasks\IndexKanbanResponse;
 use App\Http\Responses\Tasks\IndexListResponse;
+use App\Http\Responses\Tasks\PinningResponse;
 use App\Http\Responses\Tasks\RecurringSettingsResponse;
 use App\Http\Responses\Tasks\ShowResponse;
 use App\Http\Responses\Tasks\StoreChecklistResponse;
@@ -39,6 +42,7 @@ use App\Http\Responses\Tasks\UpdateResponse;
 use App\Http\Responses\Tasks\UpdateStatusLockedResponse;
 use App\Http\Responses\Tasks\UpdateStatusResponse;
 use App\Http\Responses\Tasks\UpdateTagsResponse;
+use App\Imports\TasksChecklistImport;
 use App\Models\Checklist;
 use App\Models\Comment;
 use App\Models\Task;
@@ -57,6 +61,7 @@ use App\Repositories\DestroyRepository;
 use App\Repositories\EmailerRepository;
 use App\Repositories\EventRepository;
 use App\Repositories\EventTrackingRepository;
+use App\Repositories\PinnedRepository;
 use App\Repositories\ProjectAssignedRepository;
 use App\Repositories\ProjectRepository;
 use App\Repositories\TagRepository;
@@ -67,6 +72,7 @@ use App\Repositories\TaskStatusRepository;
 use App\Repositories\TimerRepository;
 use App\Repositories\UserRepository;
 use App\Rules\CheckBox;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -75,9 +81,6 @@ use Illuminate\Support\Str;
 use Image;
 use Intervention\Image\Exception\NotReadableException;
 use Validator;
-use App\Http\Responses\Tasks\PinningResponse;
-use App\Repositories\PinnedRepository;
-
 
 class Tasks extends Controller {
 
@@ -204,6 +207,9 @@ class Tasks extends Controller {
             'recurringSettingsUpdate',
             'updateCoverImage',
             'removeCoverImage',
+            'showImportChecklists',
+            'importChecklists',
+            'storeChecklistComment',
         ]);
 
         $this->middleware('tasksMiddlewareParticipate')->only([
@@ -772,6 +778,9 @@ class Tasks extends Controller {
 
         //get clients users
         $client_users = \App\Models\User::Where('clientid', $task->task_clientid)->orderBy('first_name', 'asc')->get();
+
+        //get the global users for this task (array of user id's)
+        $user_ids = $this->taskpermissions->check('users', $id);
 
         //comments
         request()->merge([
@@ -2039,6 +2048,26 @@ class Tasks extends Controller {
     }
 
     /**
+     * update task checklist item positions
+     * @return \Illuminate\Http\Response
+     */
+    public function updateChecklistPositions() {
+
+        //update position
+        $position = 0;
+        if (is_array(request('card_checklist'))) {
+            foreach (request('card_checklist') as $key => $value) {
+                if (is_numeric($key)) {
+                    \App\Models\Checklist::where('checklist_id', $key)
+                        ->update(['checklist_position' => $position]);
+                }
+                $position++;
+            }
+        }
+
+    }
+
+    /**
      * change task status using the checkbox
      * @return \Illuminate\Http\Response
      */
@@ -2410,6 +2439,9 @@ class Tasks extends Controller {
         //delete
         $checklist->delete();
 
+        //delete checklist comment
+        \App\Models\Comment::Where('commentresource_type', 'checklist')->Where('commentresource_id', $checklist_id)->delete();
+
         //checklists
         request()->merge([
             'checklistresource_type' => 'task',
@@ -2437,10 +2469,13 @@ class Tasks extends Controller {
      */
     public function toggleChecklistStatus(Checklist $checklist, ChecklistRepository $checklistrepo) {
 
+        //get checklist id
+        $id = request()->route('checklistid');
+
         //check if file exists in the database
         $checklist = $checklist::find(request()->route('checklistid'));
 
-        if (request('card_checklist') == 'on') {
+        if (request("card_checklist.$id") == 'on') {
             $checklist->checklist_status = 'completed';
         } else {
             $checklist->checklist_status = 'pending';
@@ -2502,7 +2537,6 @@ class Tasks extends Controller {
      * @return object
      */
     private function applyPermissions($task = '') {
-
 
         //sanity - make sure this is a valid task object
         if ($task instanceof \App\Models\Task) {
@@ -3514,6 +3548,288 @@ class Tasks extends Controller {
         //generate a response
         return new PinningResponse($payload);
 
+    }
+
+    /**
+     * Import checklist items from uploaded file (Excel, CSV, or Text)
+     * @param object ChecklistRepository instance of the repository
+     * @param int $id task id
+     * @return \Illuminate\Http\Response
+     */
+    public function importChecklists(ChecklistRepository $checklistrepo, $id) {
+
+        //limit checklists items to import
+        $import_limit = 500;
+
+        // Get the task
+        $tasks = $this->taskrepo->search($id);
+        $task = $tasks->first();
+
+        // Check if task exists
+        if (!$task) {
+            abort(404, __('lang.task_not_found'));
+        }
+
+        //START EDITS - Check for attachments array instead of direct file upload
+        // CHANGED: Validate attachments array exists
+        if (!request('attachments') || !is_array(request('attachments'))) {
+            abort(409, __('lang.no_file_uploaded'));
+        }
+
+        // Get the first (and only) uploaded file from attachments array
+        $attachments = request('attachments');
+        $directory = key($attachments);
+        $filename = reset($attachments);
+
+        // CHANGED: Build file path from temp directory where file was uploaded via attachFiles()
+        $file_path = BASE_DIR . "/storage/temp/$directory/$filename";
+
+        // Check if file exists
+        if (!file_exists($file_path)) {
+            abort(409, $file_path);
+        }
+
+        // Get file extension
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        // Validate file type
+        $allowed_extensions = ['xlsx', 'xls', 'csv', 'txt'];
+        if (!in_array($extension, $allowed_extensions)) {
+            abort(409, __('lang.invalid_file_type'));
+        }
+
+        //END EDITS - the rest of this method will work as before, with $file_path
+
+        // Initialize results
+        $import_results = [
+            'success' => false,
+            'imported' => 0,
+            'skipped' => 0,
+            'message' => '',
+        ];
+
+        try {
+            // Handle different file types
+            if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                // Handle Excel/CSV files using existing TasksChecklistImport class
+                $import = new TasksChecklistImport($id, $import_limit);
+
+                try {
+                    $import->import($file_path);
+
+                    $import_results = [
+                        'success' => true,
+                        'imported' => $import->getRowCount(),
+                        'skipped' => $import->getSkippedCount(),
+                        'message' => "Successfully imported {$import->getRowCount()} checklist items",
+                    ];
+
+                    if ($import->maxLimitReached()) {
+                        $import_results['message'] .= __('lang.maximum_importing_limit_reached') . ": " . $import->getMaxItems();
+                    }
+
+                } catch (Exception $e) {
+                    $import_results = [
+                        'success' => false,
+                        'imported' => 0,
+                        'skipped' => 0,
+                        'message' => 'Import failed: ' . $e->getMessage(),
+                    ];
+                    Log::error("Excel/CSV checklist import failed: " . $e->getMessage(), ['checklist.import', config('app.debug_ref'), basename(__FILE__), __line__]);
+                }
+
+            } elseif ($extension === 'txt') {
+                // Handle text files using repository method
+                $import_results = $checklistrepo->importTextChecklistTask($file_path, $id, $import_limit);
+            }
+
+        } catch (Exception $e) {
+            $import_results = [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'message' => 'Import failed due to an error',
+            ];
+            Log::error("Checklist import failed: " . $e->getMessage(), ['checklist.import', config('app.debug_ref'), basename(__FILE__), __line__]);
+        }
+
+        // Clean up - delete the temporary file
+        if (Storage::exists("temp/$directory")) {
+            Storage::deleteDirectory("temp/$directory");
+        }
+
+        // Get updated checklists and progress after import
+        request()->merge([
+            'checklistresource_type' => 'task',
+            'checklistresource_id' => $id,
+        ]);
+        $checklists = $checklistrepo->search();
+        foreach ($checklists as $checklist) {
+            $this->applyChecklistPermissions($checklist);
+        }
+
+        //get new progress
+        $progress = $this->checklistProgress($checklists);
+
+        // Get updated task
+        $tasks = $this->taskrepo->search($id);
+        $task = $tasks->first();
+        $this->applyPermissions($task);
+
+        //reponse payload
+        $payload = [
+            'import_results' => $import_results,
+            'checklists' => $checklists,
+            'progress' => $progress,
+            'task' => $task,
+        ];
+
+        //generate a response
+        return new ImportChecklistResponse($payload);
+    }
+
+    /**
+     * Store a newly created checklist comment
+     * @param int $id task id
+     * @return \Illuminate\Http\Response
+     */
+    public function storeChecklistComment(CommentRepository $commentrepo, $id) {
+
+        //validate input
+        if (!request()->filled('checklist-comment')) {
+            abort(409, __('lang.comment_is_required'));
+        }
+
+        //get checklist id from form
+        $checklist_id = request('checklist-comments-checklist-id');
+
+        //get the checklist
+        $checklist = \App\Models\Checklist::Where('checklist_id', $checklist_id)
+            ->Where('checklistresource_type', 'task')
+            ->Where('checklistresource_id', $id)
+            ->first();
+
+        //checklist must exist and belong to this task
+        if (!$checklist) {
+            abort(404);
+        }
+
+        //get the task
+        $tasks = $this->taskrepo->search($id);
+        $task = $tasks->first();
+
+        // Check if task exists
+        if (!$task) {
+            abort(404, __('lang.task_not_found'));
+        }
+
+        //get the global users for this task (array of user id's)
+        $user_ids = $this->taskpermissions->check('users', $id);
+
+        //create the comment
+        $comment = new \App\Models\Comment();
+        $comment->comment_creatorid = auth()->id();
+        $comment->comment_text = convertTextareaToHtml(request('checklist-comment'));
+        $comment->commentresource_type = 'checklist';
+        $comment->commentresource_id = $checklist_id;
+        $comment->save();
+
+        //get complete comment
+        $comments = $commentrepo->search($comment->comment_id);
+        $comment = $comments->first();
+        $this->applyCommentPermissions($comment);
+
+        /** ----------------------------------------------
+         * record event [coment]
+         * ----------------------------------------------*/
+        $data = [
+            'event_creatorid' => auth()->id(),
+            'event_item' => 'comment',
+            'event_item_id' => $comment->comment_id,
+            'event_item_lang' => 'event_posted_a_comment',
+            'event_item_content' => $comment->comment_text,
+            'event_item_content2' => '',
+            'event_parent_type' => 'task',
+            'event_parent_id' => $task->task_id,
+            'event_parent_title' => $task->task_title,
+            'event_show_item' => 'yes',
+            'event_show_in_timeline' => 'no',
+            'event_clientid' => $task->task_clientid,
+            'eventresource_type' => 'project',
+            'eventresource_id' => $task->task_projectid,
+            'event_notification_category' => 'notifications_tasks_activity',
+        ];
+        //record event
+        if ($event_id = $this->eventrepo->create($data)) {
+            //get users
+            $users = $this->taskpermissions->check('users', $task);
+            //record notification
+            $emailusers = $this->trackingrepo->recordEvent($data, $users, $event_id);
+        }
+
+        /** ----------------------------------------------
+         * send email [comment]
+         * ----------------------------------------------*/
+        if (isset($emailusers) && is_array($emailusers)) {
+            //the comment
+            $data = $comment->toArray();
+
+            //add the checklist and also styling to the comment
+            $data['comment_text']  = formatChecklistComment($comment, $checklist);
+
+            //send to users
+            if ($users = \App\Models\User::WhereIn('id', $emailusers)->get()) {
+                foreach ($users as $user) {
+                    $mail = new \App\Mail\TaskComment($user, $data, $task);
+                    $mail->build();
+                }
+            }
+        }
+
+        //response payload
+        $payload = [
+            'response' => 'store',
+            'comment' => $comment,
+            'checklist_id' => $checklist_id,
+        ];
+
+        //generate response
+        return new ChecklistCommentsResponse($payload);
+    }
+
+    /**
+     * Remove the specified checklist comment from storage
+     * @param int $id task id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroyChecklistComment($id) {
+
+        //get the comment
+        $comment = \App\Models\Comment::Where('comment_id', $id)
+            ->Where('commentresource_type', 'checklist')
+            ->first();
+
+        //comment must exist
+        if (!$comment) {
+            abort(404);
+        }
+
+        //permission
+        if ($comment->comment_creatorid != auth()->id() && auth()->user()->role_id == 1) {
+            abort(403);
+        }
+
+        //delete the comment
+        $comment->delete();
+
+        //response payload
+        $payload = [
+            'response' => 'delete',
+            'comment_id' => $comment_id,
+        ];
+
+        //generate response
+        return new ChecklistCommentsResponse($payload);
     }
 
     /**

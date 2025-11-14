@@ -4,7 +4,6 @@ namespace App\Cronjobs\Modules;
 
 use App\Models\Module;
 use App\Models\Role;
-use Illuminate\Support\Facades\Log;
 use App\Repositories\Modules\ModuleRolesRespository;
 
 /**
@@ -20,9 +19,15 @@ class SyncModulesCron {
      */
     public function __invoke(ModuleRolesRespository $modulerepo) {
 
+        //[MT] - tenants only
+        if (env('MT_TPYE')) {
+            if (\Spatie\Multitenancy\Models\Tenant::current() == null) {
+                return;
+            }
+        }
+
         //sync user role permissions
         $modulerepo->syncModulePermissions();
     }
-
 
 }

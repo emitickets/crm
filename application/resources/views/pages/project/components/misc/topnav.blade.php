@@ -3,7 +3,7 @@
         <!-- Nav tabs -->
         <ul data-modular-id="project_tabs_menu" class="nav nav-tabs profile-tab project-top-nav list-pages-crumbs"
             role="tablist">
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent1') !!}
 
@@ -12,7 +12,7 @@
                 <a class="nav-link tabs-menu-item" href="/projects/{{ $project->project_id }}" role="tab"
                     id="tabs-menu-overview">{{ cleanLang(__('lang.overview')) }}</a>
             </li>
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent2') !!}
 
@@ -25,7 +25,7 @@
                     data-url="{{ _url('/projects') }}/{{ $project->project_id }}/project-details"
                     href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.details')) }}</a>
             </li>
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent3') !!}
 
@@ -39,7 +39,19 @@
                     href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.tasks')) }}</a>
             </li>
             @endif
-            
+
+
+            <!--[checklists]-->
+            <li class="nav-item">
+                <a class="nav-link tabs-menu-item   js-dynamic-url js-ajax-ux-request" data-toggle="tab"
+                    id="tabs-menu-checklists" data-loading-class="loading-tabs"
+                    data-loading-target="embed-content-container"
+                    data-dynamic-url="{{ _url('/projects') }}/{{ $project->project_id }}/checklists"
+                    data-url="{{ url('/checklists') }}?source=ext&checklistresource_type=project&checklistresource_id={{ $project->project_id }}"
+                    href="#projects_ajaxtab" role="tab">@lang('lang.checklist')</a>
+            </li>
+
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent4') !!}
 
@@ -69,7 +81,7 @@
                     href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.files')) }}</a>
             </li>
             @endif
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent6') !!}
 
@@ -84,7 +96,7 @@
                     href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.comments')) }}</a>
             </li>
             @endif
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent7') !!}
 
@@ -149,7 +161,7 @@
                 </div>
             </li>
             @endif
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent8') !!}
 
@@ -179,12 +191,22 @@
                         data-loading-target="embed-content-container"
                         data-dynamic-url="{{ _url('/projects') }}/{{ $project->project_id }}/notes"
                         data-url="{{ url('/notes') }}?source=ext&noteresource_type=project&noteresource_id={{ $project->project_id }}"
-                        href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.notes')) }}</a>
+                        href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.notes_project')) }}</a>
+                    @endif
+
+                    <!--notes-->
+                    @if(auth()->user()->role->role_clients >= 1)
+                    <a class="dropdown-item js-dynamic-url js-ajax-ux-request {{ $page['tabmenu_notes'] ?? '' }}"
+                        id="tabs-menu-notes" data-toggle="tab" data-loading-class="loading-tabs"
+                        data-loading-target="embed-content-container"
+                        data-dynamic-url="{{ _url('/projects') }}/{{ $project->project_id }}/notes"
+                        data-url="{{ url('/notes') }}?source=ext&noteresource_type=client&noteresource_id={{ $project->project_clientid }}"
+                        href="#projects_ajaxtab" role="tab">{{ cleanLang(__('lang.notes_client')) }}</a>
                     @endif
 
                 </div>
             </li>
-            
+
             <!--[MODULES] - dynamic menu-->
             {!! config('modules.menus.tabs.project.parent9') !!}
 

@@ -256,4 +256,61 @@ class Client extends Model {
         return runtimeLang($this->client_status);
     }
 
+    /**
+     * relatioship business rules:
+     *         - the Client can have many Starred entries
+     *         - the Starred belongs to one Client
+     *         - uses morphMany for polymorphic relationship
+     */
+    public function starred() {
+        return $this->morphMany('App\Models\Starred', 'starredresource', 'starred_resource_type', 'starred_resource_id');
+    }
+
+    /**
+     * check if the client is starred by the current user
+     * @return bool
+     */
+    public function getIsStarredAttribute() {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        return \App\Models\Starred::where('starred_userid', auth()->id())
+            ->where('starred_resource_type', 'client')
+            ->where('starred_resource_id', $this->client_id)
+            ->exists();
+    }
+
+    /**
+     * get the last seen time of any user belonging to this client
+     * @return string
+     */
+    public function getLastSeenUserTimeAttribute() {
+        $lastSeenUser = $this->users()
+            ->orderBy('last_seen', 'desc')
+            ->first();
+
+        return $lastSeenUser ? $lastSeenUser->last_seen : null;
+    }
+
+    /**
+     * get the last seen user of this client
+     * @return User|null
+     */
+    public function getLastSeenUserAttribute() {
+        return $this->users()
+            ->orderBy('last_seen', 'desc')
+            ->first();
+    }
+
+    /**
+     * get the primary user (account owner) of this client
+     * @return User|null
+     */
+    public function getPrimaryUserAttribute() {
+        return $this->users()
+            ->where('account_owner', 'yes')
+            ->first();
+    }
+
 }

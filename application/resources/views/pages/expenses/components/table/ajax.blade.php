@@ -48,8 +48,15 @@
     <!--column visibility-->
     @if(config('visibility.expenses_col_user'))
     <td class="expenses_col_user">
+        <span class="printing_hidden">
         <img src="{{ getUsersAvatar($expense->avatar_directory, $expense->avatar_filename) }}" alt="user"
             class="img-circle avatar-xsmall"> {{ str_limit($expense->first_name ?? runtimeUnkownUser(), 8) }}
+        </span>
+
+        <!--print view-->
+        <span class="hidden printing_visible">
+            {{ $expense->first_name ?? runtimeUnkownUser() }} {{ $expense->last_name ?? '' }}
+        </span>
     </td>
     @endif
     <!--column visibility-->
@@ -75,23 +82,29 @@
 
         @if($expense->expense_billable == 'billable')
         @if($expense->expense_billing_status == 'invoiced')
-        <span class="table-icons">
+        <span class="table-icons printing_hidden">
             <a href="{{ url('/invoices/'.$expense->expense_billable_invoiceid) }}">
                 <i class="mdi mdi-credit-card-plus text-danger" data-toggle="tooltip"
                     title="{{ cleanLang(__('lang.invoiced')) }} : {{ runtimeInvoiceIdFormat($expense->expense_billable_invoiceid) }}"></i>
             </a>
         </span>
+        <!--printing-->
+        <span class="hidden printing_visible">@lang('lang.invoiced')</span>
         @else
-        <span class="table-icons">
+        <span class="table-icons printing_hidden">
             <i class="mdi mdi-credit-card-plus text-success" data-toggle="tooltip"
                 title="{{ cleanLang(__('lang.billable')) }} - {{ cleanLang(__('lang.not_invoiced')) }}"></i>
         </span>
+        <!--printing-->
+        <span class="hidden printing_visible">@lang('lang.billable') - @lang('lang.not_invoiced')</span>
         @endif
         @else
-        <span class="table-icons">
+        <span class="table-icons printing_hidden">
             <i class="mdi mdi-credit-card-off text-disabled" data-toggle="tooltip"
                 title="{{ cleanLang(__('lang.not_billable')) }}"></i>
         </span>
+        <!--printing-->
+        <span class="hidden printing_visible">@lang('lang.not_billable')</span>
         @endif
     </td>
     @endif

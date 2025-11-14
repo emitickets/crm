@@ -14,7 +14,9 @@
 
 
 <!--checklist-->
-@include('pages.task.components.checklists')
+<div id="checklist-wrapper">
+    @include('pages.task.components.checklists')
+</div>
 
 
 

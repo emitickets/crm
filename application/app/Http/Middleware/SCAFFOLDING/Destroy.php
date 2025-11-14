@@ -1,9 +1,8 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This middleware class handles [destroy] precheck processes for template
+ * This middleware class handles [destroy] pre-check processes for fooos
  *
- * @package    Grow CRM
  * @author     NextLoop
  *----------------------------------------------------------------------------------*/
 
@@ -61,13 +60,12 @@ class Destroy {
             }
             //client - no permissions
             if (auth()->user()->is_client) {
-                if ($fooo->fooo_clientid != auth()->user()->clientid) {
-                    abort(403);
-                }
+                //some checks here
             }
+
         } else {
             //no items were passed with this request
-            Log::error("no items were sent with this request", ['process' => 'middleware.fooos.destroy', 'ref' => config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'fooo id' => $fooo_id ?? '']);
+            Log::error("no delete items were sent with this list", ['middleware.delete.fooos', config('app.debug_ref'), basename(__FILE__), __line__]);
             abort(409);
         }
 

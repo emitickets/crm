@@ -127,7 +127,11 @@ class Comments extends Controller {
      */
     public function index() {
 
-        $comments = $this->commentrepo->search();
+        $limit = config('system.settings_system_pagination_limits');
+        $comments = $this->commentrepo->search('', $limit);
+
+        //initialize empty resource objects here. incase we need them on the comment response
+        $project = null;
 
         //apply some permissions
         if ($comments) {
@@ -151,10 +155,20 @@ class Comments extends Controller {
                 ->update(['comment_client_status' => 'read']);
         }
 
+        //fetch the actual resource object based on resource type - add more as needed. for now just project
+        if (request()->filled('commentresource_type') && request()->filled('commentresource_id')) {
+            if (request('commentresource_type') == 'project') {
+                $project = \App\Models\Project::Where('project_id', request('commentresource_id'))->first();
+            }
+        }
+
         //reponse payload
         $payload = [
             'page' => $this->pageSettings('comments'),
             'comments' => $comments,
+            'project' => $project,
+            'source' => request('source'),
+            'loading_target' => request('loading_target'),
         ];
 
         //show the view

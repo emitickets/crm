@@ -32,11 +32,25 @@
     @endif
     @if(config('visibility.estimates_col_created_by'))
     <td class="estimates_col_created_by" id="estimates_col_created_by_{{ $estimate->bill_estimateid }}">
-        <img src="{{ getUsersAvatar($estimate->avatar_directory, $estimate->avatar_filename) }}" alt="user"
-            class="img-circle avatar-xsmall">
-        {{ $estimate->first_name ?? runtimeUnkownUser() }}
+        <span class="printing_hidden">
+            <img src="{{ getUsersAvatar($estimate->avatar_directory, $estimate->avatar_filename) }}" alt="user"
+                class="img-circle avatar-xsmall printing_hidden">
+            {{ $estimate->first_name ?? runtimeUnkownUser() }}
+        </span>
+
+        <!--print view-->
+        <span class="hidden printing_visible">
+            {{ $estimate->first_name ?? runtimeUnkownUser() }} {{ $estimate->last_name ?? '' }}
+        </span>
+
     </td>
     @endif
+
+    <!--foo-->
+    <td class="estimates_col_category">
+        {{ str_limit($estimate->category_name ?? '---', 20) }}</a>
+    </td>
+
     @if(config('visibility.estimates_col_expires'))
     <td class="estimates_col_expires" id="estimates_col_expires_{{ $estimate->bill_estimateid }}">
         {{ runtimeDate($estimate->bill_expiry_date) }}</td>

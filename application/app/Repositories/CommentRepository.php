@@ -32,7 +32,7 @@ class CommentRepository {
      * @param int $id optional for getting a single, specified record
      * @return object comment collection
      */
-    public function search($id = '') {
+    public function search($id = '', $limit = 10000) {
 
         //new query
         $comments = $this->comments->newQuery();
@@ -70,7 +70,7 @@ class CommentRepository {
         //default sorting
         $comments->orderBy('comment_id', 'desc');
 
-        return $comments->paginate(100000);
+        return $comments->paginate($limit);
     }
 
     /**

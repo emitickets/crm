@@ -37,8 +37,6 @@ class TaskRepository {
      */
     public function search($id = '', $data = []) {
 
-        debugbar()->startMeasure('TaskRepository');
-
         $tasks = $this->tasks->newQuery();
 
         //default - always apply filters
@@ -307,6 +305,13 @@ class TaskRepository {
                     $query->whereIn('tasksassigned_userid', [auth()->id()]);
                 });
             }
+
+            //filter by a specified user's assigned tasks
+            if (request()->filled('filter_users_tasks') && request()->filled('filter_users_tasks_user_id')) {
+                $tasks->whereHas('assigned', function ($query) {
+                    $query->whereIn('tasksassigned_userid', [filled('filter_users_tasks_user_id')]);
+                });
+            }
         }
 
         //custom fields filtering
@@ -405,8 +410,6 @@ class TaskRepository {
             return $tasks->count();
         }
 
-        debugbar()->stopMeasure('TaskRepository');
-
         // Get the results and return them.
         if (request('query_type') == 'kanban') {
             return $tasks->paginate(config('system.settings_system_kanban_pagination_limits'));
@@ -447,6 +450,10 @@ class TaskRepository {
         $task->task_priority = request('task_priority');
         $task->task_position = $position;
         $task->task_calendar_timezone = config('system.settings_system_timezone');
+
+        //fix - march 2025
+        $task->taskresource_type = is_numeric(request('task_projectid')) ? 'project' : '';
+        $task->task_projectid = is_numeric(request('task_projectid')) ? request('task_projectid') : '';
 
         //save and return id
         if ($task->save()) {
@@ -552,6 +559,7 @@ class TaskRepository {
         $new_task->task_billable_lineitemid = null;
         $new_task->task_milestoneid = $data['task_milestoneid'];
         $new_task->task_calendar_timezone = config('system.settings_system_timezone');
+        $new_task->taskresource_id = $project->project_id;
 
         //cleanup incase parent was a recurring task
         $new_task->task_recurring = 'no';
@@ -676,5 +684,60 @@ class TaskRepository {
         //return
         return $collection;
 
+    }
+
+/**
+ * Sync tasks billing status
+ * This method ensures that tasks marked as 'invoiced' actually have valid invoices
+ * @param array $data
+ * @return void
+ */
+    public function syncTasksBilledStatus($data = []) {
+
+        //get tasks to check
+        if (isset($data['task_id'])) {
+            //single task
+            $tasks = \App\Models\Task::where('task_id', $data['task_id'])
+                ->where('task_billable_status', 'invoiced')
+                ->get();
+        } elseif (isset($data['project_id'])) {
+            //all tasks for a project
+            $tasks = \App\Models\Task::where('task_projectid', $data['project_id'])
+                ->where('task_billable_status', 'invoiced')
+                ->get();
+        } else {
+            return;
+        }
+
+        //check each task
+        foreach ($tasks as $task) {
+            $valid_invoice = false;
+
+            //check if the invoice exists
+            if ($task->task_billable_invoiceid) {
+                $invoice = \App\Models\Invoice::where('bill_invoiceid', $task->task_billable_invoiceid)->first();
+
+                //if invoice exists, check if the line item exists
+                if ($invoice) {
+                    $line_item = \App\Models\Lineitem::where('lineitem_id', $task->task_billable_lineitemid)
+                        ->where('lineitemresource_type', 'invoice')
+                        ->where('lineitemresource_id', $invoice->bill_invoiceid)
+                        ->where('lineitem_linked_type', 'task')
+                        ->where('lineitem_linked_id', $task->task_id)
+                        ->first();
+                    if ($line_item) {
+                        $valid_invoice = true;
+                    }
+                }
+            }
+
+            //if no valid invoice/line item found, reset the task billing status
+            if (!$valid_invoice) {
+                $task->task_billable_status = 'not_invoiced';
+                $task->task_billable_invoiceid = null;
+                $task->task_billable_lineitemid = null;
+                $task->save();
+            }
+        }
     }
 }

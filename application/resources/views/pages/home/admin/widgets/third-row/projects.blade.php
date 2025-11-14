@@ -4,7 +4,7 @@
             <h5 class="card-title">{{ cleanLang(__('lang.projects')) }}</h5>
             <div class="message-center dashboard-projects-admin">
                 <!-- not started -->
-                <a href="javascript:void(0)">
+                <a href="{{ url('/projects?filter_project_status=not_started') }}">
                     <div class="btn label-default btn-circle">{{ $payload['all_projects']['not_started'] }}</div>
                     <div class="mail-contnet">
                         <h5>{{ cleanLang(__('lang.not_started')) }}</h5> <span class="mail-desc">{{ cleanLang(__('lang.assigned_to_me')) }}:
@@ -13,7 +13,7 @@
                 </a>
 
                 <!-- in progress -->
-                <a href="javascript:void(0)">
+                <a href="{{ url('/projects?filter_project_status=in_progress') }}">
                     <div class="btn btn-info btn-circle">{{ $payload['all_projects']['in_progress'] }}</div>
                     <div class="mail-contnet">
                         <h5>{{ cleanLang(__('lang.in_progress')) }}</h5> <span class="mail-desc">{{ cleanLang(__('lang.assigned_to_me')) }}:
@@ -22,7 +22,7 @@
                 </a>
 
                 <!-- on hold -->
-                <a href="javascript:void(0)">
+                <a href="{{ url('/projects?filter_project_status=on_hold') }}">
                     <div class="btn btn-warning btn-circle">{{ $payload['all_projects']['on_hold'] }}</div>
                     <div class="mail-contnet">
                         <h5>{{ cleanLang(__('lang.on_hold')) }}</h5> <span class="mail-desc">{{ cleanLang(__('lang.assigned_to_me')) }}:
@@ -32,7 +32,7 @@
 
 
                 <!-- completed -->
-                <a href="javascript:void(0)">
+                <a href="{{ url('/projects?filter_project_status=completed') }}">
                     <div class="btn btn-success btn-circle">{{ $payload['all_projects']['completed'] }}</div>
                     <div class="mail-contnet">
                         <h5>{{ cleanLang(__('lang.completed')) }}</h5> <span class="mail-desc">{{ cleanLang(__('lang.assigned_to_me')) }}:

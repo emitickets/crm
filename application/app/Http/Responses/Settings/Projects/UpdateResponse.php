@@ -31,6 +31,8 @@ class UpdateResponse implements Responsable {
             $$key = $value;
         }
 
+        $jsondata['skip_dom_reset'] = true;
+
         //notice
         $jsondata['notification'] = array('type' => 'success', 'value' => __('lang.request_has_been_completed'));
 

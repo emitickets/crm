@@ -124,12 +124,69 @@
                 <!--[MODULES] - dynamic menu-->
                 {!! config('modules.menus.topnav.parent1') !!}
 
+
+                <!--Starred Content-->
+                <li class="nav-item dropdown hidden-mobile">
+                    <a class="nav-link waves-effect waves-dark font-22 p-t-9 p-r-10 topnav-quick-access-icon"
+                        href="javascript:void(0);" id="topnav-quick-access-icon" data-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="sl-icon-star"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+
+                        <!--projects-->
+                        <a class="dropdown-item js-toggle-side-panel-ajax" href="javascript:void(0);"
+                            data-url="{{ url('/starred/view/projects?orderby=project_title&sortorder=asc') }}"
+                            data-reset-body-id="sidepanel-starred-container"
+                            data-loading-target="sidepanel-starred-container" data-target="sidepanel-starred"
+                            data-progress-bar='hidden' data-target-menu="starred-projects">
+                            <i class="ti-folder p-r-4"></i> @lang('lang.projects')
+                        </a>
+
+                        <!--clients-->
+                        <a class="dropdown-item js-toggle-side-panel-ajax" href="javascript:void(0);"
+                            data-url="{{ url('/starred/view/clients?orderby=client_company_name&sortorder=asc') }}"
+                            data-reset-body-id="sidepanel-starred-container"
+                            data-loading-target="sidepanel-starred-container" data-target="sidepanel-starred"
+                            data-progress-bar='hidden' data-target-menu="starred-clients">
+                            <i class="sl-icon-people p-r-4"></i> @lang('lang.clients')
+                        </a>
+
+                        <!--tasks-->
+                        <a class="dropdown-item js-toggle-side-panel-ajax" href="javascript:void(0);"
+                            data-url="{{ url('/starred/view/tasks?orderby=task_title&sortorder=asc') }}"
+                            data-reset-body-id="sidepanel-starred-container"
+                            data-loading-target="sidepanel-starred-container" data-target="sidepanel-starred"
+                            data-progress-bar='hidden' data-target-menu="starred-tasks">
+                            <i class="ti-menu-alt p-r-4"></i> @lang('lang.tasks')
+                        </a>
+
+                        <!--project comments-->
+                        <a class="dropdown-item js-toggle-side-panel-ajax" href="javascript:void(0);"
+                            data-url="{{ url('/starred/view/project-comments?orderby=recent_activity&sortorder=desc') }}"
+                            data-reset-body-id="sidepanel-starred-container"
+                            data-loading-target="sidepanel-starred-container" data-target="sidepanel-starred"
+                            data-progress-bar='hidden' data-target-menu="starred-project-comment">
+                            <i class="ti-comment p-r-4"></i> @lang('lang.project_comments')
+                        </a>
+
+                        <!--notes-->
+                        <a class="dropdown-item js-toggle-side-panel-ajax" href="javascript:void(0);"
+                            data-url="{{ url('/starred/view/notes?orderby=last_updated&sortorder=desc') }}"
+                            data-loading-target="sidepanel-starred-container" data-target="sidepanel-starred"
+                            data-reset-body-id="sidepanel-starred-container" data-progress-bar='hidden'
+                            data-target-menu="starred-notes">
+                            <i class="ti-notepad p-r-4"></i> @lang('lang.notes')
+                        </a>
+                    </div>
+                </li>
+
                 <!-- Reminders Notification-->
                 <li class="nav-item">
                     <a class="nav-link waves-effect waves-dark font-22 p-t-9 p-r-10 js-toggle-notifications-panel topnav-reminders-icon {{ request('user_has_due_reminder') }}"
-                        href="javascript:void(0);" data-url="{{ url('reminders/topnav-feed?status=due') }}" id="topnav-reminders-icon"
-                        data-loading-target="topnav-reminders-container" data-target="sidepanel-reminders"
-                        data-progress-bar='hidden' aria-expanded="false">
+                        href="javascript:void(0);" data-url="{{ url('reminders/topnav-feed?status=due') }}"
+                        id="topnav-reminders-icon" data-loading-target="topnav-reminders-container"
+                        data-target="sidepanel-reminders" data-progress-bar='hidden' aria-expanded="false">
                         <i class="ti-alarm-clock"></i>
                     </a>
                 </li>
@@ -174,7 +231,7 @@
 
                 <!-- calendar -->
                 @if(config('visibility.modules.calendar'))
-                <li class="nav-item">
+                <li class="nav-item hidden-mobile">
                     <a class="nav-link waves-effect waves-dark font-22 p-t-10 p-r-10" href="{{ url('/calendar') }}"
                         aria-expanded="false">
                         <i class="ti-calendar"></i>
@@ -205,7 +262,7 @@
 
                 <!-- settings -->
                 @if(auth()->user()->is_admin)
-                <li class="nav-item">
+                <li class="nav-item hidden-mobile">
                     <a class="nav-link waves-effect waves-dark font-22 p-t-10 p-r-10" href="/settings" id="32"
                         aria-expanded="false">
                         <i class="sl-icon-settings"></i>

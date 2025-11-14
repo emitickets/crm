@@ -17,8 +17,8 @@ use App\Http\Responses\Settings\FormBuilder\StyleResponse;
 use App\Repositories\CategoryRepository;
 use App\Repositories\WebformRepository;
 use Illuminate\Http\Request;
-use Validator;
 use Illuminate\Validation\Rule;
+use Validator;
 
 class Formbuilder extends Controller {
 
@@ -63,14 +63,24 @@ class Formbuilder extends Controller {
         $custom_fields = $this->availableFormFields();
 
         /** --------------------------------------------------------------------------------------------
-         * [notes] Oct 2023 - fixing single quote that were breaking the frontend formbuider/rendering
+         * July 25 - special characters that are breaking the frontend formbuider/rendering
          *      - replace the single quote `'` with html special characters `&#39;`
+         *      - replace the question mark `?` with html special characters `&#63;`
          *      - revert back to the single quote in the frontend, when its safe to do so
          *      - frontend file (settings/sections/formbuilder/build/page.blade.php)
          * --------------------------------------------------------------------------------------------*/
+
+        // Apply escaping to database form data
         $form = str_replace("'", "&#39;", $webform->webform_builder_payload);
+        $form = str_replace("?", "&#63;", $form);
         $form = json_decode($form, true);
         $current_fields = (json_decode($form, true));
+
+        // Apply escaping to custom fields array too
+        $custom_fields_json = json_encode($custom_fields);
+        $custom_fields_json = str_replace("'", "&#39;", $custom_fields_json);
+        $custom_fields_json = str_replace("?", "&#63;", $custom_fields_json);
+        $custom_fields = json_decode($custom_fields_json, true);
 
         //reponse payload
         $payload = [
@@ -518,7 +528,7 @@ class Formbuilder extends Controller {
 
     }
 
-        /**
+    /**
      * Display general form
      *
      * @return \Illuminate\Http\Response
@@ -544,7 +554,7 @@ class Formbuilder extends Controller {
         return new StyleResponse($payload);
     }
 
-        /**
+    /**
      * Save form settig=ngs
      *
      * @return \Illuminate\Http\Response
@@ -568,7 +578,6 @@ class Formbuilder extends Controller {
         return response()->json(array('notification' => ['type' => 'success', 'value' => __('lang.request_has_been_completed')]));
 
     }
-
 
     /**
      * Display general form

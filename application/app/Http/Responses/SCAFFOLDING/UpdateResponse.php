@@ -1,8 +1,8 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This classes renders the response for the [update] process for the fooo
- * controller
+ * [EXAMPLE] Response Class for updating a resouce in the view
+ * 
  * @package    Grow CRM
  * @author     NextLoop
  *----------------------------------------------------------------------------------*/
@@ -31,25 +31,18 @@ class UpdateResponse implements Responsable {
             $$key = $value;
         }
 
-        //replace the row of this record
+        //replace the row of this record in the table or similar
         $html = view('pages/fooos/components/table/ajax', compact('fooos'))->render();
         $jsondata['dom_html'][] = array(
-            'selector' => "#fooo_" . $fooos->first()->fooo_id,
+            'selector' => "#fooo-$id",
             'action' => 'replace-with',
             'value' => $html);
 
-        //for own profile, replace user name in top nav
-        if ($request->input('id') == auth()->id()) {
-            $jsondata['dom_html'][] = array(
-                'selector' => "#topnav_username",
-                'action' => 'replace',
-                'value' => safestr($request->input('first_name')));
-        }
 
         //close modal
         $jsondata['dom_visibility'][] = array('selector' => '#commonModal', 'action' => 'close-modal');
 
-        //notice
+        //show success noty message
         $jsondata['notification'] = array('type' => 'success', 'value' => __('lang.request_has_been_completed'));
 
         //response

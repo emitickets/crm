@@ -1,9 +1,8 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This middleware class handles [edit] precheck processes for template
+ * This middleware class handles [edit] pre-check processes for fooos
  *
- * @package    Grow CRM
  * @author     NextLoop
  *----------------------------------------------------------------------------------*/
 
@@ -13,15 +12,7 @@ use Log;
 
 class Edit {
 
-    /**
-     * This middleware does the following
-     *   2. checks users permissions to [view] fooos
-     *   3. modifies the request object as needed
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
+
     public function handle($request, Closure $next) {
 
         //fooo id
@@ -32,24 +23,14 @@ class Edit {
 
         //does the fooo exist
         if ($fooo_id == '' || !$fooo = \App\Models\Fooo::Where('fooo_id', $fooo_id)->first()) {
-            Log::error("fooo could not be found", ['process' => 'middleware.fooos.edit', 'ref' => config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'fooo id' => $fooo_id ?? '']);
+            Log::error("fooo could not be found", ['process' => '[fooos][edit]', 'ref' => config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'fooo id' => $fooo_id ?? '']);
             abort(404);
         }
 
         //permission: does user have permission edit fooos
         if (auth()->user()->is_team) {
             if (auth()->user()->role->role_fooos >= 2) {
-                //global permissions
-                if (auth()->user()->role->role_fooos_scope == 'global') {
-                    
-                    return $next($request);
-                }
-                //own permissions
-                if (auth()->user()->role->role_fooos_scope == 'own') {
-                    if ($fooo->fooo_creatorid == auth()->id()) { 
-                        return $next($request);
-                    }
-                }
+                return $next($request);
             }
         }
 
@@ -60,10 +41,8 @@ class Edit {
             }
         }
 
-        //NB: client db/repository (clientid filter merege) is applied in main controller.php
-
         //permission denied
-        Log::error("permission denied", ['process' => '[permissions][fooos][edit]', 'ref' => config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::error("permission denied", ['middleware.edit.fooo', config('app.debug_ref'), basename(__FILE__), __line__]);
         abort(403);
     }
 
@@ -75,7 +54,6 @@ class Edit {
         //some settings
         config([
             'settings.fooo' => true,
-            'settings.bar' => true,
         ]);
     }
 }

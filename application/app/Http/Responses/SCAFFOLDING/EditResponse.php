@@ -1,7 +1,7 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This classes renders the response for the [edit] process for the fooo
+ * [EXAMPLE] Response Class for showing the form to edit a resource
  * controller
  * @package    Grow CRM
  * @author     NextLoop
@@ -19,7 +19,7 @@ class EditResponse implements Responsable {
     }
 
     /**
-     * render the view for fooo members
+     * render the form to edit a new fooo
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -40,11 +40,6 @@ class EditResponse implements Responsable {
 
         //show modal foooter
         $jsondata['dom_visibility'][] = array('selector' => '#commonModalFooter', 'action' => 'show');
-
-        // POSTRUN FUNCTIONS------
-        $jsondata['postrun_functions'][] = [
-            'value' => 'NXFoooCreate',
-        ];
 
         //ajax response
         return response()->json($jsondata);

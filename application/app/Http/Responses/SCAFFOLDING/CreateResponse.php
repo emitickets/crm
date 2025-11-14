@@ -1,8 +1,7 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This classes renders the response for the [create] process for the fooo
- * controller
+ * [EXAMPLE] Response Class for showing the form to create a new response
  * @package    Grow CRM
  * @author     NextLoop
  *----------------------------------------------------------------------------------*/
@@ -19,7 +18,7 @@ class CreateResponse implements Responsable {
     }
 
     /**
-     * render the view for fooo members
+     * render the form to create a new fooo
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -40,11 +39,6 @@ class CreateResponse implements Responsable {
 
         //show modal foooter
         $jsondata['dom_visibility'][] = array('selector' => '#commonModalFooter', 'action' => 'show');
-
-        // POSTRUN FUNCTIONS------
-        $jsondata['postrun_functions'][] = [
-            'value' => 'NXFoooCreate',
-        ];
 
         //ajax response
         return response()->json($jsondata);

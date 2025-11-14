@@ -20,8 +20,14 @@
         @if(config('visibility.timesheets_grouped_by_users'))
         <span class="sl-icon-people"></span> {{ cleanLang(__('lang.multiple')) }}
         @else
-        <img src="{{ getUsersAvatar($timesheet->avatar_directory, $timesheet->avatar_filename) }}" alt="user"
-            class="img-circle avatar-xsmall"> {{ str_limit($timesheet->first_name ?? runtimeUnkownUser(), 10) }}
+        <span class="printing_hidden">
+            <img src="{{ getUsersAvatar($timesheet->avatar_directory, $timesheet->avatar_filename) }}" alt="user"
+                class="img-circle avatar-xsmall"> {{ str_limit($timesheet->first_name ?? runtimeUnkownUser(), 10) }}
+        </span>
+        <!--print view-->
+        <span class="hidden printing_visible">
+            {{ $timesheet->first_name ?? runtimeUnkownUser() }} {{ $timesheet->last_name ?? '' }}
+        </span>
         @endif
 
     </td>
@@ -42,8 +48,18 @@
     </td>
     @endif
 
+    @if(config('visibility.timesheets_col_recorded_by'))
+    <td class="timesheets_col_recorded_by">{{ $timesheet->recorded_by }}</td>
+    @endif
+
     <!--date-->
-    <td class="timesheets_col_start_time">{{ runtimeDate($timesheet->timer_created) }}</td>
+    <td class="timesheets_col_start_date">{{ runtimeDate($timesheet->timer_created) }}</td>
+
+    <!--time-->
+    @if(config('visibility.timesheets_col_start_time'))
+    <td class="timesheets_col_start_time">{{ runtimeTime($timesheet->timer_created) }}</td>
+    @endif
+
 
     <!--billing status-->
     <td class="timesheets_col_billing_status">
@@ -60,7 +76,7 @@
 
     <td class="timesheets_col_time">{!! clean(runtimeSecondsHumanReadable($timesheet->time, true)) !!}</td>
     @if(config('visibility.timesheets_col_action'))
-    <td class="timesheets_col_action">
+    <td class="timesheets_col_action actions_column">
         <span class="list-table-action dropdown  font-size-inherit">
             @if(config('visibility.timesheets_disable_actions'))
             <span data-toggle="tooltip" title="{{ cleanLang(__('lang.actions_not_available')) }}">---</span>

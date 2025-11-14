@@ -48,9 +48,10 @@ class Kernel extends ConsoleKernel {
         $schedule->call(new \App\Cronjobs\Landlord\TenantsUpdateCron)->everyMinute();
         $schedule->call(new \App\Cronjobs\Landlord\TenantsPatchingCron)->everyFiveMinutes();
 
-
- 
         // -----------------------------------------------------------[TENANTS]-------------------------------------------------------------------
+
+        //updating cron
+        $schedule->call(new \App\Cronjobs\UpdatingCron)->everyMinute();
 
         //send [regular] queued emails
         $schedule->call(new \App\Cronjobs\EmailCron)->everyMinute();
@@ -124,9 +125,11 @@ class Kernel extends ConsoleKernel {
         //[imap][tickets] - send queued support ticket reply emails
         $schedule->call(new \App\Cronjobs\ImapTicketRepliesCron)->everyMinute();
 
-
         //[modules]
         $schedule->call(new \App\Cronjobs\Modules\SyncModulesCron)->everyMinute();
+
+        //[cleanup] - delete large log files (over 50MB) daily
+        $schedule->call(new \App\Cronjobs\Cleanup\CleanUpCron)->daily();
 
     }
 

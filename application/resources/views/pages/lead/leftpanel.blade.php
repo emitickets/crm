@@ -6,9 +6,10 @@
 @include('pages.lead.components.description')
 
 
-<!--checklist-->
-@include('pages.lead.components.checklists')
-
+<!--[todo] checklist-->
+<div id="checklist-wrapper">
+    @include('pages.lead.components.checklists')
+</div>
 
 <!--attachments-->
 @include('pages.lead.components.attachments')

@@ -28,7 +28,9 @@ class RecurringTasksCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
         
         //todays date
         $today = \Carbon\Carbon::now()->format('Y-m-d');

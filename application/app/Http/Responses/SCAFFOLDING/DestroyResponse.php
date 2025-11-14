@@ -1,7 +1,7 @@
 <?php
 
 /** --------------------------------------------------------------------------------
- * This classes renders the response for the [destroy] process for the fooos
+ * [EXAMPLE] Response Class for showing deleting a resource from the view
  * controller
  * @package    Grow CRM
  * @author     NextLoop
@@ -34,14 +34,14 @@ class DestroyResponse implements Responsable {
         //hide and remove all deleted rows
         foreach ($allrows as $id) {
             $jsondata['dom_visibility'][] = array(
-                'selector' => '#fooo_' . $id,
+                'selector' => "#fooo-$id",
                 'action' => 'slideup-slow-remove',
             );
         }
         //close modal
         $jsondata['dom_visibility'][] = array('selector' => '#commonModal', 'action' => 'close-modal');
 
-        //notice
+        //show success noty message
         $jsondata['notification'] = array('type' => 'success', 'value' => __('lang.request_has_been_completed'));
 
         //response

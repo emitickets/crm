@@ -166,6 +166,7 @@ class SettingsRepository {
         $settings->settings_projects_clientperm_timesheets_view = (request('settings_projects_clientperm_timesheets_view') == 'on') ? 'yes' : 'no';
         $settings->settings_projects_clientperm_assigned_view = (request('settings_projects_clientperm_assigned_view') == 'on') ? 'yes' : 'no';
         $settings->settings_projects_clientperm_expenses_view = (request('settings_projects_clientperm_expenses_view') == 'on') ? 'yes' : 'no';
+        $settings->settings_projects_clientperm_checklists = (request('settings_projects_clientperm_checklists') == 'on') ? 'yes' : 'no';
 
         //save
         if ($settings->save()) {
@@ -190,6 +191,7 @@ class SettingsRepository {
         //general
         $settings->settings_projects_assignedperm_tasks_collaborate = (request('settings_projects_assignedperm_tasks_collaborate') == 'on') ? 'yes' : 'no';
         $settings->settings_projects_permissions_basis = (request('settings_projects_permissions_basis') == 'user_roles') ? 'user_roles' : 'category_based';
+        $settings->settings_projects_assignedperm_manage_checklists = (request('settings_projects_assignedperm_manage_checklists') == 'on') ? 'yes' : 'no';
 
         //save
         if ($settings->save()) {

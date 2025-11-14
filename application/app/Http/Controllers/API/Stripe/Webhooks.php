@@ -8,6 +8,9 @@
  *----------------------------------------------------------------------------------*/
 
 namespace App\Http\Controllers\API\Stripe;
+use App\Events\PaymentGateways\Stripe\CheckoutSessionCompleted;
+use App\Events\PaymentGateways\Stripe\PaymentReceived;
+use App\Events\PaymentGateways\Stripe\SubscriptionCancelled;
 use App\Http\Controllers\Controller;
 use Log;
 
@@ -31,15 +34,21 @@ class Webhooks extends Controller {
         //get the payload body
         $payload = @file_get_contents('php://input');
 
+        //fix webhook validation issues due to timestamps
+        $tolerance = (30 * 60);
+
         try {
             $event = \Stripe\Webhook::constructEvent(
-                $payload, $_SERVER['HTTP_STRIPE_SIGNATURE'], config('system.settings_stripe_webhooks_key')
+                $payload, 
+                $_SERVER['HTTP_STRIPE_SIGNATURE'], 
+                config('system.settings_stripe_webhooks_key'),
+                $tolerance
             );
-        } catch (\UnexpectedValueException $e) {
+        } catch (\UnexpectedValueException$e) {
             Log::error("stripe webhook data is invalid", ['process' => '[stripe-webhooks]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payload' => $payload]);
             http_response_code(400);
             die('Stripe payload is invalid');
-        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+        } catch (\Stripe\Exception\SignatureVerificationException$e) {
             Log::critical("Stripe signing id (signature) does not match the one in database", ['process' => '[stripe-webhooks]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'payload' => $payload]);
             http_response_code(400);
             die('Signing signature does not match');
@@ -65,6 +74,14 @@ class Webhooks extends Controller {
             $session = $event->data->object;
             $this->subscriptionCancelled($session);
         }
+
+        //save to database - subscription payment failed
+        if ($event->type == 'invoice.payment_failed') {
+            //session object
+            $session = $event->data->object;
+            $this->subscriptionPaymentFailed($session);
+        }
+
     }
 
     /**
@@ -93,6 +110,9 @@ class Webhooks extends Controller {
         $webhook->webhooks_payload = json_encode($session);
         $webhook->webhooks_status = 'new';
         $webhook->save();
+
+        //dispatch event
+        event(new CheckoutSessionCompleted($session, $webhook));
 
         //inform stripe "all ok"
         http_response_code(200);
@@ -144,6 +164,9 @@ class Webhooks extends Controller {
         $webhook->webhooks_status = 'new';
         $webhook->save();
 
+        //dispatch event
+        event(new PaymentReceived($session, $webhook));
+
         //inform stripe "all ok"
         http_response_code(200);
         exit('Webhook Received Ok');
@@ -168,8 +191,33 @@ class Webhooks extends Controller {
         $webhook->webhooks_status = 'new';
         $webhook->save();
 
+        //dispatch event
+        event(new SubscriptionCancelled($session, $webhook));
+
         //inform stripe "all ok"
         http_response_code(200);
         exit('Webhook Received Ok');
     }
+
+    /**
+     * Save this webhook for processing later by cronjob
+     * @param object $session stripe session object
+     * @return null
+     */
+    private function handleSubscriptionPaymentFailed($session) {
+        Log::info("handling failed subscription payment webhook", ['stripe.webhooks', config('app.debug_ref'), basename(__FILE__), __line__]);
+
+        $webhook = new \App\Models\Webhook();
+        $webhook->webhooks_gateway_name = 'stripe';
+        $webhook->webhooks_type = 'invoice.payment_failed';
+        $webhook->webhooks_payment_type = 'subscription';
+        $webhook->webhooks_matching_reference = $session->subscription;
+        $webhook->webhooks_payload = json_encode($session);
+        $webhook->webhooks_status = 'new';
+        $webhook->save();
+
+        //dispatch event
+        event(new \App\Events\PaymentGateways\Stripe\SubscriptionFailed($session, $webhook));
+    }
+
 }

@@ -16,12 +16,14 @@ use App\Http\Responses\Common\ChangeCategoryResponse;
 use App\Http\Responses\Leads\ActivateResponse;
 use App\Http\Responses\Leads\ArchiveResponse;
 use App\Http\Responses\Leads\AttachFilesResponse;
+use App\Http\Responses\Leads\BulkActionsResponse;
 use App\Http\Responses\Leads\BulkChangeStatusResponse;
 use App\Http\Responses\Leads\BulkChangeStatusUpdateResponse;
 use App\Http\Responses\Leads\ChangeAssignedResponse;
 use App\Http\Responses\Leads\ChangeAssignedUpdateResponse;
 use App\Http\Responses\Leads\ChangeCategoryUpdateResponse;
 use App\Http\Responses\Leads\ChangeStatusResponse;
+use App\Http\Responses\Leads\ChecklistCommentsResponse;
 use App\Http\Responses\Leads\ChecklistResponse;
 use App\Http\Responses\Leads\CloneResponse;
 use App\Http\Responses\Leads\CloneStoreResponse;
@@ -30,8 +32,10 @@ use App\Http\Responses\Leads\ConvertDetailsResponse;
 use App\Http\Responses\Leads\ConvertLeadResponse;
 use App\Http\Responses\Leads\CreateResponse;
 use App\Http\Responses\Leads\DestroyResponse;
+use App\Http\Responses\Leads\ImportChecklistResponse;
 use App\Http\Responses\Leads\IndexKanbanResponse;
 use App\Http\Responses\Leads\IndexListResponse;
+use App\Http\Responses\Leads\LogResponse;
 use App\Http\Responses\Leads\PinningResponse;
 use App\Http\Responses\Leads\ShowResponse;
 use App\Http\Responses\Leads\StoreChecklistResponse;
@@ -42,6 +46,7 @@ use App\Http\Responses\Leads\UpdateErrorResponse;
 use App\Http\Responses\Leads\UpdateResponse;
 use App\Http\Responses\Leads\UpdateStatusResponse;
 use App\Http\Responses\Leads\UpdateTagsResponse;
+use App\Imports\LeadsChecklistImport;
 use App\Models\Checklist;
 use App\Models\Comment;
 use App\Models\Lead;
@@ -60,6 +65,7 @@ use App\Repositories\EmailerRepository;
 use App\Repositories\EventRepository;
 use App\Repositories\EventTrackingRepository;
 use App\Repositories\LeadAssignedRepository;
+use App\Repositories\LeadLogRepository;
 use App\Repositories\LeadRepository;
 use App\Repositories\PinnedRepository;
 use App\Repositories\TagRepository;
@@ -145,6 +151,8 @@ class Leads extends Controller {
      */
     protected $customrepo;
 
+    protected $leadlogrepo;
+
     public function __construct(
         LeadRepository $leadrepo,
         TagRepository $tagrepo,
@@ -158,6 +166,7 @@ class Leads extends Controller {
         EventRepository $eventrepo,
         EventTrackingRepository $trackingrepo,
         EmailerRepository $emailerrepo,
+        LeadLogRepository $leadlogrepo,
         Lead $leadmodel,
         CustomFieldsRepository $customrepo) {
 
@@ -179,6 +188,7 @@ class Leads extends Controller {
         $this->trackingrepo = $trackingrepo;
         $this->emailerrepo = $emailerrepo;
         $this->customrepo = $customrepo;
+        $this->leadlogrepo = $leadlogrepo;
 
         //authenticated
         $this->middleware('auth');
@@ -206,6 +216,8 @@ class Leads extends Controller {
             'BulkchangeAssignedUpdate',
             'assignedUsersUpdate',
             'BulkChangeStatusUpdate',
+            'bulkArchive',
+            'bulkRestore',
         ]);
 
         $this->middleware('leadsMiddlewareCreate')->only([
@@ -253,6 +265,7 @@ class Leads extends Controller {
             'updateTags',
             'updateCoverImage',
             'removeCoverImage',
+            'importChecklists',
         ]);
 
         $this->middleware('leadsMiddlewareParticipate')->only([
@@ -1727,6 +1740,25 @@ class Leads extends Controller {
     }
 
     /**
+     * update task checklist item positions
+     * @return \Illuminate\Http\Response
+     */
+    public function updateChecklistPositions() {
+
+        //update position
+        $position = 0;
+        if (is_array(request('card_checklist'))) {
+            foreach (request('card_checklist') as $key => $value) {
+                if (is_numeric($key)) {
+                    \App\Models\Checklist::where('checklist_id', $key)
+                        ->update(['checklist_position' => $position]);
+                }
+                $position++;
+            }
+        }
+    }
+
+    /**
      * delete checklist
      * @param object ChecklistRepository instance of the repository
      * @param object Checklist instance of the Checklist model object
@@ -1772,10 +1804,13 @@ class Leads extends Controller {
      */
     public function toggleChecklistStatus(Checklist $checklist, ChecklistRepository $checklistrepo) {
 
+        //get checklist id
+        $id = request()->route('checklistid');
+
         //check if file exists in the database
         $checklist = $checklist::find(request()->route('checklistid'));
 
-        if (request('card_checklist') == 'on') {
+        if (request("card_checklist.$id") == 'on') {
             $checklist->checklist_status = 'completed';
         } else {
             $checklist->checklist_status = 'pending';
@@ -1829,6 +1864,131 @@ class Leads extends Controller {
         }
 
         return $progress;
+    }
+
+    /**
+     * import checklist items from a file
+     * @param object ChecklistRepository instance of the repository
+     * @return object
+     */
+    public function importChecklists(ChecklistRepository $checklistrepo, $id) {
+
+        //validate that we have files
+        if (!request()->filled('attachments') || !is_array(request('attachments'))) {
+            abort(409, __('lang.no_file_uploaded'));
+        }
+
+        //get first file from the attachments array
+        $attachments = request('attachments');
+        $first_attachment = reset($attachments);
+        $directory = key($attachments);
+        $filename = $first_attachment;
+
+        //validate file upload
+        if (!$directory || !$filename) {
+            abort(409, __('lang.file_upload_failed'));
+        }
+
+        //set default import limit
+        $import_limit = 500;
+
+        //file path in temp directory
+        $file_path = BASE_DIR . "/storage/temp/$directory/$filename";
+
+        //check if file exists
+        if (!file_exists($file_path)) {
+            abort(409, $file_path);
+        }
+
+        //get file extension
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        //validate file type
+        $allowed_extensions = ['xlsx', 'xls', 'csv', 'txt'];
+        if (!in_array($extension, $allowed_extensions)) {
+            abort(409, __('lang.invalid_file_type'));
+        }
+
+        //initialize results
+        $import_results = [
+            'success' => false,
+            'imported' => 0,
+            'skipped' => 0,
+            'message' => '',
+        ];
+
+        try {
+            //handle different file types
+            if (in_array($extension, ['xlsx', 'xls', 'csv'])) {
+                //handle Excel/CSV files using LeadsChecklistImport class
+                $import = new LeadsChecklistImport($id, $import_limit);
+
+                try {
+                    $import->import($file_path);
+
+                    $import_results = [
+                        'success' => true,
+                        'imported' => $import->getRowCount(),
+                        'skipped' => $import->getSkippedCount(),
+                        'message' => "Successfully imported {$import->getRowCount()} checklist items",
+                    ];
+
+                    if ($import->maxLimitReached()) {
+                        $import_results['message'] .= __('lang.maximum_importing_limit_reached') . ": " . $import->getMaxItems();
+                    }
+
+                } catch (\Exception$e) {
+                    $import_results = [
+                        'success' => false,
+                        'imported' => 0,
+                        'skipped' => 0,
+                        'message' => 'Import failed: ' . $e->getMessage(),
+                    ];
+                    Log::error("Excel/CSV checklist import failed: " . $e->getMessage(), ['checklist.import.lead', config('app.debug_ref'), basename(__FILE__), __line__]);
+                }
+
+            } elseif ($extension === 'txt') {
+                //handle text files using repository method
+                $import_results = $checklistrepo->importTextChecklistLead($file_path, $id, $import_limit);
+            }
+
+        } catch (\Exception$e) {
+            $import_results = [
+                'success' => false,
+                'imported' => 0,
+                'skipped' => 0,
+                'message' => 'Import failed due to an error',
+            ];
+            Log::error("Checklist import failed: " . $e->getMessage(), ['checklist.import.lead', config('app.debug_ref'), basename(__FILE__), __line__]);
+        }
+
+        //get updated checklists
+        request()->merge([
+            'checklistresource_type' => 'lead',
+            'checklistresource_id' => $id,
+        ]);
+        $checklists = $checklistrepo->search();
+        foreach ($checklists as $checklist) {
+            $this->applyChecklistPermissions($checklist);
+        }
+
+        //get lead
+        $leads = $this->leadrepo->search($id);
+        $lead = $leads->first();
+
+        $lead = $leads->first();
+        $this->applyPermissions($lead);
+
+        //response payload
+        $payload = [
+            'import_results' => $import_results,
+            'checklists' => $checklists,
+            'progress' => $this->checklistProgress($checklists),
+            'lead' => $lead,
+        ];
+
+        //return response
+        return new ImportChecklistResponse($payload);
     }
 
     /**
@@ -3281,24 +3441,217 @@ class Leads extends Controller {
     }
 
     /**
-     * show my notes data
+     * Show lead logs
      *
-     * @param  int  $id
+     * @param int $id lead id
      * @return \Illuminate\Http\Response
      */
     public function showLogs($id) {
 
-        $logs = \App\Models\Leadlog::Where('leadlog_leadid', $id)->orderBy('leadlog_id', 'DESC')->get();
+        //get the lead
+        $lead = \App\Models\Lead::Where('lead_id', $id)->first();
 
-        //package to send to response
+        //lead exists
+        if (!$lead) {
+            abort(404);
+        }
+
+        //get all logs for this lead
+        request()->merge([
+            'filter_lead_id' => $id,
+        ]);
+        $logs = $this->leadlogrepo->search();
+
+        //response payload
         $payload = [
             'type' => 'show-logs',
             'logs' => $logs,
+            'lead' => $lead,
         ];
 
-        //show the form
-        return new contentResponse($payload);
+        //response
+        return new LogResponse($payload);
+    }
 
+    /**
+     * Store a new log
+     *
+     * @param int $id lead id
+     * @return \Illuminate\Http\Response
+     */
+    public function storeLog($id) {
+
+        //validation
+        if (!request()->filled('lead_log_text')) {
+            abort(409, __('lang.fill_in_all_required_fields'));
+        }
+
+        //get the lead
+        $lead = \App\Models\Lead::Where('lead_id', $id)->first();
+
+        //lead exists
+        if (!$lead) {
+            abort(404);
+        }
+
+        //create the log
+        $log = new \App\Models\LeadLog();
+        $log->lead_log_creatorid = auth()->id();
+        $log->lead_log_leadid = $id;
+        $log->lead_log_text = request('lead_log_text');
+        $log->lead_log_type = request('lead_log_type') ?? 'general';
+        $log->lead_log_uniqueid = str_unique();
+        $log->save();
+
+        //get the log with relationships
+        request()->merge([
+            'filter_lead_log_uniqueid' => $log->lead_log_uniqueid,
+        ]);
+        $logs = $this->leadlogrepo->search();
+
+        //response payload
+        $payload = [
+            'type' => 'store-log',
+            'logs' => $logs,
+            'lead' => $lead,
+        ];
+
+        //response
+        return new LogResponse($payload);
+    }
+
+    /**
+     * edit a log
+     *
+     * @param int $id lead id
+     * @param string $uniqueid lead_log_uniqueid
+     * @return \Illuminate\Http\Response
+     */
+    public function editLog($id, $uniqueid) {
+
+        //get the lead
+        $lead = \App\Models\Lead::Where('lead_id', $id)->first();
+
+        //lead exists
+        if (!$lead) {
+            abort(404);
+        }
+
+        //get the log
+        $log = \App\Models\LeadLog::Where('lead_log_uniqueid', $uniqueid)
+            ->where('lead_log_creatorid', auth()->id())
+            ->first();
+
+        //log exists
+        if (!$log) {
+            abort(404);
+        }
+
+        //response payload
+        $payload = [
+            'type' => 'edit-log',
+            'log' => $log,
+            'lead' => $lead,
+        ];
+
+        //response
+        return new LogResponse($payload);
+    }
+
+    /**
+     * update a log
+     *
+     * @param int $id lead id
+     * @param string $uniqueid lead_log_uniqueid
+     * @return \Illuminate\Http\Response
+     */
+    public function updateLog($id, $uniqueid) {
+
+        //validation
+        if (!request()->filled('lead_log_text')) {
+            abort(409, __('lang.fill_in_all_required_fields'));
+        }
+
+        //get the lead
+        $lead = \App\Models\Lead::Where('lead_id', $id)->first();
+
+        //lead exists
+        if (!$lead) {
+            abort(404);
+        }
+
+        //get the log
+        $log = \App\Models\LeadLog::Where('lead_log_uniqueid', $uniqueid)
+            ->where('lead_log_creatorid', auth()->id())
+            ->first();
+
+        //log exists
+        if (!$log) {
+            abort(404);
+        }
+
+        //update the log
+        $log->lead_log_text = request('lead_log_text');
+        $log->lead_log_type = request('lead_log_type') ?? 'general';
+        $log->save();
+
+        //get the updated log with relationships
+        request()->merge([
+            'filter_lead_log_uniqueid' => $log->lead_log_uniqueid,
+        ]);
+        $logs = $this->leadlogrepo->search();
+
+        //response payload
+        $payload = [
+            'type' => 'update-log',
+            'logs' => $logs,
+            'log' => $log,
+            'lead' => $lead,
+        ];
+
+        //response
+        return new LogResponse($payload);
+    }
+
+    /**
+     * delete a log
+     *
+     * @param int $id lead id
+     * @param string $uniqueid lead_log_uniqueid
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteLog($id, $uniqueid) {
+
+        //get the lead
+        $lead = \App\Models\Lead::Where('lead_id', $id)->first();
+
+        //lead exists
+        if (!$lead) {
+            abort(404);
+        }
+
+        //get the log
+        $log = \App\Models\LeadLog::Where('lead_log_uniqueid', $uniqueid)
+            ->where('lead_log_creatorid', auth()->id())
+            ->first();
+
+        //log exists
+        if (!$log) {
+            abort(404);
+        }
+
+        //delete the log
+        $log->delete();
+
+        //response payload
+        $payload = [
+            'type' => 'delete-log',
+            'log' => $log,
+            'lead' => $lead,
+        ];
+
+        //response
+        return new LogResponse($payload);
     }
 
     /**
@@ -3789,6 +4142,230 @@ class Leads extends Controller {
         //generate a response
         return new PinningResponse($payload);
 
+    }
+
+/**
+ * bulk archive leads
+ *
+ * @return \Illuminate\Http\Response
+ */
+    public function bulkArchive() {
+
+        //update leads using whereIn
+        $allrows = array();
+        foreach (request('ids') as $lead_id => $value) {
+            if ($value == 'on') {
+
+                //get lead and update status
+                if ($lead = \App\Models\Lead::Where('lead_id', $lead_id)->first()) {
+                    $lead->lead_active_state = 'archived';
+                    $lead->save();
+
+                    //get refreshed lead
+                    $leads = $this->leadrepo->search($lead_id, ['apply_filters' => false]);
+                    $lead = $leads->first();
+
+                    //apply permissions
+                    $this->applyPermissions($lead);
+
+                    //add to array
+                    $allrows[] = $leads;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'archive',
+        ];
+
+        //generate a response
+        return new BulkActionsResponse($payload);
+
+    }
+
+    /**
+     * bulk restore leads
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkRestore() {
+
+        //update leads using whereIn
+        $allrows = array();
+        foreach (request('ids') as $lead_id => $value) {
+            if ($value == 'on') {
+
+                //get lead and update status
+                if ($lead = \App\Models\Lead::Where('lead_id', $lead_id)->first()) {
+                    $lead->lead_active_state = 'active';
+                    $lead->save();
+
+                    //get refreshed lead
+                    $leads = $this->leadrepo->search($lead_id, ['apply_filters' => false]);
+                    $lead = $leads->first();
+
+                    //apply permissions
+                    $this->applyPermissions($lead);
+
+                    //add to array
+                    $allrows[] = $leads;
+                }
+            }
+        }
+
+        //reponse payload
+        $payload = [
+            'allrows' => $allrows,
+            'response' => 'restore',
+        ];
+
+        //generate a response
+        return new BulkActionsResponse($payload);
+
+    }
+
+    /**
+     * Store a newly created checklist comment
+     * @param object CommentRepository instance of the repository
+     * @param int $id lead id
+     * @return \Illuminate\Http\Response
+     */
+    public function storeChecklistComment(CommentRepository $commentrepo, $id) {
+
+        //validate input
+        if (!request()->filled('checklist-comment')) {
+            abort(409, __('lang.comment_is_required'));
+        }
+
+        //get checklist id from form
+        $checklist_id = request('checklist-comments-checklist-id');
+
+        //get the checklist
+        $checklist = \App\Models\Checklist::Where('checklist_id', $checklist_id)
+            ->Where('checklistresource_type', 'lead')
+            ->Where('checklistresource_id', $id)
+            ->first();
+
+        //checklist must exist and belong to this lead
+        if (!$checklist) {
+            abort(404);
+        }
+
+        //get the lead
+        $leads = $this->leadrepo->search($id);
+        $lead = $leads->first();
+
+        //check if lead exists
+        if (!$lead) {
+            abort(404, __('lang.lead_not_found'));
+        }
+
+        //create the comment
+        $comment = new \App\Models\Comment();
+        $comment->comment_creatorid = auth()->id();
+        $comment->comment_text = convertTextareaToHtml(request('checklist-comment'));
+        $comment->commentresource_type = 'checklist';
+        $comment->commentresource_id = $checklist_id;
+        $comment->save();
+
+        //get complete comment
+        $comments = $commentrepo->search($comment->comment_id);
+        $comment = $comments->first();
+        $this->applyCommentPermissions($comment);
+
+        /** ----------------------------------------------
+         * record event [comment]
+         * ----------------------------------------------*/
+        $data = [
+            'event_creatorid' => auth()->id(),
+            'event_item' => 'comment',
+            'event_item_id' => $comment->comment_id,
+            'event_item_lang' => 'event_posted_a_comment',
+            'event_item_content' => $comment->comment_text,
+            'event_item_content2' => '',
+            'event_parent_type' => 'lead',
+            'event_parent_id' => $lead->lead_id,
+            'event_parent_title' => $lead->lead_title,
+            'event_show_item' => 'yes',
+            'event_show_in_timeline' => 'no',
+            'event_clientid' => $lead->lead_clientid,
+            'eventresource_type' => 'lead',
+            'eventresource_id' => $lead->lead_id,
+            'event_notification_category' => 'notifications_leads_activity',
+        ];
+        //record event
+        if ($event_id = $this->eventrepo->create($data)) {
+            //get users
+            $users = $this->leadpermissions->check('users', $lead);
+            //record notification
+            $emailusers = $this->trackingrepo->recordEvent($data, $users, $event_id);
+        }
+
+        /** ----------------------------------------------
+         * send email [comment]
+         * ----------------------------------------------*/
+        if (isset($emailusers) && is_array($emailusers)) {
+            //the comment
+            $data = $comment->toArray();
+
+            //add the checklist and also styling to the comment
+            $data['comment_text'] = formatChecklistComment($comment, $checklist);
+
+            //send to users
+            if ($users = \App\Models\User::WhereIn('id', $emailusers)->get()) {
+                foreach ($users as $user) {
+                    $mail = new \App\Mail\LeadComment($user, $data, $lead);
+                    $mail->build();
+                }
+            }
+        }
+
+        //response payload
+        $payload = [
+            'response' => 'store',
+            'comment' => $comment,
+            'checklist_id' => $checklist_id,
+        ];
+
+        //generate response
+        return new ChecklistCommentsResponse($payload);
+    }
+
+    /**
+     * Remove the specified checklist comment
+     * @param int $comment comment id (from route parameter)
+     * @return \Illuminate\Http\Response
+     */
+    public function destroyChecklistComment($comment) {
+
+        //get the comment
+        $comment_obj = \App\Models\Comment::Where('comment_id', $comment)
+            ->Where('commentresource_type', 'checklist')
+            ->first();
+
+        //comment must exist
+        if (!$comment_obj) {
+            abort(404);
+        }
+
+        //permission check
+        if ($comment_obj->comment_creatorid != auth()->id() && auth()->user()->role_id != 1) {
+            abort(403);
+        }
+
+        //delete the comment
+        $comment_obj->delete();
+
+        //response payload
+        $payload = [
+            'response' => 'delete',
+            'comment_id' => $comment,
+        ];
+
+        //generate response
+        return new ChecklistCommentsResponse($payload);
     }
 
     /**

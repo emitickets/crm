@@ -266,6 +266,7 @@ class CloneProjectRepository {
                     $new_task->task_milestoneid = $mileston_map[$task->task_milestoneid]; //get new milestone id of the cloned milestone
                     $new_task->task_cloning_original_task_id = $task->task_id;
                     $new_task->task_uniqueid = str_unique();
+                    $new_task->taskresource_id = $new_project->project_id;
                     $new_task->save();
 
                     //copy check list

@@ -34,7 +34,9 @@ class SubscriptionCancelled {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /**
          *   - Find webhhoks waiting to be completed
@@ -67,8 +69,12 @@ class SubscriptionCancelled {
 
                 //get the subscription
                 if (!$subscription = \App\Models\Subscription::Where('subscription_gateway_id', $subscription_gateway_id)->first()) {
-                    Log::error("the subscription could not be found in the database", ['process' => '[cronjob][stripe-subscription-cancelled]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'webhook' => $webhook]);
+                    Log::info("the subscription could not be found in the database", ['process' => '[cronjob][stripe-subscription-cancelled]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__, 'webhook' => $webhook]);
                     //skip to next webhook in the batch
+                    $webhook->update([
+                        'webhooks_status' => 'completed',
+                        'webhooks_completed_at' => now(),
+                    ]);
                     continue;
                 }
 

@@ -28,7 +28,9 @@ class ImapTicketRepliesCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //delete emails without an email address
         \App\Models\EmailQueue::Where('emailqueue_to', '')->delete();

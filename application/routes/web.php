@@ -9,6 +9,7 @@ Route::any('/', function () {
     return redirect('/home');
 });
 Route::any('home', 'Home@index')->name('home');
+Route::post('home/update-stats', 'Home@updateIncomeExpensesChart');
 
 //LOGIN & SIGNUP
 Route::get("/login", "Authenticate@logIn")->name('login');
@@ -42,6 +43,7 @@ Route::group(['prefix' => 'clients'], function () {
     Route::get("/{client}/change-account-owner", "Clients@changeAccountOwner");
     Route::post("/{client}/change-account-owner", "Clients@changeAccountOwnerUpdate");
     Route::get("/{client}/pinning", "Clients@togglePinning")->where('client', '[0-9]+');
+    Route::get("/{client}/impersonate", "Clients@ImpersonateClient")->where('client', '[0-9]+');
     //dynamic load
     Route::any("/{client}/{section}", "Clients@showDynamic")
         ->where(['client' => '[0-9]+', 'section' => 'details|contacts|projects|files|client-files|tickets|invoices|expenses|payments|timesheets|estimates|notes|project-files|client-files']);
@@ -104,6 +106,7 @@ Route::group(['prefix' => 'invoices'], function () {
     Route::get("/{invoice}/publish", "Invoices@publishInvoice")->where('invoice', '[0-9]+')->middleware(['invoicesMiddlewareEdit', 'invoicesMiddlewareShow']);
     Route::post("/{invoice}/publish/scheduled", "Invoices@publishScheduledInvoice")->where('invoice', '[0-9]+')->middleware(['invoicesMiddlewareEdit', 'invoicesMiddlewareShow']);
     Route::get("/{invoice}/resend", "Invoices@resendInvoice")->where('invoice', '[0-9]+')->middleware(['invoicesMiddlewareEdit', 'invoicesMiddlewareShow']);
+    Route::get("/{invoice}/overdue-reminder", "Invoices@overdueReminder")->where('invoice', '[0-9]+');
     Route::get("/{invoice}/stripe-payment", "Invoices@paymentStripe")->where('invoice', '[0-9]+');
     Route::get("/{invoice}/paypal-payment", "Invoices@paymentPaypal")->where('invoice', '[0-9]+');
     Route::get("/timebilling/{project}/", "Timebilling@index")->where('project', '[0-9]+');
@@ -115,6 +118,9 @@ Route::group(['prefix' => 'invoices'], function () {
     Route::get("/delete-attachment", "Invoices@deleteFile");
     Route::post("/{invoice}/change-tax-type", "Invoices@updateTaxType")->where('invoice', '[0-9]+');
     Route::get("/{invoice}/pinning", "Invoices@togglePinning")->where('invoice', '[0-9]+');
+    Route::post("/bulk-dettach-project", "Invoices@bulkDettachFromProject");
+    Route::post("/bulk-email-client", "Invoices@bulkEmailClient");
+    Route::get('/{invoice}/taskbilling', 'Invoices@taskBilling')->where('id', '[0-9]+');
 
     //view from email link
     Route::get("/redirect/{invoice}", "Invoices@redirectURL")->where('invoice', '[0-9]+');
@@ -169,7 +175,11 @@ Route::group(['prefix' => 'estimates'], function () {
     Route::post("/{estimate}/change-tax-type", "Estimates@updateTaxType")->where('estimate', '[0-9]+');
     Route::get("/view/{estimate}", "Estimates@showPublic");
     Route::get("/{estimate}/pinning", "Estimates@togglePinning")->where('estimate', '[0-9]+');
-
+    Route::post("/bulk-email-client", "Estimates@bulkEmailClient");
+    Route::get("/bulk-change-status", "Estimates@bulkChangeStatus");
+    Route::post("/bulk-change-status-update", "Estimates@bulkChangeStatusUpdate");
+    Route::get("/bulk-convert-to-invoice", "Estimates@bulkConvertToInvoice");
+    Route::post("/bulk-convert-to-invoice-action", "Estimates@bulkConvertToInvoiceAction");
 });
 Route::resource('estimates', 'Estimates');
 
@@ -235,7 +245,7 @@ Route::group(['prefix' => 'expenses'], function () {
     Route::post("/{expense}/recurring-settings", "Expenses@recurringSettingsUpdate")->where('expense', '[0-9]+');
     Route::get("/{expense}/stop-recurring", "Expenses@stopRecurring")->where('expense', '[0-9]+');
     Route::get("/{expense}/clone", "Expenses@createClone")->where('project', '[0-9]+');
-    Route::post("/{expense}/clone", "Expenses@storeClone")->where('project', '[0-9]+'); 
+    Route::post("/{expense}/clone", "Expenses@storeClone")->where('project', '[0-9]+');
 });
 Route::resource('expenses', 'Expenses');
 
@@ -270,10 +280,15 @@ Route::group(['prefix' => 'projects'], function () {
     Route::get("/bulk-change-status", "Projects@BulkChangeStatus");
     Route::post("/bulk-change-status", "Projects@BulkChangeStatusUpdate");
     Route::get("/{project}/pinning", "Projects@togglePinning")->where('project', '[0-9]+');
+    Route::post("/bulk/archive", "Projects@bulkArchive");
+    Route::post("/bulk/restore", "Projects@bulkRestore");
+    Route::get("/bulk-change-progress", "Projects@bulkChangeProgress");
+    Route::post("/bulk-change-progress", "Projects@bulkChangeProgressUpdate");
+    Route::post("/bulk/stop-timers", "Projects@bulkStopTimers");
 
     //dynamic load
     Route::any("/{project}/{section}", "Projects@showDynamic")
-        ->where(['project' => '[0-9]+', 'section' => 'details|comments|files|tasks|invoices|payments|timesheets|expenses|estimates|milestones|tickets|notes']);
+        ->where(['project' => '[0-9]+', 'section' => 'details|comments|files|tasks|invoices|payments|timesheets|expenses|estimates|milestones|tickets|notes|checklists']);
 });
 Route::resource('projects', 'Projects');
 
@@ -294,6 +309,7 @@ Route::group(['prefix' => 'tasks'], function () {
     Route::delete("/delete-comment/{commentid}", "Tasks@deleteComment")->where('commentid', '[0-9]+');
     Route::post("/{task}/update-title", "Tasks@updateTitle")->where('task', '[0-9]+');
     Route::post("/{task}/add-checklist", "Tasks@storeChecklist")->where('task', '[0-9]+');
+    Route::post("/{task}/import-checklist", "Tasks@importChecklists")->where('task', '[0-9]+');
     Route::post("/update-checklist/{checklistid}", "Tasks@updateChecklist")->where('checklistid', '[0-9]+');
     Route::delete("/delete-checklist/{checklistid}", "Tasks@deleteChecklist")->where('checklistid', '[0-9]+');
     Route::post("/toggle-checklist-status/{checklistid}", "Tasks@toggleChecklistStatus")->where('checklistid', '[0-9]+');
@@ -333,6 +349,10 @@ Route::group(['prefix' => 'tasks'], function () {
     Route::delete("/content/{task}/delete-mynotes", "Tasks@deleteMyNotes")->where('task', '[0-9]+');
     Route::post("/content/{task}/edit-mynotes", "Tasks@updateMyNotes")->where('task', '[0-9]+');
 
+    Route::post('/update-checklist-positions', 'Tasks@updateChecklistPositions');
+    Route::post('/{task}/import-checklists', 'Tasks@importChecklists');
+    Route::post('/{task}/post-checklist-comment', 'Tasks@storeChecklistComment');
+    Route::delete('/{task}/delete-checklist-comment', 'Tasks@destroyChecklistComment');
 });
 Route::resource('tasks', 'Tasks');
 
@@ -387,7 +407,6 @@ Route::group(['prefix' => 'leads'], function () {
     Route::get("/{lead}/remove-cover-image", "Leads@removeCoverImage")->where('lead', '[0-9]+');
     Route::get("/{lead}/pinning", "Leads@togglePinning")->where('lead', '[0-9]+');
 
-
     //card tabs
     Route::get("/content/{lead}/show-main", "Leads@show")->where('lead', '[0-9]+');
     Route::get("/content/{lead}/show-organisation", "Leads@showOrganisation")->where('lead', '[0-9]+');
@@ -405,6 +424,21 @@ Route::group(['prefix' => 'leads'], function () {
     Route::get("/content/{lead}/edit-logs", "Leads@editLogs")->where('lead', '[0-9]+');
     Route::post("/content/{lead}/edit-logs", "Leads@updateLogs")->where('lead', '[0-9]+');
 
+    Route::post('/update-checklist-positions', 'Leads@updateChecklistPositions');
+    Route::post('/{lead}/import-checklists', 'Leads@importChecklists');
+    Route::post('/{lead}/post-checklist-comment', 'Leads@storeChecklistComment')->where('lead', '[0-9]+');
+    Route::delete('/{comment}/delete-checklist-comment', 'Leads@destroyChecklistComment')->where('comment', '[0-9]+');
+    
+    //bulk archive and restore
+    Route::post("/bulk/archive", "Leads@bulkArchive");
+    Route::post("/bulk/restore", "Leads@bulkRestore");
+
+    //lead logs
+    Route::get("/{lead}/show-logs", "Leads@showLogs")->where('lead', '[0-9]+');
+    Route::post("/{lead}/store-log", "Leads@storeLog")->where('lead', '[0-9]+');
+    Route::get("/{lead}/edit-log/{uniqueid}", "Leads@editLog")->where('lead', '[0-9]+');
+    Route::put("/{lead}/update-log/{uniqueid}", "Leads@updateLog")->where('lead', '[0-9]+');
+    Route::delete("/{lead}/delete-log/{uniqueid}", "Leads@deleteLog")->where('lead', '[0-9]+');    
 });
 Route::resource('leads', 'Leads');
 
@@ -443,6 +477,7 @@ Route::resource('canned', 'Canned');
 Route::group(['prefix' => 'timeline'], function () {
     Route::any("/client", "Timeline@clientTimeline");
     Route::any("/project", "Timeline@projectTimeline");
+    Route::any("/user/{id}", "Timeline@user");
 });
 
 //TIMESHEETS
@@ -575,6 +610,7 @@ Route::group(['prefix' => 'feed'], function () {
     Route::get("/clone-task-projects", "Feed@cloneTaskProjects");
     Route::get("/project-milestones", "Feed@projectsMilestones");
     Route::get("/project-client-users", "Feed@projectClientUsers");
+    Route::get("/users-projects", "Feed@usersProjects");
 
 });
 
@@ -660,6 +696,9 @@ Route::group(['prefix' => 'settings'], function () {
 //SETTINGS - SYSTEM
 Route::group(['prefix' => 'settings/system'], function () {
     Route::get("/clearcache", "Settings\System@clearLaravelCache");
+    Route::get("/info", "Settings\System@systemInfo");
+    Route::get("/disc-usage", "Settings\System@discUsage");
+    Route::post("/cleanup", "Settings\System@cleanUpSpace");
 });
 
 //SETTINGS - GENERAL
@@ -720,6 +759,12 @@ Route::group(['prefix' => 'settings/projects'], function () {
 Route::group(['prefix' => 'settings/invoices'], function () {
     Route::get("/", "Settings\Invoices@index");
     Route::put("/", "Settings\Invoices@update")->middleware(['demoModeCheck']);
+});
+
+//SETTINGS - TIMESHEETS
+Route::group(['prefix' => 'settings/timesheets'], function () {
+    Route::get("/", "Settings\Timesheets@index");
+    Route::put("/", "Settings\Timesheets@update")->middleware(['demoModeCheck']);
 });
 
 //SETTINGS - SUBSCRIPTIONS
@@ -1142,7 +1187,6 @@ Route::post('export/payments', 'Export\Payments@index');
 //EXPORT EXPENSES
 Route::post('export/expenses', 'Export\Expenses@index');
 
-
 //EXPORT TIMESHEETS
 Route::post('export/timesheets', 'Export\Timesheets@index');
 
@@ -1269,6 +1313,27 @@ Route::group(['prefix' => 'preferences'], function () {
 //CLIENT LOGO FILEUPLOAD
 Route::post("/search", "Search@index");
 
+//CHECKLISTS
+Route::group(['prefix' => 'checklists'], function () {
+    Route::any("/search", "Checklists@index");
+    Route::post("/import-checklists", "Checklists@importChecklists");
+    Route::post("/post-checklist-comment", "Checklists@storeChecklistComment");
+    Route::delete("/delete-checklist-comment/{id}", "Checklists@destroyChecklistComment");
+    Route::post("/toggle-checklist-status/{checklistid}", "Checklists@toggleChecklistStatus")->where('checklistid', '[0-9]+');
+    Route::delete("/delete-checklist/{checklistid}", "Checklists@deleteChecklist")->where('checklistid', '[0-9]+');
+    Route::post("/update-checklist-positions", "Checklists@updateChecklistPositions");
+    Route::post("/update-checklist/{checklistid}", "Checklists@UpdateChecklist")->where('checklistid', '[0-9]+');
+    Route::post("/add-checklist", "Checklists@StoreChecklist");
+});
+Route::resource('checklists', 'Checklists');
+
+
+//STARRED
+Route::group(['prefix' => 'starred'], function () {
+    Route::get("/view/{type}", "Starred@index");
+    Route::post("/togglestatus", "Starred@toggleStatus");
+    Route::delete("/remove/{id}", "Starred@removeFromFeed");
+});
 
 /**----------------------------------------------------------------------------------------------------------------
  * [GROWCRM - CUSTOM ROUTES]

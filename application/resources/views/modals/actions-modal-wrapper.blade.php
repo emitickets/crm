@@ -5,7 +5,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="actionsModalTitle"></h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    <button type="button" class="close" data-dismiss="modal">
                         <i class="ti-close"></i>
                     </button>
                 </div>

@@ -3,6 +3,28 @@
     id="list-page-actions-container">
     <div id="list-page-actions">
 
+        <!--star button-->
+        <button type="button"
+            class="list-actions-button btn btn-page-actions waves-effect waves-dark ajax-request {{ $project->is_starred ? 'hidden' : '' }}"
+            id="starred-star-button-{{ $project->project_id }}"
+            data-url="{{ url('/starred/togglestatus?action=star&resource_type=project&resource_id='.$project->project_id) }}"
+            data-loading-target="starred-star-button-{{ $project->project_id }}" data-ajax-type="POST"
+            data-on-start-submit-button="disable" data-toggle="tooltip"
+            title="{{ cleanLang(__('lang.star_project')) }}">
+            <i class="sl-icon-star"></i>
+        </button>
+
+        <!--unstar button-->
+        <button type="button"
+            class="list-actions-button btn btn-page-actions waves-effect waves-dark ajax-request active {{ !$project->is_starred ? 'hidden' : '' }}"
+            id="starred-unstar-button-{{ $project->project_id }}"
+            data-url="{{ url('/starred/togglestatus?action=unstar&resource_type=project&resource_id='.$project->project_id) }}"
+            data-loading-target="starred-unstar-button-{{ $project->project_id }}" data-ajax-type="POST"
+            data-on-start-submit-button="disable" data-toggle="tooltip"
+            title="{{ cleanLang(__('lang.unstar_project')) }}">
+            <i class="sl-icon-star"></i>
+        </button>
+
         <!--reminder-->
         @if(config('visibility.modules.reminders'))
         <button type="button" data-toggle="tooltip" title="{{ cleanLang(__('lang.reminder')) }}"

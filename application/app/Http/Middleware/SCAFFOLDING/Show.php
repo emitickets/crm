@@ -1,21 +1,17 @@
 <?php
 
+/** --------------------------------------------------------------------------------
+ * This middleware class handles [show] precheck processes for fooos
+ *
+ * @author     NextLoop
+ *----------------------------------------------------------------------------------*/
+
 namespace App\Http\Middleware\Fooos;
 use Closure;
 use Log;
 
 class Show {
 
-    /**
-     * This middleware does the following
-     *   1. validates that the fooo exists
-     *   2. checks users permissions to [view] the fooo
-     *   3. modifies the request object as needed
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle($request, Closure $next) {
 
         //fooo id
@@ -43,10 +39,8 @@ class Show {
             }
         }
 
-        //NB: client db/repository (clientid filter merege) is applied in main controller.php
-
         //permission denied
-        Log::error("permission denied", ['process' => 'middleware.fooos.show', 'ref' => config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::error("permission denied", ['middleware.show.fooo', config('app.debug_ref'), basename(__FILE__), __line__]);
         abort(403);
     }
 
@@ -55,13 +49,9 @@ class Show {
      */
     private function fronteEnd() {
 
-        //default: show client and project options
-        config(['visibility.fooo_modal_client_fields' => true]);
+        //show something
+        config(['visibility.foo_bar_ement' => true]);
 
-        //merge data
-        request()->merge([
-            'resource_query' => 'ref=page',
-        ]);
     }
 
 }

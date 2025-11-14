@@ -1,9 +1,22 @@
 <div class="card m-t--50">
     <div class="card-body">
 
-        <!--edit user icon-->
         @if(auth()->user()->is_admin)
         <div class="text-right p-b-10">
+
+            <!--view user activity-->
+            @if(auth()->user()->is_admin)
+            <button type="button"
+                class="btn btn-xxs btn-outline-warning waves-effect text-left edit-add-modal-button ajax-request m-r-8"
+                data-url="{{ url('timeline/user/'.$contact->id) }}" data-loading-target="commonModalBody"
+                data-modal-title="@lang('lang.view_activity') - {{ $contact->first_name }} {{ $contact->last_name }}"
+                data-modal-size="modal-lg" data-header-close-icon="hidden" data-header-extra-close-icon="visible"
+                data-footer-visibility="hidden" data-action-ajax-loading-target="commonModalBody">
+                @lang('lang.view_activity')
+            </button>
+            @endif
+
+            <!--edit user icon-->
             <button type="submit" id="submitButton"
                 class="btn btn-xxs btn-outline-info waves-effect text-left edit-add-modal-button ajax-request"
                 data-action-url="{{ url('contacts/'.$contact->id.'?ref=profile-modal') }}"

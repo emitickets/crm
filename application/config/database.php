@@ -54,7 +54,7 @@ return [
             'driver' => 'mysql',
             'host' => env_db_host(),
             'port' => env_db_port(),
-            'database' => null,
+            'database' => env('TENANT_DB_DATABASE', null), // Para desarrollo local, usa TENANT_DB_DATABASE en .env
             'username' => env_db_user(),
             'password' => env_db_password(),
             'unix_socket' => '',

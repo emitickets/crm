@@ -3,9 +3,9 @@
 /** --------------------------------------------------------------------------------
  * This classes renders the response for the [show] process for the leads
  * controller
- * 
+ *
  * [IMPORTANT] All Left Panel code must be reproduced in the file ContentResponse.php
- * 
+ *
  * @package    Grow CRM
  * @author     NextLoop
  *----------------------------------------------------------------------------------*/
@@ -73,7 +73,6 @@ class ShowResponse implements Responsable {
                 'action' => 'hide',
             ];
         }
-
 
         //  LEFT PANEL - MAIN (changes must be reproduced in contentResponse)
         $html = view('pages/lead/leftpanel', compact('page', 'lead', 'progress', 'attachment_tags'))->render();
@@ -161,6 +160,16 @@ class ShowResponse implements Responsable {
         // POSTRUN FUNCTIONS------
         $jsondata['postrun_functions'][] = [
             'value' => 'NXBootCards',
+        ];
+
+        //drag and drop checklist itens
+        $jsondata['postrun_functions'][] = [
+            'value' => 'NXChecklistDragDrop',
+        ];
+
+        //import checklist items
+        $jsondata['postrun_functions'][] = [
+            'value' => 'nxChecklistFileUpload',
         ];
 
         //ajax response

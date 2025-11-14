@@ -10,6 +10,7 @@
 
 namespace App\Cronjobs\Landlord;
 use DB;
+use Exception;
 use Illuminate\Support\Facades\Schema;
 use Log;
 
@@ -39,7 +40,7 @@ class TenantsUpdateCron {
      */
     public function updateTenantsDB() {
 
-        Log::info("tenants updating process has started. Looking for tenants to update - started", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("[UPDATING] - tenants updating process has started. Looking for tenants to update - started", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
         //current version
         $target_system_version = config('system.settings_version');
@@ -50,7 +51,7 @@ class TenantsUpdateCron {
         //only do the update if the file exists
         if (!file_exists($filepath)) {
             //log as info and not error
-            Log::info("tenants updating process halted. The sql file ($target_system_version.sql) could not be found.It may not be required for this version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("[UPDATING] - tenants updating process halted. The sql file ($target_system_version.sql) could not be found.It may not be required for this version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return;
         }
 
@@ -74,10 +75,10 @@ class TenantsUpdateCron {
 
         //count how many we are updating
         if ($count == 0) {
-            Log::info("no tenants were found that are eligable for an update to version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("[UPDATING] - no tenants were found that are eligable for an update to version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
             return;
         } else {
-            Log::info("found ($count) tenants that are eligable for an update to version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("[UPDATING] - found ($count) tenants that are eligable for an update to version ($target_system_version)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
         }
 
         //mark each tenant as updating
@@ -93,105 +94,70 @@ class TenantsUpdateCron {
 
             \Spatie\Multitenancy\Models\Tenant::forgetCurrent();
 
-            Log::info("updating database for tenant id (" . $customer->tenant_id . ") - domain (" . $customer->domain . ") - started", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+            Log::info("[UPDATING] - updating database for tenant id (" . $customer->tenant_id . ") - domain (" . $customer->domain . ") - started", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
             //get the customer from landlord db
             if ($tenant = \Spatie\Multitenancy\Models\Tenant::Where('tenant_id', $customer->tenant_id)->first()) {
                 try {
+
+                    /** ---------------------------------------------------------------------------------------------------------------------------
+                     * 14 APRIL 2025 - V2.9
+                     *
+                     * Starting this version, the SQL file is executed section by section
+                     *  - Each section is identfied by '-- [SQL BLOCK]' tag
+                     *  - This enables only single failure points and not the whole file
+                     *  - When different versions are merged, these blocks are added by the Python combining app
+                     *  - If the file does not have any '-- [SQL BLOCK]' sections, the entire file will be treated as one block and processed
+                     * 
+                     * [NOTES]
+                     *  - Ensure the SQL file ends with a '-- [SQL BLOCK]'
+                     * --------------------------------------------------------------------------------------------------------------------------*/
+
                     //swicth to this tenants DB
                     $tenant->makeCurrent();
 
-                    /** -------------------------------------------------------------------------------------------------------------
-                     * [FORCED MODE] [CONTINUE IMPORTING SQL ON ERRORS] - January 2024
-                     *
-                     * Breakdown the SQL file into query by query and execute them 1 by one
-                     * Catch any error but continue to the end of the file
-                     *
-                     * [DEVELOPER NOTES]
-                     *
-                     * Unisng this mode is usually needed if there are problems updating and requires manual action as follows
-                     *
-                     *    (1) Edit the /config/settings.php and add a setting
-                     *              'force_sql_update' =>  true,
-                     *    (2) Be 100% certain that the sql file in the /updates/ folder is the version you want to force importing
-                     *    (2) Update all 'processing' updates in the landlord 'tenants' table as 'completed'
-                     *    (3) Remvoe the /config/settings.php after done
-                     *
-                     * ------------------------------------------------------------------------------------------------------------*/
-                    if (config('settings.force_sql_update') === true) {
+                    // Read the contents of the SQL file
+                    $sql_content = file_get_contents($filepath);
 
-                        // Read the contents of the SQL file
-                        $sql_content = file_get_contents($filepath);
+                    // Split the SQL content into blocks based on the "-- [SQL BLOCK]" marker found in the sal file
+                    $sql_blocks = preg_split('/-- \[SQL BLOCK\].*?(?:\R|$)/', $sql_content, -1, PREG_SPLIT_NO_EMPTY);
 
-                        // Split the SQL content into individual queries
-                        $sql_queries = explode(';', $sql_content);
-
-                        // Loop through each query and execute it
-                        $force_count_all = 0;
-                        $force_count_failed = 0;
-                        foreach ($sql_queries as $sql_query) {
-
-                            $force_count_all++;
-
-                            try {
-                                // Skip empty queries
-                                if (trim($sql_query) === '') {
-                                    continue;
-                                }
-
-                                // Execute the query
-                                DB::connection('tenant')->unprepared($sql_query);
-
-                            } catch (\Exception $e) {
-                                $force_count_failed++;
-                            }
-                        }
-
-                        //update tenant record (in landlord db)
-                        $customer->tenant_updating_status = 'completed';
-                        $customer->tenant_updating_current_version = $target_system_version;
-                        $customer->save();
-
-                        //log this event
-                        $log = new \App\Models\Landlord\Updatelog();
-                        $log->setConnection('landlord');
-                        $log->updateslog_tenant_id = $customer->tenant_id;
-                        $log->updateslog_tenant_database = $customer->database;
-                        $log->updateslog_current_version = $customer->tenant_updating_current_version;
-                        $log->updateslog_target_version = $target_system_version;
-                        $log->updateslog_status = 'completed';
-                        $log->save();
-
-                        //log
-                        Log::critical("[forced tenant sql update] [info]: tenant database (" . $tenant->database . ") - total queries ($force_count_all) - failed queries($force_count_failed)", ['process' => '[permissions]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
-
-                    } else {
-
-                        //EXECUTE THE WHOLE FILE. THIS WILL STOP ON ERRORS
-                        DB::connection('tenant')->unprepared(file_get_contents($filepath));
-
-                        //forget tenant
-                        \Spatie\Multitenancy\Models\Tenant::forgetCurrent();
-
-                        $count_passed++;
-
-                        //update tenant record (in landlord db)
-                        $customer->tenant_updating_status = 'completed';
-                        $customer->tenant_updating_current_version = $target_system_version;
-                        $customer->save();
-
-                        //log this event
-                        $log = new \App\Models\Landlord\Updatelog();
-                        $log->setConnection('landlord');
-                        $log->updateslog_tenant_id = $customer->tenant_id;
-                        $log->updateslog_tenant_database = $customer->database;
-                        $log->updateslog_current_version = $customer->tenant_updating_current_version;
-                        $log->updateslog_target_version = $target_system_version;
-                        $log->updateslog_status = 'completed';
-                        $log->save();
-
-                        Log::info("updating database for tenant id (" . $customer->tenant_id . ") - domain (" . $customer->domain . ") - to version ($target_system_version) completed", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    // If there were no "-- [SQL BLOCK]" markers, treat the entire file as a single block
+                    if (count($sql_blocks) == 0) {
+                        $sql_blocks = [$sql_content];
                     }
+
+                    // Loop through each version block and execute it
+                    foreach ($sql_blocks as $sql_block) {
+                        try {
+                            // Skip empty blocks
+                            if (trim($sql_block) === '') {
+                                continue;
+                            }
+
+                            // Execute the entire version block as a single operation
+                            DB::connection('tenant')->unprepared($sql_block);
+
+                        } catch (Exception $e) {
+                            // Log the error but continue with the next version block
+                            Log::error("[UPDATING] - Error executing SQL block for tenant {$customer->tenant_id}: " . $e->getMessage());
+                        }
+                    }
+
+                    //update tenant record (in landlord db)
+                    $customer->tenant_updating_status = 'completed';
+                    $customer->tenant_updating_current_version = $target_system_version;
+                    $customer->save();
+
+                    //log this event
+                    $log = new \App\Models\Landlord\Updatelog();
+                    $log->setConnection('landlord');
+                    $log->updateslog_tenant_id = $customer->tenant_id;
+                    $log->updateslog_tenant_database = $customer->database;
+                    $log->updateslog_current_version = $customer->tenant_updating_current_version;
+                    $log->updateslog_target_version = $target_system_version;
+                    $log->updateslog_status = 'completed';
+                    $log->save();
 
                 } catch (Exception $e) {
 
@@ -212,13 +178,13 @@ class TenantsUpdateCron {
                     $log->save();
 
                     $count_failed++;
-                    Log::error("updating database for tenant id (" . $customer->tenant_id . ") - domain (" . $customer->domain . ") - failed - see crm log table", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+                    Log::error("[UPDATING] - updating database for tenant id (" . $customer->tenant_id . ") - domain (" . $customer->domain . ") - failed - see crm log table", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
                 }
             }
 
         }
 
-        Log::info("tenants updating process has finshed. passed ($count_passed) - failed ($count_failed)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
+        Log::info("[UPDATING] - tenants updating process has finshed. passed ($count_passed) - failed ($count_failed)", ['process' => '[update-tenant-databases]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
 
     }
 

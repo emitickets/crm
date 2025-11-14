@@ -23,10 +23,10 @@
         </span>
         <!--add item modal-->
         @if(config('visibility.show_contact_profile'))
-        <a href="javascript:void(0);" class="edit-add-modal-button js-ajax-ux-request reset-target-modal-form user_profile_name_{{ $contact->id }}"
+        <a href="javascript:void(0);"
+            class="edit-add-modal-button js-ajax-ux-request reset-target-modal-form user_profile_name_{{ $contact->id }}"
             data-toggle="modal" data-target="#commonModal" data-url="{{ url('contacts/'.$contact->id) }}"
-            data-loading-target="commonModalBody"
-            data-modal-title="" data-modal-size="modal-md"
+            data-loading-target="commonModalBody" data-modal-title="" data-modal-size="modal-md"
             data-header-close-icon="hidden" data-header-extra-close-icon="visible" data-footer-visibility="hidden"
             data-action-ajax-loading-target="commonModalBody">{{ $contact->first_name }} {{ $contact->last_name }}
         </a>
@@ -110,6 +110,29 @@
                 data-action-ajax-class="" data-action-ajax-loading-target="contacts-td-container">
                 <i class="sl-icon-lock"></i>
             </button>
+            @endif
+
+            <!--more button (team)-->
+            @if(auth()->user()->is_admin)
+            <span class="list-table-action dropdown font-size-inherit">
+                <button type="button" id="listTableAction" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false" title="{{ cleanLang(__('lang.more')) }}"
+                    class="data-toggle-action-tooltip btn btn-outline-default-light btn-circle btn-sm">
+                    <i class="ti-more"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="listTableAction">
+                    <!--view activity-->
+                    <a class="dropdown-item edit-add-modal-button js-ajax-ux-request reset-target-modal-form"
+                        href="javascript:void(0)" data-toggle="modal" data-target="#commonModal"
+                        data-url="{{ url('timeline/user/'.$contact->id) }}" data-loading-target="commonModalBody"
+                        data-modal-title="@lang('lang.view_activity') - {{ $contact->first_name }} {{ $contact->last_name }}"
+                        data-modal-size="modal-lg" data-header-close-icon="hidden"
+                        data-header-extra-close-icon="visible" data-footer-visibility="hidden"
+                        data-action-ajax-loading-target="commonModalBody">
+                        @lang('lang.view_activity')
+                    </a>
+                </div>
+            </span>
             @endif
 
         </span>

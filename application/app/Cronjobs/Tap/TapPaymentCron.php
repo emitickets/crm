@@ -36,7 +36,9 @@ class TapPaymentCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         /**
          *   - Find webhhoks waiting to be completed
@@ -53,9 +55,8 @@ class TapPaymentCron {
             ->take($limit)
             ->get()) {
 
-                
             Log::info("found applicable webhooks", ['process' => '[tap-complete-payment-cronjob]', config('app.debug_ref'), 'function' => __function__, 'file' => basename(__FILE__), 'line' => __line__, 'path' => __file__]);
-            
+
             //mark all emails in the batch as processing - to avoid batch duplicates/collisions
             foreach ($webhooks as $webhook) {
                 $webhook->update([
@@ -64,10 +65,8 @@ class TapPaymentCron {
                 ]);
             }
 
-
             //process each webhook
             foreach ($webhooks as $webhook) {
-
 
                 //see if there is matching payment session
                 if (!$session = \App\Models\PaymentSession::Where('session_gateway_ref', $webhook->webhooks_matching_attribute)->first()) {

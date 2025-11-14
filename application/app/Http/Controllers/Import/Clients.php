@@ -106,6 +106,7 @@ class Clients extends Controller {
             'error_count' => count($import->failures()),
             'error_ref' => $import_ref,
             'count_passed' => $import->getRowCount(),
+            'skipped' => $import->getSkippedCount(),
         ];
 
         //process reponse

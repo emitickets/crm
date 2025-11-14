@@ -142,7 +142,6 @@ class Index {
             config([
                 //visibility
                 'visibility.list_page_actions_add_button' => true,
-                'visibility.action_buttons_edit' => true,
                 'visibility.projects_col_checkboxes' => true,
             ]);
         }
@@ -165,6 +164,15 @@ class Index {
                 'visibility.projects_col_team' => false,
                 'visibility.filter_panel_clients_projects' => true,
             ]);
+        }
+
+        //bulk actions
+        if (auth()->user()->is_team && auth()->user()->role->role_projects_scope == 'global') {
+            if (auth()->user()->role->role_projects >= 2) {
+                config([
+                    'visibility.action_buttons_edit' => true,
+                ]);
+            }
         }
 
         //visibility of 'filter assigned" in filter panel
@@ -240,6 +248,14 @@ class Index {
         if (auth()->user()->role->role_expenses >= 1) {
             config([
                 'visibility.role_expenses' => true,
+            ]);
+        }
+
+        //print button - default state
+        if (auth()->user()->pref_view_projects_layout == 'card') {
+            config([
+                //visibility
+                'visibility.print_button' => 'hidden',
             ]);
         }
 

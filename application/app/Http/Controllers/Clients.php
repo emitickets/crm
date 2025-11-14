@@ -18,24 +18,23 @@ use App\Http\Responses\Clients\DetailsResponse;
 use App\Http\Responses\Clients\EditLogoResponse;
 use App\Http\Responses\Clients\EditResponse;
 use App\Http\Responses\Clients\IndexResponse;
+use App\Http\Responses\Clients\PinningResponse;
 use App\Http\Responses\Clients\ShowDynamicResponse;
 use App\Http\Responses\Clients\ShowResponse;
 use App\Http\Responses\Clients\StoreResponse;
 use App\Http\Responses\Clients\UpdateDetailsResponse;
 use App\Http\Responses\Clients\UpdateOwnerResponse;
 use App\Http\Responses\Clients\UpdateResponse;
-use App\Http\Responses\Clients\PinningResponse;
 use App\Repositories\AttachmentRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\ClientRepository;
 use App\Repositories\CustomFieldsRepository;
 use App\Repositories\DestroyRepository;
+use App\Repositories\PinnedRepository;
 use App\Repositories\TagRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Repositories\PinnedRepository;
-
 use Validator;
 
 class Clients extends Controller {
@@ -95,7 +94,7 @@ class Clients extends Controller {
             'updateDescription',
             'emailCompose',
             'emailSend',
-            'togglePinning'
+            'togglePinning',
         ]);
 
         //dependencies
@@ -705,7 +704,6 @@ class Clients extends Controller {
         $user->account_owner = 'yes';
         $user->save();
 
-
         //reponse payload
         $payload = [
             'client_id' => $id,
@@ -717,7 +715,6 @@ class Clients extends Controller {
         return new UpdateOwnerResponse($payload);
     }
 
-    
     /**
      * toggle pinned state of clients
      *
@@ -829,38 +826,83 @@ class Clients extends Controller {
     }
 
     /**
+     * impersonate a client
+     *
+     * @param int $id client id
+     * @return \Illuminate\Http\Response
+     */
+    public function ImpersonateClient($id) {
+
+        //get the client
+        if (!$client = \App\Models\Client::Where('client_id', $id)->first()) {
+            abort(409, __('lang.client_not_found'));
+        }
+
+        //admin only
+        if (!auth()->user()->is_admin) {
+            abort(403);
+        }
+
+        //get the primary account owner from User model - where account_owner = yes
+        if (!$owner = \App\Models\User::Where('clientid', $id)
+            ->Where('account_owner', 'yes')
+            ->first()) {
+            abort(409, __('lang.client_owner_not_found'));
+        }
+
+        //logout admin
+        auth()->logout();
+
+        //authenticate this user
+        auth()->loginUsingId($owner->id);
+
+        //redirect to home
+        $jsondata['redirect_url'] = url('/home');
+
+        //ajax response
+        return response()->json($jsondata);
+    }
+
+    /**
      * data for the stats widget
      * @return array
      */
     private function statsWidget($data = array()) {
 
+        //get expense (all rows - for stats etc)
+        $count_all_projects = $this->clientrepo->search('', ['stats' => 'count_all_projects']);
+        $count_clients = $this->clientrepo->search('', ['stats' => 'count_clients']);
+        $sum_payments = $this->clientrepo->search('', ['stats' => 'sum_payments']);
+        $sum_invoices = $this->clientrepo->search('', ['stats' => 'sum_invoices']);
+
         //default values
         $stats = [
             [
-                'value' => '0',
-                'title' => __('lang.projects'),
+                'value' => $count_clients ?? 0,
+                'title' => __('lang.clients'),
                 'percentage' => '0%',
                 'color' => 'bg-success',
             ],
             [
-                'value' => '$0.00',
-                'title' => __('lang.invoices'),
+                'value' => $count_all_projects ?? 0,
+                'title' => __('lang.projects'),
                 'percentage' => '0%',
                 'color' => 'bg-info',
             ],
             [
-                'value' => '0',
-                'title' => __('lang.users'),
+                'value' => runtimeMoneyFormat($sum_invoices),
+                'title' => __('lang.invoices'),
                 'percentage' => '0%',
                 'color' => 'bg-primary',
             ],
             [
-                'value' => '0',
-                'title' => __('lang.active'),
+                'value' => runtimeMoneyFormat($sum_payments),
+                'title' => __('lang.payments'),
                 'percentage' => '0%',
                 'color' => 'bg-inverse',
             ],
         ];
+
         //calculations - set real values
         if (!empty($data)) {
             $stats[0]['value'] = '1';

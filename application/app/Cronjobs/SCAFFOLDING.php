@@ -31,7 +31,9 @@ class FooCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //boot theme for things that need css
         middlewareBootTheme();

@@ -2,7 +2,7 @@
 
 /** ---------------------------------------------------------------------------------
  * NEXTLOOP NOTES
- * Do nbot format the document, use Nwidart\Modules\Commands; will be deleted 
+ * Do NOT format this document, use Nwidart\Modules\Commands; will be deleted 
  *-----------------------------------------------------------------------------------*/
 
 use Nwidart\Modules\Activators\FileActivator;
@@ -55,6 +55,7 @@ return [
             'nextloop-module-stubs/providers/ModuleServiceProvider.php' => 'Providers/ModuleServiceProvider.php',
             'nextloop-module-stubs/providers/CronServiceProvider.php' => 'Providers/CronServiceProvider.php',
             'nextloop-module-stubs/providers/RouteServiceProvider.php' => 'Providers/RouteServiceProvider.php',
+            'nextloop-module-stubs/providers/ListenerServiceProvider.php' => 'Providers/ListenerServiceProvider.php',
 
             //NEXTLOOP - ROUTES
             'nextloop-module-stubs/routes/web.php' => ['STUDLY_NAME', 'LOWER_NAME'],
@@ -75,11 +76,18 @@ return [
             'nextloop-module-stubs/views/SCAFFOLDING/table/table.blade.php' => 'Resources/views/SCAFFOLDING/table/table.blade.php',
             'nextloop-module-stubs/views/SCAFFOLDING/table/ajax.blade.php' => 'Resources/views/SCAFFOLDING/table/ajax.blade.php',
             'nextloop-module-stubs/views/SCAFFOLDING/modals/add-edit.blade.php' => 'Resources/views/SCAFFOLDING/modals/add-edit.blade.php',
+            'nextloop-module-stubs/views/SCAFFOLDING/modals/show.blade.php' => 'Resources/views/SCAFFOLDING/modals/show.blade.php',
             'nextloop-module-stubs/views/SCAFFOLDING/misc/filter.blade.php' => 'Resources/views/SCAFFOLDING/misc/filter.blade.php',
             'nextloop-module-stubs/views/SCAFFOLDING/misc/list-page-actions.blade.php' => 'Resources/views/SCAFFOLDING/misc/list-page-actions.blade.php',
+            'nextloop-module-stubs/views/settings/SCAFFOLDING/page.blade.php' => 'Resources/views/settings/SCAFFOLDING/page.blade.php',
 
-            //NEXTLOOP - JS
+
+            //NEXTLOOP - RESOURCES
             'nextloop-module-stubs/js/events.js' => 'Resources/assets/js/events.js',
+            'nextloop-module-stubs/css/module.scss' => 'Resources/assets/css/module.scss',
+            'nextloop-module-stubs/css/module.css' => 'Resources/assets/css/module.css',
+            'nextloop-module-stubs/css/custom.scss' => 'Resources/assets/css/custom.scss',
+            'nextloop-module-stubs/css/custom.css' => 'Resources/assets/css/custom.css',
 
             //NEXTLOOP - RESPONSES
             'nextloop-module-stubs/responses/SCAFFOLDING/IndexResponse.php' => 'Http/Responses/SCAFFOLDING/IndexResponse.php',
@@ -104,7 +112,10 @@ return [
             'nextloop-module-stubs/routes/web.php' => 'Routes/web.php',
 
             //NEXTLOOP - MAIL
-            'nextloop-module-stubs/email/SCAFFOLDING.php' => 'Email/SCAFFOLDING.php',
+            'nextloop-module-stubs/emails/SCAFFOLDING.php' => 'Emails/SCAFFOLDING.php',
+
+            //NEXTLOOP - SETUP SQL
+            'nextloop-module-stubs/module.sql' => 'module.sql',
 
         ],
         'replacements' => [
@@ -137,6 +148,7 @@ return [
             'nextloop-module-stubs/providers/ModuleServiceProvider.php' => ['STUDLY_NAME', 'LOWER_NAME'],
             'nextloop-module-stubs/providers/CronServiceProvider.php' => ['STUDLY_NAME', 'LOWER_NAME'],            
             'nextloop-module-stubs/providers/RouteServiceProvider.php' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/providers/ListenerServiceProvider.php' => ['STUDLY_NAME', 'LOWER_NAME'],
 
             //NEXTLOOP - WEB
             'nextloop-module-stubs/routes/web.php' => ['STUDLY_NAME', 'LOWER_NAME'],
@@ -155,11 +167,17 @@ return [
             'nextloop-module-stubs/views/SCAFFOLDING/table/table.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
             'nextloop-module-stubs/views/SCAFFOLDING/table/ajax.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
             'nextloop-module-stubs/views/SCAFFOLDING/modals/add-edit.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/views/SCAFFOLDING/modals/show.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
             'nextloop-module-stubs/views/SCAFFOLDING/misc/filter.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
             'nextloop-module-stubs/views/SCAFFOLDING/misc/list-page-actions.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/views/settings/SCAFFOLDING/page.blade.php' => ['STUDLY_NAME', 'LOWER_NAME'],
 
-            //NEXTLOOP - JS
+            //NEXTLOOP - RESOURCES
             'nextloop-module-stubs/js/events.js' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/css/module.scss'=> ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/css/module.css' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/css/custom.scss' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/css/custom.css' => ['STUDLY_NAME', 'LOWER_NAME'],
 
             //NEXTLOOP - RESPONSES
             'nextloop-module-stubs/responses/SCAFFOLDING/IndexResponse.php' => ['STUDLY_NAME', 'LOWER_NAME'],
@@ -182,11 +200,11 @@ return [
             'nextloop-module-stubs/helpers/Helpers.php' => ['STUDLY_NAME', 'LOWER_NAME'],
 
             //NEXTLOOP - MAIL
-            'nextloop-module-stubs/email/SCAFFOLDING.php' => ['STUDLY_NAME', 'LOWER_NAME'],
+            'nextloop-module-stubs/emails/SCAFFOLDING.php' => ['STUDLY_NAME', 'LOWER_NAME'],
 
-
-
-
+            //NEXTLOOP - SETUP SQL
+            'nextloop-module-stubs/module.sql' => ['STUDLY_NAME', 'LOWER_NAME'],
+            
 
         ],
         'gitkeep' => false,

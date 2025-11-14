@@ -19,6 +19,10 @@ function middlewareBootSettings() {
         ->Where('settings_id', 1)
         ->first();
 
+    //save system settings into config array
+    $currencies = \App\Models\Currencies::orderBy('currency_code', 'asc')->get();
+    config(['currencies' => $currencies]);
+
     //set timezone
     date_default_timezone_set($settings->settings_system_timezone);
 
@@ -128,7 +132,6 @@ function middlewareBootSettings() {
     //[modules] - enabled modules
     $enabled_modules = \App\Models\Module::where('module_status', 'enabled')->pluck('module_name')->toArray();
     config(['modules.enabled' => $enabled_modules]);
-
 
 }
 
@@ -327,6 +330,14 @@ function middlewareBootTheme() {
         //[MT]
         'theme.selected_theme_saas_css' => 'public/themes/' . $settings->settings_theme_name . '/css/saas.css?v=' . $settings->settings_system_javascript_versioning,
     ]);
+
+    //save active theme to config
+    $active_theme = auth()->check() ? auth()->user()->pref_theme : $settings->settings_theme_name;
+    if (is_file(BASE_DIR . "/public/themes/$active_theme/css/style.css")) {
+        config(['active_theme' => $active_theme]);
+    } else {
+        config(['active_theme' => $settings->settings_theme_name]);
+    }
 
     //[user custom theme] - set the theme for the current user (apply to all views)
     view()->composer('*', function ($view) {

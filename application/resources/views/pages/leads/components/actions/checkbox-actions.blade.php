@@ -35,6 +35,23 @@
             <i class="ti-bookmark"></i> @lang('lang.change_status')
         </button>
 
+
+        <!--archive-->
+        <button type="button" class="btn btn-sm btn-default waves-effect waves-dark confirm-action-info"
+            data-type="form" data-ajax-type="POST" data-form-id="leads-list-table"
+            data-url="{{ url('/leads/bulk/archive') }}" data-confirm-title="{{ cleanLang(__('lang.archive_leads')) }}"
+            data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}" id="checkbox-actions-archive-leads">
+            <i class="sl-icon-briefcase"></i> {{ cleanLang(__('lang.archive')) }}</button>
+
+        <!--restore-->
+        <button type="button" class="btn btn-sm btn-default waves-effect waves-dark confirm-action-info"
+            data-type="form" data-ajax-type="POST" data-form-id="leads-list-table"
+            data-url="{{ url('/leads/bulk/restore') }}" data-confirm-title="{{ cleanLang(__('lang.restore_leads')) }}"
+            data-confirm-text="{{ cleanLang(__('lang.are_you_sure')) }}" id="checkbox-actions-restore-leads">
+            <i class="sl-icon-folder-alt"></i> {{ cleanLang(__('lang.restore')) }}</button>
+
+
+
         @if(auth()->user()->role->role_assign_leads == 'yes')
         <!--assign users-->
         <button type="button"

@@ -38,7 +38,9 @@ class OrphanedRecordsCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //cleanup tasks
         $this->cleanupTasks();

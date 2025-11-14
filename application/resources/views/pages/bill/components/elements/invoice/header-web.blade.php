@@ -35,7 +35,8 @@
                     <h1 class="text-uppercase {{ runtimeInvoiceStatusColors('paid', 'text') }}">
                         {{ cleanLang(__('lang.paid')) }}</h1>
                 </span>
-                @if(config('system.settings_estimates_show_view_status') == 'yes' && (auth()->check() && auth()->user()->is_team) &&
+                @if(config('system.settings_estimates_show_view_status') == 'yes' && (auth()->check() &&
+                auth()->user()->is_team) &&
                 $bill->bill_status != 'draft' && $bill->bill_status != 'paid')
                 @if($bill->bill_viewed_by_client == 'no')
                 <span>
@@ -49,6 +50,15 @@
                         class="label label label-lighter-info text-lc font-normal">@lang('lang.client_has_opened')</span>
                 </span>
                 @endif
+                @endif
+
+                <!--reminder sent-->
+                @if((auth()->check() && auth()->user()->is_team) && $bill->bill_status == 'overdue')
+                <span>
+                    <span
+                        class="label label label-light-danger text-lc font-normal">@lang('lang.overdue_reminders_sent') - 
+                        <span id="invoice_overdue_reminder_counter">{{ $bill->bill_overdue_reminder_counter ?? 0}}</span></span>
+                </span>
                 @endif
             </span>
         </div>

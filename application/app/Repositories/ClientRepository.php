@@ -91,6 +91,14 @@ class ClientRepository {
                                       AND project_status NOT IN('completed'))
                                       AS count_pending_projects");
 
+        //count_pending_projects
+        $clients->selectRaw("(SELECT COUNT(*)
+                                      FROM projects
+                                      WHERE project_clientid = clients.client_id
+                                      AND project_type = 'project'
+                                      AND project_status NOT IN('draft'))
+                                      AS count_all_projects");
+
         //count_completed_projects
         $clients->selectRaw("(SELECT COUNT(*)
                                       FROM projects
@@ -316,6 +324,10 @@ class ClientRepository {
                 $query->orWhereHas('tags', function ($query) {
                     $query->where('tag_title', 'LIKE', '%' . request('search_query') . '%');
                 });
+                $query->orWhereHas('users', function ($q) {
+                    $q->where('first_name', request('search_query'));
+                    $q->orWhere('last_name', request('search_query'));
+                });
                 $query->orWhereHas('category', function ($query) {
                     $query->where('category_name', 'LIKE', '%' . request('search_query') . '%');
                 });
@@ -387,6 +399,21 @@ class ClientRepository {
             'tags',
             'users',
         ]);
+
+        //stats - count all
+        if (isset($data['stats']) && $data['stats'] == 'count_clients') {
+            return $clients->count();
+        }
+        //stats - count all
+        if (isset($data['stats']) && $data['stats'] == 'count_all_projects') {
+            return $clients->get()->sum('count_all_projects');
+        }
+        if (isset($data['stats']) && $data['stats'] == 'sum_payments') {
+            return $clients->get()->sum('sum_all_payments');
+        }
+        if (isset($data['stats']) && $data['stats'] == 'sum_invoices') {
+            return $clients->get()->sum('sum_invoices_all');
+        }
 
         //we are not paginating (e.g. when doing exports)
         if (isset($data['no_pagination']) && $data['no_pagination'] === true) {

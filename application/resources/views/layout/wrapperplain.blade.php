@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="logged-out {{ config('visibility.page_rendering') }}">
+<html lang="en" class="logged-out {{ config('visibility.page_rendering') }} {{ config('active_theme') }}">
 
 <!--html header-->
 @include('layout.header')

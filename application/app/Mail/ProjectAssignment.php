@@ -78,8 +78,8 @@ class ProjectAssignment extends Mailable {
         $payload += [
             'first_name' => $this->user->first_name,
             'last_name' => $this->user->last_name,
-            'assigned_by_first_name' => auth()->user()->first_name,
-            'assigned_by_last_name' => auth()->user()->last_name,
+            'assigned_by_first_name' => auth()->check() ? auth()->user()->first_name : __('lang.system'),
+            'assigned_by_last_name' => auth()->check() ? auth()->user()->last_name: '',
             'project_id' => $this->obj->project_id,
             'project_title' => $this->obj->project_title,
             'project_start_date' => runtimeDate($this->obj->project_date_start),

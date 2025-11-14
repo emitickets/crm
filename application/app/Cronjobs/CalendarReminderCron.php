@@ -27,7 +27,9 @@ class CalendarReminderCron {
 
         //boot system settings
         middlewareBootSettings();
-        middlewareBootMail();
+
+        //[MT] boot mail settings
+        env('MT_TPYE') ? middlewareSaaSBootMail() : middlewareBootMail();
 
         //Send reminders for all event types
         $this->calendarEvents();

@@ -183,6 +183,18 @@ class LeadRepository {
                 });
             }
 
+            //filter content created by me or assigned to me
+            if (request()->filled('filter_created_by_or_assigned_to_me')) {
+                $leads->where(function ($query) {
+                    //where created by me
+                    $query->where('lead_creatorid', auth()->id())
+                    //or where assigned to me
+                        ->orWhereHas('assigned', function ($subquery) {
+                            $subquery->where('leadsassigned_userid', auth()->id());
+                        });
+                });
+            }
+
             //filter my leads (using the actions button)
             if (request()->filled('filter_my_leads')) {
                 //leads assigned to me

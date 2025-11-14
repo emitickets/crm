@@ -7,6 +7,7 @@
     </div>
     <div class="x-splash-subtext">
         <span class="label label-rounded label-danger p-r-16 p-l-16"><strong>0</strong> @lang('lang.records_imported')</span>
+        <span class="label label-rounded label-default p-r-16 p-l-16"><strong>{{ $skipped ?? 0 }}</strong> @lang('lang.duplicates_skipped')</span>
     </div>
     <!--see error log-->
     <div class="x-splash-failed-text p-t-15">

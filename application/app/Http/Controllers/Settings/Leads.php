@@ -63,11 +63,13 @@ class Leads extends Controller {
         $page = $this->pageSettings();
 
         $settings = \App\Models\Settings::find(1);
+        $settings2 = \App\Models\Settings2::find(1);
 
         //reponse payload
         $payload = [
             'page' => $page,
             'settings' => $settings,
+            'settings2' => $settings2,
         ];
 
         //show the view
@@ -82,10 +84,20 @@ class Leads extends Controller {
      */
     public function updateGeneral() {
 
+        $settings = \App\Models\Settings::find(1);
+        $settings2 = \App\Models\Settings2::find(1);
+
         //update
         if (!$this->settingsrepo->updateLeads()) {
             abort(409);
         }
+
+        //update other settings
+        $settings2->settings2_importing_leads_duplicates_name = request('settings2_importing_leads_duplicates_name') == 'on' ? 'yes' : 'no';
+        $settings2->settings2_importing_leads_duplicates_email = request('settings2_importing_leads_duplicates_email') == 'on' ? 'yes' : 'no';
+        $settings2->settings2_importing_leads_duplicates_telephone = request('settings2_importing_leads_duplicates_telephone') == 'on' ? 'yes' : 'no';
+        $settings2->settings2_importing_leads_duplicates_company = request('settings2_importing_leads_duplicates_company') == 'on' ? 'yes' : 'no';
+        $settings2->save();
 
         //reponse payload
         $payload = [];

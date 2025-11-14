@@ -153,4 +153,12 @@ class Lead extends Model {
         return $this->morphMany('App\Models\Reminder', 'reminderresource');
     }
 
+    /**
+     * relatioship business rules:
+     *         - the Lead can have many LeadLogs
+     *         - the LeadLog belongs to one Lead
+     */
+    public function logs() {
+        return $this->hasMany('App\Models\LeadLog', 'lead_log_leadid', 'lead_id');
+    }
 }

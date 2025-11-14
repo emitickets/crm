@@ -54,6 +54,10 @@ class TicketStoreUpdate extends FormRequest {
          * ------------------------------------------------------*/
         if ($this->getMethod() == 'POST') {
             $rules += [
+                'ticket_subject' => [
+                    'required',
+                    new NoTags,
+                ],
                 'ticket_clientid' => [
                     'required',
                     Rule::exists('clients', 'client_id'),
@@ -87,10 +91,6 @@ class TicketStoreUpdate extends FormRequest {
          * common rules for both [create] and [update] requests
          * ------------------------------------------------------*/
         $rules += [
-            'ticket_subject' => [
-                'required',
-                new NoTags,
-            ],
             'ticket_message' => [
                 'required'
             ],

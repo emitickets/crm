@@ -62,13 +62,18 @@ class EventRepository {
             $events->where('eventresource_id', request('eventresource_id'));
         }
 
+        //filter by creator
+        if (request()->filled('event_creatorid')) {
+            $events->where('event_creatorid', request('event_creatorid'));
+        }
+
         //filter by client (for client timelone)
         if (request()->filled('timelineclient_id')) {
             $events->where('event_clientid', request('timelineclient_id'));
         }
 
         //filter only visible items
-        if(isset($data['filter']) && $data['filter'] == 'timeline_visible'){
+        if (isset($data['filter']) && $data['filter'] == 'timeline_visible') {
             $events->where('event_show_in_timeline', 'yes');
         }
 
@@ -85,9 +90,6 @@ class EventRepository {
         // Get the results and return them.
         return $events->paginate($pagination);
     }
-
-
-    
 
     /**
      * Create a new record

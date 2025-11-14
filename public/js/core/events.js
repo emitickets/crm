@@ -18,10 +18,9 @@ $(document).ready(function () {
     /** --------------------------------------------------------------------------------------------------
      *  [link on a div]
      * -------------------------------------------------------------------------------------------------*/
-    $(document).on("click", ".click-url", function (e) {
+    $(document).on("click", ".click-url, .url-link", function (e) {
         window.location = $(this).attr("data-url");
     });
-
 
     /** --------------------------------------------------------------------------------------------------
      *  [remove preloader]
@@ -44,6 +43,13 @@ $(document).ready(function () {
      * -------------------------------------------------------------------------------------------------*/
     $(document).on("click", ".js-toggle-side-panel", function () {
         NX.toggleSidePanel($(this));
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [side panel with ajax] - toggle
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".js-toggle-side-panel-ajax", function () {
+        NX.toggleSidePanelAjax($(this));
     });
 
     /** --------------------------------------------------------------------------------------------------
@@ -301,11 +307,11 @@ $(document).ready(function () {
         $(document).on({
             mouseenter: function () {
                 //hide all
-                $('.checklist-item-delete').hide();
-                $(this).find('.checklist-item-delete').show();
+                $('.checklist-action-buttons').hide();
+                $(this).find('.checklist-action-buttons').show();
             },
             mouseleave: function () {
-                $('.checklist-item-delete').hide();
+                $('.checklist-action-buttons').hide();
             }
         }, ".checklist-item");
     });
@@ -706,13 +712,33 @@ $(document).ready(function () {
     });
 
 
+    /*----------------------------------------------------------------
+     * [task item] - add selected tasks button clicked
+     * ------------------------------------------------------------*/
+    $(document).on('click', '#tasksModalSelectButton', function (e) {
+        NXINVOICE.DOM.addSelectedTask($(this));
+    });
+
 
     /*----------------------------------------------------------------
-     *  [epxense item] - add time billing button clicked
+     *  [time item] - add time billing button clicked
      * ------------------------------------------------------------*/
     $(document).on('click', '#timebillingModalSelectButton', function (e) {
         NXINVOICE.DOM.addSelectedTimebilling($(this));
     });
+
+
+    /*----------------------------------------------------------------
+     *  [time item] - add task time billing button clicked
+     * ------------------------------------------------------------*/
+    $(document).on('click', '#tasksModalSelectTimeButton', function (e) {
+        //change the 'data-unit' for each selected item to equal the value in 'data-unit-time'
+        $("#tasks-list-table").find(".tasks-checkbox:checked").each(function () {
+            $(this).attr('data-unit', $(this).attr('data-unit-time'));
+        });
+        NXINVOICE.DOM.addSelectedTimebilling($(this));
+    });
+
 
 
     /*----------------------------------------------------------------
@@ -810,8 +836,6 @@ $(document).ready(function () {
         var add_class = $(this).attr('data-add-class');
         var top_padding = $(this).attr('data-top-padding'); //set to 'none'
         var button_loading_annimation = $(this).attr('data-button-loading-annimation');
-        var skip_modal_body_reset = $(this).attr('data-skip-modal-body-reset');
-
 
 
         //modal-lg modal-sm modal-xl modal-xs
@@ -847,12 +871,7 @@ $(document).ready(function () {
         //change title
         $("#commonModalTitle").html(modal_title);
         //reset body
-        if (skip_modal_body_reset == 'yes') {
-            //do nothing
-        } else {
-            $("#commonModalBody").html('');
-        }
-
+        $("#commonModalBody").html('');
         //hide footer
         $("#commonModalFooter").hide();
         //change form action
@@ -872,6 +891,10 @@ $(document).ready(function () {
         $("#commonModalCloseIcon").show();
         $("#commonModalExtraCloseIcon").hide();
 
+        //remove classes
+        $("#commonModalCloseIcon").removeClass('on-close-reload-parent');
+        $("#commonModalCloseButton").removeClass('on-close-reload-parent');
+
         //hidden elements
         if ($(this).attr('data-header-visibility') == 'hidden') {
             $("#commonModalHeader").hide();
@@ -887,6 +910,11 @@ $(document).ready(function () {
         }
         if ($(this).attr('data-header-extra-close-icon') == 'visible') {
             $("#commonModalExtraCloseIcon").show();
+        }
+        //reload parent when modal is closed
+        if ($(this).attr('data-on-close-reload-parent') == 'yes') {
+            $("#commonModalCloseIcon").addClass('on-close-reload-parent');
+            $("#commonModalCloseButton").addClass('on-close-reload-parent');
         }
 
         //remove top padding
@@ -913,7 +941,6 @@ $(document).ready(function () {
             $button.attr('data-form-id', action_form_id);
         }
     });
-
 
     /*----------------------------------------------------------------
      *  show actions modal window - action modal
@@ -1943,5 +1970,353 @@ $(document).ready(function () {
         nxAjaxUxRequest($(this));
         e.stopPropagation();
     });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  checlist items - show drag icon, on-hover
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).ready(function () {
+        // When the mouse enters a checklist item
+        $(document).on('mouseenter', '.checklist-item', function () {
+            // Find the .drag-handle element within this checklist item and show it
+            $(this).find('.drag-handle').show();
+        });
+
+        // When the mouse leaves a checklist item
+        $(document).on('mouseleave', '.checklist-item', function () {
+            // Find the .drag-handle element within this checklist item and hide it
+            $(this).find('.drag-handle').hide();
+        });
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  reload parent on modal window close
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).off("click", ".on-close-reload-parent").on("click", ".on-close-reload-parent", function (e) {
+
+        //add overlay to page
+        $("body").addClass('overlay');
+        $("#main-top-nav-bar").addClass('loading');
+
+        //reload window
+        window.location.reload();
+
+    });
+
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  recording timesheet for other users
+     * -------------------------------------------------------------------------------------------------*/
+    //monitor select2 change on timesheet user dropdown    
+    $(document).on('select2:select', "#timesheet_user", function (e) {
+        //get the selected user id
+        var userId = $(this).select2('data')[0].id;
+
+        //get the base url from the data attribute
+        var baseUrl = $(this).attr('data-base-url');
+
+        //new ajax url
+        var newUrl = baseUrl + userId;
+
+        //update the data attribute for consistency
+        $("#my_assigned_projects").attr('data-ajax--url', newUrl);
+
+        //update the data attribute for consistency
+        $("#my_assigned_projects").attr('data-user-id', userId);
+
+        //update the AJAX URL directly in the select2 instance
+        $("#my_assigned_projects").data('select2').dataAdapter.ajaxOptions.url = newUrl;
+
+        //reset the projects dropdown
+        $("#my_assigned_projects").val(null).trigger('change');
+
+        //clear and disable the tasks dropdown
+        $("#my_assigned_tasks").empty().prop('disabled', true);
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  import checklist items
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", "#import-checklist-link", function (e) {
+        e.preventDefault();
+
+        // Toggle visibility of #import-checklist-container
+        if ($("#import-checklist-container").hasClass('hidden')) {
+            $("#import-checklist-container").removeClass('hidden');
+        } else {
+            $("#import-checklist-container").addClass('hidden');
+        }
+
+        //hide text area for adding checklist
+        $("#element-checklist-text").hide();
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST COMMENTS] - toggle checklist comments wrapper visibility
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".checklist-comments-wrapper-toggle-button", function (e) {
+        e.preventDefault();
+
+        //toggle text aread
+        var text_area_wrapper_id = $(this).attr('data-checklist-comments-textarea-wrapper');
+
+        if ($("#" + text_area_wrapper_id).is(":visible")) {
+            $(".checklist-comments-textarea-wrapper").hide();
+        } else {
+            $(".checklist-comments-textarea-wrapper").hide();
+            $("#" + text_area_wrapper_id).show();
+        }
+
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST COMMENTS] - submit checklist comment
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".checklist-comments-submit-button", function (e) {
+
+        //nothing for now
+
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST COMMENTS] - close post comment textarea
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".checklist-comments-close-button", function (e) {
+        e.preventDefault();
+
+        var tinymce_textarea_id = $(this).attr('data-tinymce-textarea-id');
+        var textarea_wrapper = $(this).attr('data-textarea-wrapper');
+        var post_button = $(this).attr('data-checklist-comments-post-button');
+
+        // hide the textarea wrapper
+        $("#" + textarea_wrapper).hide();
+
+        // show the 'post comment' button
+        $("#" + post_button).show();
+
+        // reset the tinymce textarea
+        tinymce.get(tinymce_textarea_id).setContent('');
+
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLISTS] - hide or show checklist comments
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".checklist-comments-hide-button", function (e) {
+
+        console.log('foo');
+
+        $("#card-checklist").removeClass('checklist-comments-visible');
+        $("#card-checklist").addClass('checklist-comments-hidden');
+
+        $(".global-checklist").removeClass('checklist-comments-visible');
+        $(".global-checklist").addClass('checklist-comments-hidden');
+
+    });
+    $(document).on("click", ".checklist-comments-show-button", function (e) {
+
+        $("#card-checklist").removeClass('checklist-comments-hidden');
+        $("#card-checklist").addClass('checklist-comments-visible');
+
+        $(".global-checklist").removeClass('checklist-comments-hidden');
+        $(".global-checklist").addClass('checklist-comments-visible');
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [GLOBAL][CHECKLISTS] - add new button clicked
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on('click', '#checklist-add-new-button, #new-checklist-text-form-close-button', function (e) {
+        $("#new-checklist-text-container").toggle();
+        $("#checklists-actions-panel").toggle();
+        if (!$("#import-checklist-container").hasClass('hidden')) {
+            $("#import-checklist-container").addClass('hidden');
+        }
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST INLINE EDITING] - when user clicks on checklist text to edit
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".checklist-text-container", function (e) {
+        e.preventDefault();
+
+        // First, hide all checklist editing forms that may be open
+        $(".edit-checklist-text-container").hide();
+
+        // Show all checklists (go to default view state)
+        $(".checklist-item").removeClass('hidden-forced');
+
+        // Get the target editing container ID from data attribute
+        var targetEditContainer = $(this).attr('data-target');
+
+        // Get the current checklist container ID
+        var checklistContainerId = $(this).closest('.checklist-item').attr('id');
+
+        // Hide the current checklist container
+        $("#" + checklistContainerId).addClass('hidden-forced');
+
+        // Show the editing form for this checklist
+        $("#" + targetEditContainer).show();
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST INLINE EDITING] - when user clicks update button to save changes
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".update-checklist-submit-button", function (e) {
+        e.preventDefault();
+
+        // Get data attributes
+        var checklistTarget = $(this).attr('data-checklist-target');
+        var checklistWrapperTarget = $(this).attr('data-checklist-wrapper-target');
+        var formId = $(this).attr('data-form-id');
+
+        // Get the new text from textarea
+        var newText = $("#" + formId + " textarea[name='checklist_text']").val();
+
+        // Update the checklist text display
+        $("#" + checklistTarget).text(newText);
+
+        // Hide the editing form
+        $("#" + formId).hide();
+
+        // Show the main checklist container
+        $("#" + checklistWrapperTarget).removeClass('hidden-forced');
+
+        // Initiate AJAX request to update backend
+        nxAjaxUxRequest($(this));
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [CHECKLIST INLINE EDITING] - when user clicks close button to cancel editing
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".update-checklist-close-button", function (e) {
+        e.preventDefault();
+
+        // Get data attributes
+        var checklistTarget = $(this).attr('data-checklist-target');
+        var textareaTarget = $(this).attr('data-textarea-target');
+        var formId = $(this).attr('data-form-id');
+        var checklistWrapperTarget = $(this).attr('data-checklist-wrapper-target');
+
+        // Get the original text from the checklist display
+        var originalText = $("#" + checklistTarget).text();
+
+        // Reset the textarea to match the original text
+        $("#" + textareaTarget).val(originalText);
+
+        // Hide the editing form
+        $("#" + formId).hide();
+
+        // Show the main checklist container
+        $("#" + checklistWrapperTarget).removeClass('hidden-forced');
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [LEAD LOG] - editor close button clicked
+     *  -------------------------------------------------------------------------------------------------*/
+    $(document).on('click', '.lead_log_edit_clode_button', function () {
+
+        var log_id = $(this).attr('data-log-id');
+        var lead_log_container = $("#lead_log_container_" + log_id);
+        var editor_container = $("#lead_log_editing_wrapper_" + log_id);
+
+        //hide this editor
+        editor_container.hide();
+
+        //show the original log
+        lead_log_container.show();
+    });
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [Quick Access] buttons - Star/Unstar toggle
+     *  -------------------------------------------------------------------------------------------------*/
+    //handle star button click
+    $(document).on('click', '#quick-access-star-button', function () {
+        //hide star button and show unstar button after successful ajax
+        $(this).addClass('ajax-success-action');
+        $(this).attr('data-success-hide', '#quick-access-star-button');
+        $(this).attr('data-success-show', '#quick-access-unstar-button');
+    });
+
+    //handle unstar button click  
+    $(document).on('click', '#quick-access-unstar-button', function () {
+        //hide unstar button and show star button after successful ajax
+        $(this).addClass('ajax-success-action');
+        $(this).attr('data-success-hide', '#quick-access-unstar-button');
+        $(this).attr('data-success-show', '#quick-access-star-button');
+    });
+
+
+    /*----------------------------------------------------------------
+     *  Select2 events - Income vs Expenses Year Filter
+     * -----------------------------------------------------------*/
+    $(document).on("select2:select", "#income_expenses_year", function (e) {
+
+        //get the selected option value
+        var selected_value = e.params.data.id;
+
+        //trigger ajax request using existing framework
+        nxAjaxUxRequest($(this));
+
+    });
+
+
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [STARRED CONTENT] - HIGHLIGHT ACTIVE MENU
+     *  Highlight the active menu item in the starred side panel when opened from topnav
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".js-toggle-side-panel-ajax", function (e) {
+        //get the target menu from data attribute
+        var targetMenu = $(this).attr('data-target-menu');
+
+        //remove active class from all menu items
+        $('.right-sidepanel-menu').removeClass('active');
+
+        //add active class to the target menu item
+        if (targetMenu) {
+            $('#' + targetMenu).addClass('active');
+        }
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [STARRED CONTENT] - SORTING DROPDOWN
+     *  Update the dropdown text when sorting is changed
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".js-starred-sorting", function (e) {
+        e.preventDefault();
+
+        //get the sort text
+        var sortText = $(this).attr('data-sort-text');
+
+        //update the dropdown button text
+        $('#starred-sort-text').text(sortText);
+    });
+
+    /** --------------------------------------------------------------------------------------------------
+     *  [STARRED CONTENT] - REMOVE ITEM FROM FEED
+     *  Generic handler to remove items from any starred feed
+     * -------------------------------------------------------------------------------------------------*/
+    $(document).on("click", ".js-starred-remove-item", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        //get the item id to remove
+        var itemId = $(this).attr('data-item-id');
+
+        //fade out and remove the item immediately for better UX
+        if (itemId) {
+            $('#' + itemId).fadeOut(300, function () {
+                $(this).remove();
+            });
+        }
+    });
+
 
 });

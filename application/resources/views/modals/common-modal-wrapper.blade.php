@@ -5,13 +5,13 @@
             <div class="modal-content">
                 <div class="modal-header" id="commonModalHeader">
                     <h4 class="modal-title" id="commonModalTitle"></h4>
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+                    <button type="button" class="close" data-dismiss="modal"
                         id="commonModalCloseIcon">
                         <i class="ti-close"></i>
                     </button>
                 </div>
                 <!--optional button for when header is hidden-->
-                <span class="close x-extra-close-icon" data-dismiss="modal" aria-hidden="true"
+                <span class="close x-extra-close-icon" data-dismiss="modal"
                     id="commonModalExtraCloseIcon">
                     <i class="ti-close"></i>
                 </span>

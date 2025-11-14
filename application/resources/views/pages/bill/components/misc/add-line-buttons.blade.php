@@ -22,9 +22,8 @@
     <!--add product item-->
     <button type="button"
         class="billing-mode-only-item btn btn-secondary btn-rounded btn-sm btn-rounded-icon actions-modal-button js-ajax-ux-request reset-target-modal-form"
-        data-toggle="modal" data-target="#itemsModal" data-modal-title="{{ cleanLang(__('lang.product_item')) }}" id="add-item-button-products"
-        data-reset-loading-target="true"
-        data-url="{{ url('/items?action=search&itemresource_type=invoice&dom_reset=skip') }}"
+        data-toggle="modal" data-target="#itemsModal" data-modal-title="{{ cleanLang(__('lang.product_item')) }}"
+        id="add-item-button-products" data-reset-loading-target="true" data-url="{{ url('/items?action=search') }}"
         data-loading-target="items-table-wrapper"><i class="mdi mdi-cart-outline text-themecontrast"></i>
         <span>{{ cleanLang(__('lang.product_item')) }}</span></button>
 
@@ -32,14 +31,15 @@
     <!--add category items-->
     <button type="button"
         class="billing-mode-only-item btn btn-secondary btn-rounded btn-sm btn-rounded-icon actions-modal-button js-ajax-ux-request reset-target-modal"
-        data-toggle="modal" data-target="#categoryItemsModal" data-modal-title="{{ cleanLang(__('lang.product_category')) }}" id="add-item-button-products-category"
-        data-reset-loading-target="true"
-        data-url="{{ url('/items/category?action=search&itemresource_type=invoice&dom_reset=skip') }}"
+        data-toggle="modal" data-target="#categoryItemsModal"
+        data-modal-title="{{ cleanLang(__('lang.product_category')) }}" id="add-item-button-products-category"
+        data-reset-loading-target="true" data-url="{{ url('/items/category?action=search') }}"
         data-loading-target="items-table-wrapper"><i class="mdi mdi-playlist-plus text-themecontrast"></i>
         <span>{{ cleanLang(__('lang.product_category')) }}</span></button>
 
-    <!--[invoices] add expense-->
+
     @if($bill->bill_type == 'invoice')
+    <!--[invoices] add expense-->
     <button type="button"
         class="billing-mode-only-item btn btn-secondary btn-rounded btn-sm btn-rounded-icon actions-modal-button js-ajax-ux-request reset-target-modal-form"
         data-toggle="modal" data-target="#expensesModal" data-modal-title="{{ cleanLang(__('lang.expense')) }}"
@@ -56,6 +56,16 @@
         data-url="{{ url('/invoices/timebilling/'.$bill->bill_projectid.'?grouping=tasks') }}"
         data-loading-target="timebilling-table-wrapper"><i class="mdi mdi-calendar-clock text-themecontrast"></i>
         <span>{{ cleanLang(__('lang.hours_worked')) }}</span></button>
+
+
+
+    <!--[invoices] add project tasks-->
+    <button type="button"
+        class="billing-mode-only-item btn btn-secondary btn-rounded btn-sm btn-rounded-icon actions-modal-button js-ajax-ux-request reset-target-modal-form"
+        data-toggle="modal" data-target="#tasksModal" data-modal-title="@lang('lang.bill_project_tasks')"
+        data-reset-loading-target="true" data-url="{{ url('/invoices/'.$bill->bill_projectid.'/taskbilling') }}"
+        data-loading-target="tasks-table-wrapper"><i class="mdi mdi-check-circle-outline text-themecontrast"></i>
+        <span>@lang('lang.project_tasks')</span></button>
     @endif
 
 </div>
