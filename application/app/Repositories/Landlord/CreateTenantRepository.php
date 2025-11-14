@@ -103,6 +103,16 @@ class CreateTenantRepository {
                 //purge the tenant connection to force reconnection with the new database
                 DB::purge('tenant');
 
+                // Re-configurar la conexión con el nombre de la base de datos después de purgar
+                // Esto asegura que la conexión tenga la base de datos correcta seleccionada
+                $database_name = $new_customer->database;
+                if ($database_name) {
+                    config(['database.connections.tenant.database' => $database_name]);
+                }
+
+                // Volver a hacer makeCurrent para que el paquete configure correctamente la conexión
+                $new_customer->makeCurrent();
+
                 //import the sql file into the tenants database
                 DB::connection('tenant')->unprepared(file_get_contents($sql_file));
 
