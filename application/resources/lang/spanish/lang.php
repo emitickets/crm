@@ -245,7 +245,7 @@ return [
 'clone_task' => "Tarea de clonación",
 'cloning_failed' => "La clonación ha fallado. Ver registro para más detalles",
 'close_modal_windows_on_page_click' => "Cerrar ventana modal en la página Haga clic en",
-'close' => "Cerca",
+'close' => "Cerrar",
 'closed_tasks' => "Tareas cerradas",
 'closed' => "Cerrado",
 'closing_balance' => "Balance de cierre",
