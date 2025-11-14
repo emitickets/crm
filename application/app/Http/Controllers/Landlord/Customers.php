@@ -895,6 +895,14 @@ class Customers extends Controller {
             //swicth to this tenants DB
             $customer->makeCurrent();
 
+            // Asegurar que la conexión tenga la base de datos correcta seleccionada
+            $database_name = $customer->database;
+            if ($database_name) {
+                config(['database.connections.tenant.database' => $database_name]);
+                // Volver a hacer makeCurrent para aplicar la configuración
+                $customer->makeCurrent();
+            }
+
             $key = str_unique();
 
             //add the onetime login key to the tenant database
