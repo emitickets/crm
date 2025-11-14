@@ -1,46 +1,13 @@
 # --- Etapa 1: Builder ---
-# Esta etapa instala dependencias de PHP, Node.js y compila los assets frontend
+# Esta etapa solo instala dependencias de Composer (los assets ya están compilados)
 
 FROM php:8.2-cli-alpine AS builder
 
-# Instalar dependencias del sistema (git, zip, nodejs, npm)
-# Incluir Python 3 y herramientas de compilación para node-sass
+# Instalar dependencias del sistema necesarias para Composer
 RUN apk add --no-cache \
     git \
     zip \
-    unzip \
-    python3 \
-    make \
-    g++ \
-    curl \
-    bash \
-    xz \
-    libzip-dev \
-    libpng-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    freetype-dev \
-    libjpeg-turbo-dev
-
-# Instalar Node.js 14 directamente desde binarios oficiales (compatible con node-sass 4.14.1)
-ENV NODE_VERSION=14.21.3
-
-RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -o node.tar.xz \
-    && tar -xJf node.tar.xz -C /usr/local --strip-components=1 \
-    && rm node.tar.xz \
-    && node --version \
-    && npm --version
-
-# Instalar extensiones de PHP necesarias
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        pdo_mysql \
-        zip \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd
+    unzip
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -54,13 +21,8 @@ COPY . /app
 WORKDIR /app/application
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# Instalar dependencias de Node y compilar assets
-# Configurar Python para node-gyp (node-sass lo requiere)
-ENV PYTHON=/usr/bin/python3
-RUN npm install --legacy-peer-deps && npm run production
-
 # --- Etapa 2: Production ---
-# Esta etapa usa la imagen de webdevops y copia los archivos compilados
+# Esta etapa usa la imagen de webdevops y copia los archivos
 
 FROM webdevops/php-nginx:8.2
 
