@@ -100,6 +100,9 @@ class CreateTenantRepository {
 
                 $current = \Spatie\Multitenancy\Models\Tenant::current();
 
+                //purge the tenant connection to force reconnection with the new database
+                DB::purge('tenant');
+
                 //import the sql file into the tenants database
                 DB::connection('tenant')->unprepared(file_get_contents($sql_file));
 
