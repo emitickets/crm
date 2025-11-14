@@ -87,10 +87,34 @@ WORKDIR /app/application
 # Regenerar autoload optimizado automáticamente
 RUN composer dump-autoload --optimize --no-scripts
 
+# Instalar cron si no está disponible
+RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
+
+# Crear archivo crontab con los comandos de Laravel
+RUN echo "* * * * * /usr/local/bin/php /app/application/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/laravel-schedule \
+    && echo "* * * * * /usr/local/bin/php /app/application/artisan tenants:artisan schedule:run >> /dev/null 2>&1" >> /etc/cron.d/laravel-schedule \
+    && chmod 0644 /etc/cron.d/laravel-schedule \
+    && crontab /etc/cron.d/laravel-schedule
+
+# Crear script de inicio para cron (sin supervisor, compatible con easypanel.io)
+RUN echo '#!/bin/bash\n\
+# Iniciar cron en segundo plano\n\
+cron\n\
+# Ejecutar el comando original del entrypoint\n\
+exec "$@"' > /usr/local/bin/docker-entrypoint-cron.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint-cron.sh
+
 # Expone el puerto 80
 EXPOSE 80
 
 # NOTA: La imagen base webdevops/php-nginx se encarga automáticamente de:
 # - Iniciar Nginx y PHP-FPM
 # - Configurar permisos al inicio
-# - Gestionar el proceso supervisor
+# 
+# NOTA: Los cronjobs están configurados y se ejecutarán cada minuto:
+# - schedule:run para el sistema principal
+# - tenants:artisan schedule:run para los tenants
+# 
+# Para iniciar cron en easypanel.io, puedes usar el script:
+# /usr/local/bin/docker-entrypoint-cron.sh
+# O iniciar cron manualmente con: cron
