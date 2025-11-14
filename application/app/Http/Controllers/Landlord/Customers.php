@@ -20,6 +20,7 @@ use App\Repositories\Landlord\CreateTenantRepository;
 use App\Repositories\Landlord\SubscriptionsRepository;
 use App\Repositories\Landlord\TenantsRepository;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -898,7 +899,12 @@ class Customers extends Controller {
             // Asegurar que la conexión tenga la base de datos correcta seleccionada
             $database_name = $customer->database;
             if ($database_name) {
+                // Configurar la base de datos en la conexión
                 config(['database.connections.tenant.database' => $database_name]);
+                
+                // Purgar la conexión para forzar la reconexión con la nueva base de datos
+                DB::purge('tenant');
+                
                 // Volver a hacer makeCurrent para aplicar la configuración
                 $customer->makeCurrent();
             }
