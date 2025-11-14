@@ -83,8 +83,8 @@ RUN if [ -f /app/application/.env ]; then chmod 775 /app/application/.env; fi
 # Establecer el directorio de trabajo
 WORKDIR /app/application
 
-# Ejecutar scripts de Composer post-install (si es necesario)
-RUN composer dump-autoload --optimize
+# Ejecutar scripts de Composer post-install (sin scripts para evitar errores con Debugbar en producción)
+RUN composer dump-autoload --optimize --no-scripts
 
 # Expone el puerto 80
 EXPOSE 80
