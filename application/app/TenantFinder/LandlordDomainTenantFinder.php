@@ -3,7 +3,7 @@
 namespace App\TenantFinder;
 
 use Spatie\Multitenancy\TenantFinder\TenantFinder;
-use Spatie\Multitenancy\Models\Tenant;
+use App\Models\Multitenancy\Tenant;
 use Illuminate\Support\Facades\Log;
 
 class LandlordDomainTenantFinder extends TenantFinder
@@ -121,104 +121,43 @@ class LandlordDomainTenantFinder extends TenantFinder
             'tenant_status' => $landlordTenant->tenant_status ?? 'N/A',
         ]);
 
-        // Find tenant in landlord database using Spatie Tenant model
-        // The Spatie model expects 'id' but the table uses 'tenant_id' as primary key
-        $tenant = null;
-        
-        // First try: search by domain (both models should have this field)
-        Log::info('TenantFinder: Attempt 1 - Searching Spatie Tenant by domain', [
+        // Find tenant using Spatie's Tenant model (our custom one that extends it)
+        // This will work with Spatie's multitenancy system
+        Log::info('TenantFinder: Searching Spatie Tenant model by domain', [
             'host' => $host,
         ]);
+        
         $tenant = Tenant::on('landlord')
             ->where('domain', $host)
             ->first();
 
-        if ($tenant) {
-            Log::info('TenantFinder: Found tenant in Spatie model (by domain)', [
-                'tenant_id' => $tenant->id ?? $tenant->tenant_id ?? 'unknown',
-                'domain' => $tenant->domain ?? 'N/A',
-            ]);
-        }
-
-        // Second try: if not found, search by tenant_id directly (the actual column name)
         if (!$tenant) {
-            Log::info('TenantFinder: Attempt 2 - Searching Spatie Tenant by tenant_id', [
+            // If not found by domain, try by tenant_id
+            Log::info('TenantFinder: Not found by domain, trying by tenant_id', [
                 'tenant_id' => $landlordTenant->tenant_id,
             ]);
+            
             $tenant = Tenant::on('landlord')
                 ->where('tenant_id', $landlordTenant->tenant_id)
                 ->first();
-            
-            if ($tenant) {
-                Log::info('TenantFinder: Found tenant in Spatie model (by tenant_id)', [
-                    'tenant_id' => $tenant->id ?? $tenant->tenant_id ?? 'unknown',
-                    'domain' => $tenant->domain ?? 'N/A',
-                ]);
-            }
-        }
-        
-        // Third try: search by id (in case Spatie model maps tenant_id to id)
-        if (!$tenant) {
-            Log::info('TenantFinder: Attempt 3 - Searching Spatie Tenant by id', [
-                'id' => $landlordTenant->tenant_id,
-            ]);
-            $tenant = Tenant::on('landlord')
-                ->where('id', $landlordTenant->tenant_id)
-                ->first();
-            
-            if ($tenant) {
-                Log::info('TenantFinder: Found tenant in Spatie model (by id)', [
-                    'tenant_id' => $tenant->id ?? $tenant->tenant_id ?? 'unknown',
-                    'domain' => $tenant->domain ?? 'N/A',
-                ]);
-            }
         }
 
-        // Fourth try: create a new Tenant instance from the LandlordTenant data
-        // This ensures we always return a valid Tenant instance
-        if (!$tenant) {
-            Log::info('TenantFinder: Attempt 4 - Creating Tenant instance from LandlordTenant data', [
-                'tenant_id' => $landlordTenant->tenant_id,
-                'domain' => $landlordTenant->domain,
-                'database' => $landlordTenant->database ?? 'N/A',
+        if ($tenant) {
+            Log::info('TenantFinder: Found tenant in Spatie Tenant model', [
+                'tenant_id' => $tenant->getKey(),
+                'domain' => $tenant->domain ?? 'N/A',
+                'database' => $tenant->database ?? 'N/A',
             ]);
-            
-            // Create a new Tenant instance
-            $tenant = new Tenant();
-            $tenant->setConnection('landlord');
-            
-            // Use setRawAttributes to set all attributes at once (like Laravel does internally)
-            $tenantAttributes = [
-                'id' => $landlordTenant->tenant_id,
-                'name' => $landlordTenant->tenant_name ?? $landlordTenant->subdomain ?? $landlordTenant->domain,
-                'domain' => $landlordTenant->domain,
-                'database' => $landlordTenant->database ?? '',
-            ];
-            
-            Log::info('TenantFinder: Setting tenant attributes', [
-                'attributes' => $tenantAttributes,
-            ]);
-            
-            $tenant->setRawAttributes($tenantAttributes);
-            
-            // Mark as existing record
-            $tenant->exists = true;
-            $tenant->wasRecentlyCreated = false;
-            
-            // Sync original attributes so Laravel knows this is an existing record
-            $tenant->syncOriginal();
-            
-            Log::info('TenantFinder: Created Tenant instance successfully', [
-                'tenant_id' => $tenant->id ?? 'unknown',
-                'domain' => $tenant->domain ?? 'unknown',
-                'database' => $tenant->database ?? 'unknown',
-                'exists' => $tenant->exists,
+        } else {
+            Log::warning('TenantFinder: Tenant not found in Spatie Tenant model', [
+                'searched_host' => $host,
+                'landlord_tenant_id' => $landlordTenant->tenant_id,
             ]);
         }
 
         if ($tenant) {
             Log::info('TenantFinder: ✅ Successfully found/created tenant - RETURNING', [
-                'tenant_id' => $tenant->id ?? $tenant->tenant_id ?? 'unknown',
+                'tenant_id' => $tenant->getKey(),
                 'domain' => $tenant->domain ?? $landlordTenant->domain,
                 'database' => $tenant->database ?? $landlordTenant->database ?? 'unknown',
                 'connection' => $tenant->getConnectionName(),
