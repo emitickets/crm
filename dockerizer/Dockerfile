@@ -3,11 +3,28 @@
 
 FROM php:8.2-cli-alpine AS builder
 
-# Instalar dependencias del sistema necesarias para Composer
+# Instalar dependencias del sistema necesarias para Composer y extensiones PHP
 RUN apk add --no-cache \
     git \
     zip \
-    unzip
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    oniguruma-dev \
+    libxml2-dev
+
+# Instalar extensiones de PHP necesarias (zip, gd, mbstring, etc.)
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        zip \
+        gd \
+        mbstring \
+        pdo_mysql \
+        exif \
+        pcntl \
+        bcmath
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
