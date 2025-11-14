@@ -4,18 +4,34 @@
 FROM php:8.2-cli-alpine AS builder
 
 # Instalar dependencias del sistema (git, zip, nodejs, npm)
+# Incluir Python 3 y herramientas de compilación para node-sass
 RUN apk add --no-cache \
     git \
     zip \
     unzip \
-    nodejs \
-    npm \
+    python3 \
+    make \
+    g++ \
+    curl \
+    bash \
     libzip-dev \
     libpng-dev \
     oniguruma-dev \
     libxml2-dev \
     freetype-dev \
     libjpeg-turbo-dev
+
+# Instalar Node.js 14 usando nvm (compatible con node-sass 4.14.1)
+ENV NVM_VERSION=0.39.0
+ENV NODE_VERSION=14.21.3
+ENV NVM_DIR=/root/.nvm
+ENV PATH="$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH"
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash \
+    && . "$NVM_DIR/nvm.sh" \
+    && nvm install ${NODE_VERSION} \
+    && nvm alias default ${NODE_VERSION} \
+    && nvm use default
 
 # Instalar extensiones de PHP necesarias
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
@@ -41,7 +57,9 @@ WORKDIR /app/application
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Instalar dependencias de Node y compilar assets
-RUN npm install && npm run production
+# Configurar Python para node-gyp (node-sass lo requiere)
+ENV PYTHON=/usr/bin/python3
+RUN npm install --legacy-peer-deps && npm run production
 
 # --- Etapa 2: Production ---
 # Esta etapa usa la imagen de webdevops y copia los archivos compilados
