@@ -16,6 +16,7 @@
 namespace App\Http\Middleware\Landlord;
 use Closure;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Multitenancy\Models\Tenant;
 
 class BootSystem {
 
@@ -28,6 +29,9 @@ class BootSystem {
      * @return mixed
      */
     public function handle($request, Closure $next) {
+
+        //[MT] Forget any current tenant - landlord routes should not have a tenant
+        Tenant::forgetCurrent();
 
         //system sanity check
         $this->sanityCheck();
