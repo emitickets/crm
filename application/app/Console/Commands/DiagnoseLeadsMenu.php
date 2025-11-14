@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use App\Models\Settings;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Multitenancy\Tenant;
+use Illuminate\Support\Facades\DB;
 
 class DiagnoseLeadsMenu extends Command
 {
@@ -14,7 +16,7 @@ class DiagnoseLeadsMenu extends Command
      *
      * @var string
      */
-    protected $signature = 'leads:diagnose-menu {user_id?}';
+    protected $signature = 'leads:diagnose-menu {--tenant_id= : ID del tenant} {--user_id= : ID del usuario}';
 
     /**
      * The console command description.
@@ -31,6 +33,54 @@ class DiagnoseLeadsMenu extends Command
     public function handle()
     {
         $this->info('=== DIAGNÓSTICO DEL MENÚ DE LEADS ===');
+        $this->newLine();
+
+        // Manejar multi-tenancy
+        $tenantId = $this->option('tenant_id');
+        
+        if (!$tenantId) {
+            // Intentar obtener el tenant del entorno o listar disponibles
+            $tenants = Tenant::on('landlord')->get();
+            
+            if ($tenants->isEmpty()) {
+                $this->error('   ❌ No se encontraron tenants en la base de datos landlord');
+                $this->warn('   → Usa --tenant_id=<id> para especificar un tenant');
+                return 1;
+            }
+            
+            if ($tenants->count() == 1) {
+                $tenant = $tenants->first();
+                $this->line("   Usando el único tenant disponible: {$tenant->tenant_name} (ID: {$tenant->tenant_id})");
+            } else {
+                $this->warn('   Se encontraron múltiples tenants. Usa --tenant_id=<id> para especificar uno.');
+                $this->line('   Tenants disponibles:');
+                foreach ($tenants as $t) {
+                    $this->line("     - ID: {$t->tenant_id}, Nombre: {$t->tenant_name}");
+                }
+                $this->newLine();
+                $this->error('   Por favor, especifica un tenant_id usando --tenant_id=<id>');
+                return 1;
+            }
+        } else {
+            $tenant = Tenant::on('landlord')->where('tenant_id', $tenantId)->first();
+            
+            if (!$tenant) {
+                $this->error("   ❌ No se encontró el tenant con ID: {$tenantId}");
+                return 1;
+            }
+            
+            $this->line("   Usando tenant: {$tenant->tenant_name} (ID: {$tenant->tenant_id})");
+        }
+
+        // Hacer el tenant actual
+        try {
+            Tenant::forgetCurrent();
+            $tenant->makeCurrent();
+            $this->line('   ✅ Tenant configurado correctamente');
+        } catch (\Exception $e) {
+            $this->error('   ❌ Error al configurar el tenant: ' . $e->getMessage());
+            return 1;
+        }
         $this->newLine();
 
         // Cargar configuración del sistema (simula BootSystem middleware)
@@ -90,7 +140,7 @@ class DiagnoseLeadsMenu extends Command
         $this->newLine();
 
         // 3. Verificar usuario y permisos
-        $userId = $this->argument('user_id');
+        $userId = $this->option('user_id');
         
         if ($userId) {
             $user = User::with('role')->find($userId);
