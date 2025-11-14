@@ -56,21 +56,58 @@ class LandlordDomainTenantFinder extends TenantFinder
             'connection' => 'landlord',
         ]);
 
-        $landlordTenant = \App\Models\Landlord\Tenant::on('landlord')
-            ->where('domain', $host)
-            ->first();
+        try {
+            $landlordTenant = \App\Models\Landlord\Tenant::on('landlord')
+                ->where('domain', $host)
+                ->first();
 
-        if (!$landlordTenant) {
-            // Try to see what domains exist for debugging
-            $allTenants = \App\Models\Landlord\Tenant::on('landlord')
-                ->select('tenant_id', 'domain', 'subdomain')
-                ->limit(10)
-                ->get();
-            
-            Log::warning('TenantFinder: Tenant not found in Landlord\Tenant model', [
-                'searched_host' => $host,
-                'available_tenants_sample' => $allTenants->pluck('domain', 'tenant_id')->toArray(),
-                'total_tenants_count' => \App\Models\Landlord\Tenant::on('landlord')->count(),
+            // If not found by domain, try searching by subdomain
+            if (!$landlordTenant) {
+                Log::info('TenantFinder: Not found by domain, trying subdomain', [
+                    'host' => $host,
+                ]);
+                
+                // Extract subdomain from host (e.g., "subdomain.example.com" -> "subdomain")
+                $hostParts = explode('.', $host);
+                if (count($hostParts) > 2) {
+                    $possibleSubdomain = $hostParts[0];
+                    Log::info('TenantFinder: Trying to find by subdomain', [
+                        'extracted_subdomain' => $possibleSubdomain,
+                        'full_host' => $host,
+                    ]);
+                    
+                    $landlordTenant = \App\Models\Landlord\Tenant::on('landlord')
+                        ->where('subdomain', $possibleSubdomain)
+                        ->first();
+                }
+            }
+
+            if (!$landlordTenant) {
+                // Try to see what domains exist for debugging
+                try {
+                    $allTenants = \App\Models\Landlord\Tenant::on('landlord')
+                        ->select('tenant_id', 'domain', 'subdomain')
+                        ->limit(10)
+                        ->get();
+                    
+                    Log::warning('TenantFinder: Tenant not found in Landlord\Tenant model', [
+                        'searched_host' => $host,
+                        'available_tenants_sample' => $allTenants->pluck('domain', 'tenant_id')->toArray(),
+                        'total_tenants_count' => \App\Models\Landlord\Tenant::on('landlord')->count(),
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('TenantFinder: Error querying tenants for debugging', [
+                        'error' => $e->getMessage(),
+                        'searched_host' => $host,
+                    ]);
+                }
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error('TenantFinder: Database connection error when searching for tenant', [
+                'error' => $e->getMessage(),
+                'host' => $host,
+                'connection' => 'landlord',
             ]);
             return null;
         }
