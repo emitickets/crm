@@ -153,6 +153,11 @@ class Leads extends Controller {
 
     protected $leadlogrepo;
 
+    /**
+     * The lead model instance.
+     */
+    protected $leadmodel;
+
     public function __construct(
         LeadRepository $leadrepo,
         TagRepository $tagrepo,
