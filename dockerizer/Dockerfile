@@ -14,6 +14,7 @@ RUN apk add --no-cache \
     g++ \
     curl \
     bash \
+    xz \
     libzip-dev \
     libpng-dev \
     oniguruma-dev \
@@ -21,17 +22,14 @@ RUN apk add --no-cache \
     freetype-dev \
     libjpeg-turbo-dev
 
-# Instalar Node.js 14 usando nvm (compatible con node-sass 4.14.1)
-ENV NVM_VERSION=0.39.0
+# Instalar Node.js 14 directamente desde binarios oficiales (compatible con node-sass 4.14.1)
 ENV NODE_VERSION=14.21.3
-ENV NVM_DIR=/root/.nvm
-ENV PATH="$NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH"
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v${NVM_VERSION}/install.sh | bash \
-    && . "$NVM_DIR/nvm.sh" \
-    && nvm install ${NODE_VERSION} \
-    && nvm alias default ${NODE_VERSION} \
-    && nvm use default
+RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -o node.tar.xz \
+    && tar -xJf node.tar.xz -C /usr/local --strip-components=1 \
+    && rm node.tar.xz \
+    && node --version \
+    && npm --version
 
 # Instalar extensiones de PHP necesarias
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
