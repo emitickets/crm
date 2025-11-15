@@ -1,54 +1,18 @@
-# --- Etapa 1: Builder ---
-# Esta etapa solo instala dependencias de Composer (los assets ya están compilados)
-
-FROM php:8.2-cli-alpine AS builder
-
-# Instalar dependencias del sistema necesarias para Composer y extensiones PHP
-RUN apk add --no-cache \
-    git \
-    zip \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    oniguruma-dev \
-    libxml2-dev
-
-# Instalar extensiones de PHP necesarias (zip, gd, mbstring, etc.)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        zip \
-        gd \
-        mbstring \
-        pdo_mysql \
-        exif \
-        pcntl \
-        bcmath
-
-# Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Imagen base con PHP 8.2, Nginx, Node.js, gRPC y Supervisor
+FROM gbetus/php-nginx-node-grpc:8.2
 
 # Copiar archivos del proyecto (desde la raíz del proyecto)
 # NOTA: Este Dockerfile debe ejecutarse desde la raíz con: docker build -f dockerizer/Dockerfile .
 WORKDIR /app
 COPY . /app
 
-# Instalar dependencias de Composer (incluyendo dev)
+# Instalar dependencias de Composer
+# La imagen base ya incluye Composer y las extensiones PHP necesarias
 WORKDIR /app/application
-RUN composer install --optimize-autoloader --no-interaction
-
-# --- Etapa 2: Production ---
-# Esta etapa usa la imagen de webdevops y copia los archivos
-
-FROM webdevops/php-nginx:8.2
-
-# Copiar los archivos de la aplicación desde el builder
-COPY --from=builder /app /app
+RUN composer install --optimize-autoloader --no-interaction --no-dev
 
 # Configurar Nginx para Laravel
 # Este proyecto tiene index.php en la raíz, no en /public
-# La imagen base webdevops/php-nginx usa variables de entorno para configurar el vhost
 ENV WEB_DOCUMENT_ROOT=/app
 
 # Crear todas las carpetas de almacenamiento necesarias (según documentación de Grow CRM)
@@ -87,34 +51,45 @@ WORKDIR /app/application
 # Regenerar autoload optimizado automáticamente
 RUN composer dump-autoload --optimize --no-scripts
 
-# Instalar cron si no está disponible
-RUN apt-get update && apt-get install -y cron && rm -rf /var/lib/apt/lists/*
+# Crear archivos de configuración de supervisor para los cronjobs
+# Supervisor ya está instalado en la imagen base y busca configuraciones en /opt/docker/etc/supervisor.d/
+RUN mkdir -p /opt/docker/etc/supervisor.d
 
-# Crear archivo crontab con los comandos de Laravel
-RUN echo "* * * * * /usr/local/bin/php /app/application/artisan schedule:run >> /dev/null 2>&1" > /etc/cron.d/laravel-schedule \
-    && echo "* * * * * /usr/local/bin/php /app/application/artisan tenants:artisan schedule:run >> /dev/null 2>&1" >> /etc/cron.d/laravel-schedule \
-    && chmod 0644 /etc/cron.d/laravel-schedule \
-    && crontab /etc/cron.d/laravel-schedule
+# Configuración de supervisor para el schedule principal de Laravel
+RUN printf '[program:laravel-schedule]\n\
+command=/bin/bash -c "while true; do /usr/local/bin/php /app/application/artisan schedule:run >> /dev/null 2>&1; sleep 60; done"\n\
+autostart=true\n\
+autorestart=true\n\
+startretries=3\n\
+user=root\n\
+redirect_stderr=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n' > /opt/docker/etc/supervisor.d/laravel-schedule.conf
 
-# Crear script de inicio para cron (sin supervisor, compatible con easypanel.io)
-RUN echo '#!/bin/bash\n\
-# Iniciar cron en segundo plano\n\
-cron\n\
-# Ejecutar el comando original del entrypoint\n\
-exec "$@"' > /usr/local/bin/docker-entrypoint-cron.sh \
-    && chmod +x /usr/local/bin/docker-entrypoint-cron.sh
+# Configuración de supervisor para el schedule de tenants
+RUN printf '[program:laravel-tenants-schedule]\n\
+command=/bin/bash -c "while true; do /usr/local/bin/php /app/application/artisan tenants:artisan schedule:run >> /dev/null 2>&1; sleep 60; done"\n\
+autostart=true\n\
+autorestart=true\n\
+startretries=3\n\
+user=root\n\
+redirect_stderr=true\n\
+stdout_logfile=/dev/stdout\n\
+stdout_logfile_maxbytes=0\n' > /opt/docker/etc/supervisor.d/laravel-tenants-schedule.conf
 
 # Expone el puerto 80
 EXPOSE 80
 
-# NOTA: La imagen base webdevops/php-nginx se encarga automáticamente de:
-# - Iniciar Nginx y PHP-FPM
-# - Configurar permisos al inicio
+# NOTA: La imagen base gbetus/php-nginx-node-grpc:8.2 incluye:
+# - PHP 8.2, Nginx, Node.js y soporte para gRPC
+# - Supervisor ya está instalado y configurado
 # 
-# NOTA: Los cronjobs están configurados y se ejecutarán cada minuto:
-# - schedule:run para el sistema principal
-# - tenants:artisan schedule:run para los tenants
+# NOTA: Los cronjobs están configurados con supervisor y se ejecutarán cada minuto:
+# - schedule:run para el sistema principal (laravel-schedule)
+# - tenants:artisan schedule:run para los tenants (laravel-tenants-schedule)
 # 
-# Para iniciar cron en easypanel.io, puedes usar el script:
-# /usr/local/bin/docker-entrypoint-cron.sh
-# O iniciar cron manualmente con: cron
+# Los archivos de configuración de supervisor están en:
+# - /opt/docker/etc/supervisor.d/laravel-schedule.conf
+# - /opt/docker/etc/supervisor.d/laravel-tenants-schedule.conf
+# 
+# Supervisor se iniciará automáticamente con la imagen base
