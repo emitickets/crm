@@ -51,48 +51,20 @@ WORKDIR /app/application
 # Regenerar autoload optimizado automáticamente
 RUN composer dump-autoload --optimize --no-scripts
 
-# Crear archivos de configuración de supervisor para los cronjobs
-# Supervisor ya está instalado en la imagen base y busca configuraciones en /opt/docker/etc/supervisor.d/
-RUN mkdir -p /opt/docker/etc/supervisor.d
+# Copiar configuraciones de Supervisor para los cronjobs
+# La imagen base gbetus/php-nginx-node-grpc:8.2 ya tiene Supervisor configurado
+# y usa el directorio /opt/docker/etc/supervisor.d/ para configuraciones adicionales
+COPY ./dockerizer/supervisor-laravel-schedule.conf /opt/docker/etc/supervisor.d/laravel-schedule.conf
+COPY ./dockerizer/supervisor-laravel-tenants-schedule.conf /opt/docker/etc/supervisor.d/laravel-tenants-schedule.conf
 
-# Configuración de supervisor para el schedule principal de Laravel
-RUN printf '[program:laravel-schedule]\n\
-process_name=%(program_name)s_%(process_num)02d\n\
-command=/bin/bash -c "while true; do php artisan schedule:run; sleep 60; done"\n\
-autostart=true\n\
-autorestart=true\n\
-startretries=3\n\
-numprocs=1\n\
-user=root\n\
-directory=/app/application\n\
-redirect_stderr=true\n\
-stdout_logfile=/var/log/supervisor/laravel-schedule.log\n\
-stdout_logfile_maxbytes=10MB\n\
-stdout_logfile_backups=5\n\
-stderr_logfile=/var/log/supervisor/laravel-schedule-error.log\n\
-stderr_logfile_maxbytes=10MB\n\
-stderr_logfile_backups=5\n' > /opt/docker/etc/supervisor.d/laravel-schedule.conf
-
-# Configuración de supervisor para el schedule de tenants
-RUN printf '[program:laravel-tenants-schedule]\n\
-process_name=%(program_name)s_%(process_num)02d\n\
-command=/bin/bash -c "while true; do php artisan tenants:artisan schedule:run; sleep 60; done"\n\
-autostart=true\n\
-autorestart=true\n\
-startretries=3\n\
-numprocs=1\n\
-user=root\n\
-directory=/app/application\n\
-redirect_stderr=true\n\
-stdout_logfile=/var/log/supervisor/laravel-tenants-schedule.log\n\
-stdout_logfile_maxbytes=10MB\n\
-stdout_logfile_backups=5\n\
-stderr_logfile=/var/log/supervisor/laravel-tenants-schedule-error.log\n\
-stderr_logfile_maxbytes=10MB\n\
-stderr_logfile_backups=5\n' > /opt/docker/etc/supervisor.d/laravel-tenants-schedule.conf
-
-# Crear directorio de logs para supervisor
-RUN mkdir -p /var/log/supervisor && chmod 755 /var/log/supervisor
+# Configurar logs para Supervisor (Schedule)
+RUN mkdir -p /var/log \
+    && touch /var/log/laravel-schedule.log /var/log/laravel-schedule-error.log \
+    && touch /var/log/laravel-tenants-schedule.log /var/log/laravel-tenants-schedule-error.log \
+    && chown root:root /var/log/laravel-schedule.log /var/log/laravel-schedule-error.log \
+    && chown root:root /var/log/laravel-tenants-schedule.log /var/log/laravel-tenants-schedule-error.log \
+    && chmod 644 /var/log/laravel-schedule.log /var/log/laravel-schedule-error.log \
+    && chmod 644 /var/log/laravel-tenants-schedule.log /var/log/laravel-tenants-schedule-error.log
 
 # Expone el puerto 80
 EXPOSE 80
@@ -110,10 +82,10 @@ EXPOSE 80
 # - /opt/docker/etc/supervisor.d/laravel-tenants-schedule.conf
 # 
 # Los logs de supervisor están en:
-# - /var/log/supervisor/laravel-schedule.log
-# - /var/log/supervisor/laravel-schedule-error.log
-# - /var/log/supervisor/laravel-tenants-schedule.log
-# - /var/log/supervisor/laravel-tenants-schedule-error.log
+# - /var/log/laravel-schedule.log
+# - /var/log/laravel-schedule-error.log
+# - /var/log/laravel-tenants-schedule.log
+# - /var/log/laravel-tenants-schedule-error.log
 # 
 # Para verificar el estado de supervisor dentro del contenedor:
 # - supervisorctl status
