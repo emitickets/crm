@@ -9,7 +9,7 @@ COPY . /app
 # Instalar dependencias de Composer
 # La imagen base ya incluye Composer y las extensiones PHP necesarias
 WORKDIR /app/application
-RUN composer install --optimize-autoloader --no-interaction --no-dev
+RUN composer install --optimize-autoloader --no-interaction 
 
 # Configurar Nginx para Laravel
 # Este proyecto tiene index.php en la raíz, no en /public
